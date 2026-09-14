@@ -1,4 +1,6 @@
 import AvailabilitySearch from "@/components/AvailabilitySearch";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 const locations = [
   {
@@ -38,42 +40,7 @@ const locations = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <a href="/" className="flex items-center gap-3">
-            <img
-              src="/ernest-rentals-logo.png"
-              alt="Ernest Rentals"
-              className="h-11 w-11 rounded-xl bg-white object-contain"
-            />
-
-            <div>
-              <p className="text-lg font-extrabold tracking-tight">
-                ERNEST RENTALS
-              </p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Outdoor Advertising
-              </p>
-            </div>
-          </a>
-
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 lg:flex">
-            <a className="hover:text-orange-600" href="#billboards">Billboards</a>
-            <a className="hover:text-orange-600" href="#digital">Digital Screens</a>
-            <a className="hover:text-orange-600" href="#locations">Locations</a>
-            <a className="hover:text-orange-600" href="#how-it-works">How It Works</a>
-            <a className="hover:text-orange-600" href="#contact">Contact</a>
-          </nav>
-
-          <a
-            href="#availability"
-            className="rounded-xl bg-[#071226] px-5 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
-          >
-            Check Availability
-          </a>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#071226] text-white">
@@ -203,13 +170,13 @@ export default function Home() {
               <p className="mt-2 text-slate-500">High-traffic advertising opportunities across Saint Lucia.</p>
             </div>
 
-            <a href="#" className="font-bold text-sky-600">View all locations →</a>
+            <a href="/locations" className="font-bold text-sky-600">View all locations →</a>
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {locations.map((item) => (
               <a
-                href="#"
+                href={`/locations`}
                 key={`${item.city}-${item.name}`}
                 className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
@@ -253,7 +220,7 @@ export default function Home() {
             <p className="mt-4 max-w-xl leading-7 text-slate-300">
               High-impact static billboard locations for businesses that want consistent visibility every day.
             </p>
-            <a href="#" className="mt-8 inline-block rounded-xl border border-orange-400 px-5 py-3 font-bold text-orange-300">
+            <a href="/billboards" className="mt-8 inline-block rounded-xl border border-orange-400 px-5 py-3 font-bold text-orange-300">
               View Static Billboards →
             </a>
           </div>
@@ -270,8 +237,8 @@ export default function Home() {
               <span className="rounded-full bg-white/70 px-4 py-2">15-Second Premium</span>
             </div>
 
-            <a href="#" className="mt-8 inline-block rounded-xl bg-[#071226] px-5 py-3 font-bold text-white">
-              Check Digital Availability →
+            <a href="/digital-screens" className="mt-8 inline-block rounded-xl bg-[#071226] px-5 py-3 font-bold text-white">
+              View Digital Advertising →
             </a>
           </div>
         </div>
@@ -290,7 +257,7 @@ export default function Home() {
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["01", "Find a Billboard", "Browse locations and choose static or digital advertising."],
-              ["02", "Check Availability", "Select your dates and see advertising options."],
+              ["02", "Search Billboards", "Select your dates and see advertising options."],
               ["03", "Start Your Campaign", "Send us your company and campaign information."],
               ["04", "We Confirm & Launch", "Our team reviews, confirms and prepares your campaign."],
             ].map(([number, title, body]) => (
@@ -317,28 +284,13 @@ export default function Home() {
             </div>
 
             <a href="#availability" className="rounded-xl bg-orange-500 px-6 py-4 font-bold text-white">
-              Check Availability
+              Search Billboards
             </a>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer id="contact" className="border-t border-slate-200 bg-white px-5 py-10 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/ernest-rentals-logo.png" alt="" className="h-10 w-10 object-contain" />
-            <div>
-              <p className="font-extrabold">ERNEST RENTALS</p>
-              <p className="text-xs text-slate-500">Outdoor Advertising • Saint Lucia</p>
-            </div>
-          </div>
-
-          <p className="text-sm text-slate-500">
-            © 2026 Ernest Rentals. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

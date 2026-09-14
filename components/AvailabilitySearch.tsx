@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -29,6 +30,65 @@ type AvailabilityResult = {
   availability_status: string;
   image_url: string | null;
 };
+
+type StaticPackage = {
+  package_id: string;
+  billboard_id: string;
+  package_code: string;
+  package_name: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  duration_label: string | null;
+  price: number;
+  currency_code: string;
+};
+
+function formatMoney(
+  value: number,
+  currency: string
+) {
+  try {
+    return new Intl.NumberFormat(
+      "en-US",
+      {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }
+    ).format(
+      Number(
+        value
+      )
+    );
+  } catch {
+    return `${currency} ${Number(
+      value
+    ).toFixed(0)}`;
+  }
+}
+
+function resultIsAvailable(
+  result: AvailabilityResult
+) {
+  if (
+    result.billboard_type ===
+    "digital"
+  ) {
+    return (
+      result.available_standard_slots >
+        0 ||
+      result.available_premium_slots >
+        0 ||
+      result.available_shoutout_slots >
+        0
+    );
+  }
+
+  return (
+    result.available_static_faces >
+    0
+  );
+}
 
 function formatSize(
   width: number | null,
@@ -64,6 +124,12 @@ export default function AvailabilitySearch() {
   const [results, setResults] =
     useState<AvailabilityResult[]>([]);
 
+  const [
+    staticPackages,
+    setStaticPackages,
+  ] =
+    useState<StaticPackage[]>([]);
+
   const [loading, setLoading] =
     useState(false);
 
@@ -82,6 +148,224 @@ export default function AvailabilitySearch() {
     useState<AvailabilityResult | null>(
       null
     );
+
+  useEffect(() => {
+    async function loadStaticPackages() {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_public_static_billboard_packages"
+        );
+
+      if (error) {
+        console.error(
+          "Unable to load static billboard packages:",
+          error
+        );
+
+        return;
+      }
+
+      setStaticPackages(
+        (data ??
+          []) as StaticPackage[]
+      );
+    }
+
+    loadStaticPackages();
+  }, [
+    supabase,
+  ]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function runSearchFromUrl() {
+      if (
+        typeof window ===
+        "undefined"
+      ) {
+        return;
+      }
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const urlLocation =
+        params.get(
+          "location"
+        ) ??
+        "";
+
+      const urlType =
+        params.get(
+          "type"
+        ) ??
+        "";
+
+      const urlStart =
+        params.get(
+          "start"
+        ) ??
+        "";
+
+      const urlEnd =
+        params.get(
+          "end"
+        ) ??
+        "";
+
+      if (
+        urlLocation
+      ) {
+        setLocation(
+          urlLocation
+        );
+      }
+
+      if (
+        urlType ===
+          "static" ||
+        urlType ===
+          "digital"
+      ) {
+        setBillboardType(
+          urlType
+        );
+      }
+
+      if (
+        urlStart
+      ) {
+        setStartDate(
+          urlStart
+        );
+      }
+
+      if (
+        urlEnd
+      ) {
+        setEndDate(
+          urlEnd
+        );
+      }
+
+      if (
+        !urlStart ||
+        !urlEnd ||
+        urlEnd <=
+          urlStart
+      ) {
+        return;
+      }
+
+      setErrorMessage(
+        ""
+      );
+
+      setResults(
+        []
+      );
+
+      setSelectedBillboard(
+        null
+      );
+
+      setLoading(
+        true
+      );
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "search_public_billboard_availability",
+          {
+            p_start_date:
+              urlStart,
+
+            p_end_date:
+              urlEnd,
+
+            p_location:
+              urlLocation ||
+              null,
+
+            p_billboard_type:
+              (
+                urlType ===
+                  "static" ||
+                urlType ===
+                  "digital"
+              )
+                ? urlType
+                : null,
+          }
+        );
+
+      if (
+        cancelled
+      ) {
+        return;
+      }
+
+      setLoading(
+        false
+      );
+
+      setSearched(
+        true
+      );
+
+      if (
+        error
+      ) {
+        console.error(
+          error
+        );
+
+        setErrorMessage(
+          "We could not check availability right now. Please try again."
+        );
+
+        return;
+      }
+
+      setResults(
+        (data ??
+          []) as AvailabilityResult[]
+      );
+
+      window.requestAnimationFrame(
+        () => {
+          document
+            .getElementById(
+              "availability"
+            )
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "start",
+            });
+        }
+      );
+    }
+
+    runSearchFromUrl();
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, [
+    supabase,
+  ]);
 
   async function handleSearch(
     event: FormEvent<HTMLFormElement>
@@ -152,7 +436,7 @@ export default function AvailabilitySearch() {
       id="availability"
       className="relative z-20 -mt-8 px-5 lg:px-8"
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1500px]">
 
         {/* SEARCH FORM */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
@@ -187,16 +471,32 @@ export default function AvailabilitySearch() {
                   Dennery
                 </option>
 
-                <option value="Praslin">
-                  Praslin
+                <option value="Mamiku">
+                  Mamiku
                 </option>
 
                 <option value="Micoud">
                   Micoud
                 </option>
 
-                <option value="Mamiku">
-                  Mamiku
+                <option value="Mon Repos">
+                  Mon Repos
+                </option>
+
+                <option value="Piaye">
+                  Piaye
+                </option>
+
+                <option value="Praslin">
+                  Praslin
+                </option>
+
+                <option value="Richford">
+                  Richford
+                </option>
+
+                <option value="Rodney Bay">
+                  Rodney Bay
                 </option>
               </select>
             </label>
@@ -258,7 +558,31 @@ export default function AvailabilitySearch() {
               <input
                 type="date"
                 value={endDate}
-                min={startDate || undefined}
+                min={
+                  startDate
+                    ? new Date(
+                        `${startDate}T00:00:00Z`
+                      )
+                        .toISOString()
+                        .slice(
+                          0,
+                          10
+                        ) ===
+                      startDate
+                      ? new Date(
+                          new Date(
+                            `${startDate}T00:00:00Z`
+                          ).getTime() +
+                            86400000
+                        )
+                          .toISOString()
+                          .slice(
+                            0,
+                            10
+                          )
+                      : undefined
+                    : undefined
+                }
                 onChange={(event) =>
                   setEndDate(
                     event.target.value
@@ -329,120 +653,176 @@ export default function AvailabilitySearch() {
               </div>
             ) : (
               /* RESULTS GRID */
-              <div className="grid gap-5 lg:grid-cols-2">
-                {results.map(
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {[...results]
+                  .sort(
+                    (a, b) => {
+                      const aAvailable =
+                        resultIsAvailable(
+                          a
+                        );
+
+                      const bAvailable =
+                        resultIsAvailable(
+                          b
+                        );
+
+                      if (
+                        aAvailable ===
+                        bAvailable
+                      ) {
+                        return 0;
+                      }
+
+                      return aAvailable
+                        ? -1
+                        : 1;
+                    }
+                  )
+                  .map(
                   (result) => {
                     const isDigital =
                       result.billboard_type ===
                       "digital";
 
+                    const resultStaticPackages =
+                      staticPackages
+                        .filter(
+                          (item) =>
+                            item.billboard_id ===
+                            result.billboard_id
+                        )
+                        .sort(
+                          (a, b) =>
+                            Number(
+                              a.duration_value ??
+                                0
+                            ) -
+                            Number(
+                              b.duration_value ??
+                                0
+                            )
+                        );
+
                     const available =
-                      result.availability_status ===
-                      "available";
+                      resultIsAvailable(
+                        result
+                      );
 
                     return (
                       <article
                         key={
                           result.billboard_id
                         }
-                        className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                        className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_45px_rgba(15,23,42,0.12)]"
                       >
-                        {/* BRAND STRIP */}
-                        <div className="h-2 bg-gradient-to-r from-orange-500 via-orange-500 to-sky-500" />
+                        {/* IMAGE / VISUAL HEADER */}
+                        <div className="relative overflow-hidden">
+                          <div className="absolute inset-x-0 top-0 z-20 h-1 bg-gradient-to-r from-orange-500 via-orange-400 to-sky-500" />
 
-                        {/* BILLBOARD IMAGE */}
-                        {result.image_url ? (
-                          <div className="relative h-60 overflow-hidden bg-slate-100">
-                            <img
-                              src={
-                                result.image_url
-                              }
-                              alt={
-                                result.billboard_name
-                              }
-                              className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                          {result.image_url ? (
+                            <div className="relative h-36 overflow-hidden bg-slate-100">
+                              <img
+                                src={
+                                  result.image_url
+                                }
+                                alt={
+                                  result.billboard_name
+                                }
+                                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                              />
+
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#071226]/70 via-transparent to-black/5" />
+
+                              <div className="absolute inset-x-4 bottom-4">
+                                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
+                                  Ernest Rentals
+                                </p>
+
+                                <h3 className="mt-1 text-lg font-black leading-tight text-white">
+                                  {
+                                    result.billboard_name
+                                  }
+                                </h3>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="relative flex h-36 items-end overflow-hidden bg-[radial-gradient(circle_at_top_right,_#17325f_0%,_#071226_48%,_#030917_100%)] p-4">
+                              <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full border border-white/10" />
+                              <div className="absolute -right-2 top-2 h-16 w-16 rounded-full border border-white/10" />
+
+                              <div className="relative">
+                                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                                  Ernest Rentals
+                                </p>
+
+                                <h3 className="mt-1 max-w-[95%] text-lg font-black leading-tight text-white">
+                                  {
+                                    result.billboard_name
+                                  }
+                                </h3>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                  Photo coming soon
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* TYPE */}
+                          <span className="absolute left-3 top-3 z-20 rounded-full border border-white/20 bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#071226] shadow-sm backdrop-blur">
+                            {isDigital
+                              ? "Digital"
+                              : "Static"}
+                          </span>
+
+                          {/* STATUS */}
+                          <span
+                            className={`absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold shadow-sm ${
+                              available
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-red-50 text-red-700"
+                            }`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                available
+                                  ? "bg-emerald-500"
+                                  : "bg-red-500"
+                              }`}
                             />
 
-                            <div className="absolute left-4 top-4">
-                              <span
-                                className={`rounded-full px-3 py-1.5 text-xs font-bold shadow-sm ${
-                                  available
-                                    ? "bg-white text-emerald-700"
-                                    : "bg-white text-red-700"
-                                }`}
-                              >
-                                {available
-                                  ? "Available"
-                                  : "Fully Booked"}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex h-60 items-center justify-center bg-[#071226] px-6 text-center">
-                            <div>
-                              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
-                                Ernest Rentals
-                              </p>
+                            {available
+                              ? "Available"
+                              : "Booked"}
+                          </span>
+                        </div>
 
-                              <p className="mt-3 text-2xl font-black text-white">
-                                {
-                                  result.billboard_name
-                                }
-                              </p>
+                        {/* CARD BODY */}
+                        <div className="flex flex-1 flex-col p-4">
 
-                              <p className="mt-2 text-sm text-slate-400">
-                                Billboard photo coming soon
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          {/* LOCATION */}
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="truncate text-sm font-semibold text-slate-500">
+                              {result.location ||
+                                "Saint Lucia"}
+                            </p>
 
-                        <div className="p-6">
-
-                          {/* TITLE */}
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
-                                {isDigital
-                                  ? "Digital Billboard"
-                                  : "Static Billboard"}
-                              </p>
-
-                              <h3 className="mt-2 text-xl font-black text-[#071226]">
-                                {
-                                  result.billboard_name
-                                }
-                              </h3>
-
-                              <p className="mt-1 text-sm text-slate-500">
-                                {result.location ||
-                                  "Saint Lucia"}
-                              </p>
-                            </div>
-
-                            {!result.image_url && (
-                              <span
-                                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                                  available
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-red-50 text-red-700"
-                                }`}
-                              >
-                                {available
-                                  ? "Available"
-                                  : "Fully Booked"}
-                              </span>
-                            )}
+                            <p className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-300">
+                              {
+                                result.billboard_code
+                              }
+                            </p>
                           </div>
 
-                          {/* BILLBOARD SPECS */}
-                          <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm">
-                            <div>
-                              <p className="text-xs text-slate-400">
+                          {/* SPECS */}
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                                 Size
                               </p>
 
-                              <p className="mt-1 font-semibold text-slate-800">
+                              <p className="mt-0.5 text-sm font-extrabold text-[#071226]">
                                 {formatSize(
                                   result.width_ft,
                                   result.height_ft
@@ -450,115 +830,203 @@ export default function AvailabilitySearch() {
                               </p>
                             </div>
 
-                            <div>
-                              <p className="text-xs text-slate-400">
+                            <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                                 Orientation
                               </p>
 
-                              <p className="mt-1 font-semibold capitalize text-slate-800">
+                              <p className="mt-0.5 truncate text-sm font-extrabold capitalize text-[#071226]">
                                 {result.orientation ||
                                   "—"}
                               </p>
                             </div>
                           </div>
 
-                          {/* DIGITAL AVAILABILITY */}
+                          {/* AVAILABILITY */}
                           {isDigital ? (
-                            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-
-                              {/* STANDARD */}
-                              <div className="rounded-xl border border-slate-200 p-4">
-                                <p className="text-xs font-semibold text-slate-500">
+                            <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                              <div className="px-2 py-3 text-center">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                                   Standard
                                 </p>
 
-                                <p className="mt-1 text-2xl font-black text-sky-600">
+                                <p className="mt-1 text-xl font-black text-sky-600">
                                   {
                                     result.available_standard_slots
                                   }
                                 </p>
 
-                                <p className="text-xs text-slate-400">
-                                  10-second slots
+                                <p className="text-[10px] text-slate-400">
+                                  10 sec
                                 </p>
                               </div>
 
-                              {/* PREMIUM */}
-                              <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4">
-                                <p className="text-xs font-semibold text-slate-500">
+                              <div className="border-x border-slate-200 px-2 py-3 text-center">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                                   Premium
                                 </p>
 
-                                <p className="mt-1 text-2xl font-black text-orange-600">
+                                <p className="mt-1 text-xl font-black text-orange-600">
                                   {
                                     result.available_premium_slots
                                   }
                                 </p>
 
-                                <p className="text-xs text-slate-400">
-                                  15-second slots
+                                <p className="text-[10px] text-slate-400">
+                                  15 sec
                                 </p>
                               </div>
 
-                              {/* SHOUTOUT */}
-                              <div className="rounded-xl border border-slate-200 p-4">
-                                <p className="text-xs font-semibold text-slate-500">
-                                  Shoutouts
+                              <div className="px-2 py-3 text-center">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                  Shoutout
                                 </p>
 
-                                <p className="mt-1 text-2xl font-black text-[#071226]">
+                                <p className="mt-1 text-xl font-black text-violet-700">
                                   {
                                     result.available_shoutout_slots
                                   }
                                 </p>
 
-                                <p className="text-xs text-slate-400">
-                                  available
+                                <p className="text-[10px] text-slate-400">
+                                  slots
                                 </p>
                               </div>
                             </div>
                           ) : (
-                            /* STATIC AVAILABILITY */
-                            <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50/40 p-4">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Static Availability
-                              </p>
-
-                              <p className="mt-2 text-2xl font-black text-orange-600">
-                                {
-                                  result.available_static_faces
-                                }{" "}
-                                face
-                                {result.available_static_faces ===
-                                1
-                                  ? ""
-                                  : "s"}{" "}
+                            <div
+                              className={`mt-3 flex items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 ${
                                 available
-                              </p>
+                                  ? "border-emerald-100 bg-emerald-50/60"
+                                  : "border-red-100 bg-red-50/70"
+                              }`}
+                            >
+                              <div>
+                                <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                                  Availability
+                                </p>
+
+                                <p
+                                  className={`mt-0.5 text-sm font-black ${
+                                    available
+                                      ? "text-emerald-700"
+                                      : "text-red-700"
+                                  }`}
+                                >
+                                  {available
+                                    ? `${result.available_static_faces} face${
+                                        result.available_static_faces ===
+                                        1
+                                          ? ""
+                                          : "s"
+                                      } available`
+                                    : "Booked for selected dates"}
+                                </p>
+                              </div>
+
+                              <div className="shrink-0 text-right">
+                                <p className="text-[10px] font-bold text-slate-400">
+                                  9:00 AM
+                                </p>
+
+                                <p className="text-[10px] text-slate-400">
+                                  changeover
+                                </p>
+                              </div>
                             </div>
                           )}
 
-                          {/* ACTION BUTTONS */}
-                          <div className="mt-6 flex flex-wrap gap-3">
+                          {/* STATIC RATES */}
+                          {!isDigital && (
+                            <div className="mt-3">
+                              <div className="mb-2 flex items-center justify-between gap-2">
+                                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                                  Rental Rates
+                                </p>
 
-                            {/* START CAMPAIGN */}
-                            <button
-                              type="button"
-                              disabled={!available}
-                              onClick={() =>
-                                setSelectedBillboard(
-                                  result
-                                )
-                              }
-                              className="rounded-xl bg-[#071226] px-5 py-3 text-sm font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-                            >
-                              Start Campaign
-                            </button>
+                                <span className="text-[10px] text-slate-400">
+                                  Per face
+                                </span>
+                              </div>
 
-                            {/* VIEW DETAILS */}
+                              {resultStaticPackages.length >
+                              0 ? (
+                                <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70">
+                                  {resultStaticPackages.map(
+                                    (
+                                      staticPackage,
+                                      index
+                                    ) => (
+                                      <div
+                                        key={
+                                          staticPackage.package_id
+                                        }
+                                        className={`px-2 py-3 ${
+                                          index >
+                                          0
+                                            ? "border-l border-slate-200"
+                                            : ""
+                                        }`}
+                                      >
+                                        <p className="truncate text-[10px] font-bold text-slate-500">
+                                          {staticPackage.duration_label ||
+                                            staticPackage.package_name}
+                                        </p>
+
+                                        <p className="mt-1 whitespace-nowrap text-sm font-black tracking-tight text-[#071226]">
+                                          {formatMoney(
+                                            staticPackage.price,
+                                            staticPackage.currency_code ||
+                                              "XCD"
+                                          )}
+                                        </p>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-medium text-slate-500">
+                                  Pricing available on request.
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* ACTIONS */}
+                          <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+                            {isDigital ? (
+                              <button
+                                type="button"
+                                disabled={!available}
+                                onClick={() =>
+                                  setSelectedBillboard(
+                                    result
+                                  )
+                                }
+                                className="rounded-xl bg-[#071226] px-3 py-2.5 text-xs font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                              >
+                                Start Campaign
+                              </button>
+                            ) : available ? (
+                              <a
+                                href={`/billboards/${result.billboard_id}?start=${startDate}&end=${endDate}`}
+                                className="rounded-xl bg-[#071226] px-3 py-2.5 text-center text-xs font-extrabold text-white transition hover:bg-orange-600"
+                              >
+                                Choose Package
+                              </a>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled
+                                className="rounded-xl bg-slate-200 px-3 py-2.5 text-xs font-extrabold text-slate-400"
+                              >
+                                Unavailable
+                              </button>
+                            )}
+
                             <a
                               href={`/billboards/${result.billboard_id}?start=${startDate}&end=${endDate}`}
-                              className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
                             >
                               View Details
                             </a>

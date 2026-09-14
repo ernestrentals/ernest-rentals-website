@@ -21,6 +21,7 @@ type BillboardCampaignCTAProps = {
 
 type PublicAdPackage = {
   package_id: string;
+  billboard_id: string | null;
   package_code: string;
   package_name: string;
   package_type: string;
@@ -32,6 +33,32 @@ type PublicAdPackage = {
   currency_code: string;
   includes_ad_creation: boolean;
 };
+
+type StaticPackageRpcRow = {
+  package_id: string;
+  billboard_id: string;
+  package_code: string;
+  package_name: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  duration_label: string | null;
+  price: number;
+  currency_code: string;
+};
+
+type AvailabilityResult = {
+  billboard_id: string;
+  billboard_type: string;
+  available_static_faces: number;
+  availability_status: string;
+};
+
+type AvailabilityState =
+  | "idle"
+  | "checking"
+  | "available"
+  | "unavailable"
+  | "error";
 
 function formatMoney(
   value: number,
@@ -49,6 +76,32 @@ function formatMoney(
     ).format(value);
   } catch {
     return `${currency} ${value.toFixed(0)}`;
+  }
+}
+
+function formatScheduleDate(
+  value: string
+) {
+  if (!value) {
+    return "—";
+  }
+
+  try {
+    return new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    ).format(
+      new Date(
+        `${value}T00:00:00Z`
+      )
+    );
+  } catch {
+    return value;
   }
 }
 
@@ -117,6 +170,215 @@ function packageDescription(
   );
 }
 
+function calculatePackageChangeoverDate(
+  startDate: string,
+  adPackage: PublicAdPackage | null
+) {
+  if (
+    !startDate ||
+    !adPackage?.duration_value ||
+    !adPackage.duration_unit
+  ) {
+    return "";
+  }
+
+  const [
+    year,
+    month,
+    day,
+  ] =
+    startDate
+      .split("-")
+      .map(Number);
+
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
+    return "";
+  }
+
+  const duration =
+    adPackage.duration_value;
+
+  let result: Date;
+
+  if (
+    adPackage.duration_unit ===
+    "day"
+  ) {
+    result =
+      new Date(
+        Date.UTC(
+          year,
+          month - 1,
+          day + duration
+        )
+      );
+  } else if (
+    adPackage.duration_unit ===
+    "week"
+  ) {
+    result =
+      new Date(
+        Date.UTC(
+          year,
+          month - 1,
+          day +
+            duration *
+              7
+        )
+      );
+  } else if (
+    adPackage.duration_unit ===
+    "month"
+  ) {
+    const targetMonthIndex =
+      month -
+      1 +
+      duration;
+
+    const targetYear =
+      year +
+      Math.floor(
+        targetMonthIndex /
+          12
+      );
+
+    const normalizedMonth =
+      ((targetMonthIndex %
+        12) +
+        12) %
+      12;
+
+    const daysInTargetMonth =
+      new Date(
+        Date.UTC(
+          targetYear,
+          normalizedMonth +
+            1,
+          0
+        )
+      ).getUTCDate();
+
+    const targetDay =
+      Math.min(
+        day,
+        daysInTargetMonth
+      );
+
+    result =
+      new Date(
+        Date.UTC(
+          targetYear,
+          normalizedMonth,
+          targetDay
+        )
+      );
+  } else {
+    return "";
+  }
+
+  return [
+    result.getUTCFullYear(),
+
+    String(
+      result.getUTCMonth() +
+        1
+    ).padStart(
+      2,
+      "0"
+    ),
+
+    String(
+      result.getUTCDate()
+    ).padStart(
+      2,
+      "0"
+    ),
+  ].join("-");
+}
+
+function getMinimumRentalLabel(
+  packages: PublicAdPackage[]
+) {
+  const packageWithShortestDuration =
+    [...packages]
+      .filter(
+        (item) =>
+          Boolean(
+            item.duration_value
+          ) &&
+          Boolean(
+            item.duration_unit
+          )
+      )
+      .sort(
+        (
+          a,
+          b
+        ) => {
+          const unitWeight = (
+            item: PublicAdPackage
+          ) => {
+            if (
+              item.duration_unit ===
+              "day"
+            ) {
+              return Number(
+                item.duration_value
+              );
+            }
+
+            if (
+              item.duration_unit ===
+              "week"
+            ) {
+              return (
+                Number(
+                  item.duration_value
+                ) *
+                7
+              );
+            }
+
+            return (
+              Number(
+                item.duration_value
+              ) *
+              30
+            );
+          };
+
+          return (
+            unitWeight(
+              a
+            ) -
+            unitWeight(
+              b
+            )
+          );
+        }
+      )[0];
+
+  if (
+    !packageWithShortestDuration
+  ) {
+    return "";
+  }
+
+  return (
+    packageWithShortestDuration.duration_label ||
+    `${packageWithShortestDuration.duration_value} ${packageWithShortestDuration.duration_unit}${
+      packageWithShortestDuration.duration_value ===
+      1
+        ? ""
+        : "s"
+    }`
+  );
+}
+
 export default function BillboardCampaignCTA({
   billboardId,
   billboardName,
@@ -132,6 +394,10 @@ export default function BillboardCampaignCTA({
         createBrowserClient(),
       []
     );
+
+  const isStatic =
+    billboardType ===
+    "static";
 
   const [
     open,
@@ -165,12 +431,145 @@ export default function BillboardCampaignCTA({
   ] =
     useState("");
 
+  const [
+    staticAvailabilityState,
+    setStaticAvailabilityState,
+  ] =
+    useState<AvailabilityState>(
+      "idle"
+    );
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadPackages() {
       setLoadingPackages(true);
       setPackageError("");
+      setSelectedPackageId("");
+
+      if (
+        isStatic
+      ) {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "get_public_static_billboard_packages"
+          );
+
+        if (cancelled) {
+          return;
+        }
+
+        if (error) {
+          console.error(error);
+
+          setPackageError(
+            "Pricing is available on request."
+          );
+
+          setPackages([]);
+          setLoadingPackages(false);
+
+          return;
+        }
+
+        const rows =
+          (data ??
+            []) as StaticPackageRpcRow[];
+
+        /*
+          IMPORTANT:
+          Static packages are billboard-specific.
+
+          This prevents a Mamiku billboard from
+          accidentally showing Dennery or Praslin
+          pricing.
+        */
+
+        const loadedPackages:
+          PublicAdPackage[] =
+          rows
+            .filter(
+              (row) =>
+                row.billboard_id ===
+                billboardId
+            )
+            .map(
+              (row) => ({
+                package_id:
+                  row.package_id,
+
+                billboard_id:
+                  row.billboard_id,
+
+                package_code:
+                  row.package_code,
+
+                package_name:
+                  row.package_name,
+
+                package_type:
+                  "static",
+
+                slot_duration_seconds:
+                  null,
+
+                duration_value:
+                  row.duration_value,
+
+                duration_unit:
+                  row.duration_unit,
+
+                duration_label:
+                  row.duration_label,
+
+                price:
+                  Number(
+                    row.price
+                  ),
+
+                currency_code:
+                  row.currency_code,
+
+                includes_ad_creation:
+                  false,
+              })
+            )
+            .sort(
+              (
+                a,
+                b
+              ) =>
+                Number(
+                  a.duration_value ??
+                    0
+                ) -
+                Number(
+                  b.duration_value ??
+                    0
+                )
+            );
+
+        setPackages(
+          loadedPackages
+        );
+
+        if (
+          loadedPackages.length >
+          0
+        ) {
+          setSelectedPackageId(
+            loadedPackages[0]
+              .package_id
+          );
+        }
+
+        setLoadingPackages(false);
+
+        return;
+      }
 
       const {
         data,
@@ -202,8 +601,19 @@ export default function BillboardCampaignCTA({
       }
 
       const loadedPackages =
-        (data ??
-          []) as PublicAdPackage[];
+        (
+          (data ??
+            []) as Omit<
+            PublicAdPackage,
+            "billboard_id"
+          >[]
+        ).map(
+          (item) => ({
+            ...item,
+            billboard_id:
+              null,
+          })
+        );
 
       setPackages(
         loadedPackages
@@ -228,7 +638,9 @@ export default function BillboardCampaignCTA({
       cancelled = true;
     };
   }, [
+    billboardId,
     billboardType,
+    isStatic,
     supabase,
   ]);
 
@@ -239,8 +651,196 @@ export default function BillboardCampaignCTA({
         selectedPackageId
     ) ?? null;
 
+  const packageChangeoverDate =
+    useMemo(
+      () =>
+        isStatic
+          ? calculatePackageChangeoverDate(
+              startDate,
+              selectedPackage
+            )
+          : changeoverDate,
+      [
+        changeoverDate,
+        isStatic,
+        selectedPackage,
+        startDate,
+      ]
+    );
+
+  const minimumRentalLabel =
+    useMemo(
+      () =>
+        getMinimumRentalLabel(
+          packages
+        ),
+      [
+        packages,
+      ]
+    );
+
+  /*
+    For static billboards, the selected package
+    determines the real booking period.
+
+    We therefore re-check availability against the
+    package-adjusted changeover date instead of the
+    shorter date range the customer originally used
+    to search the website.
+  */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkStaticPackageAvailability() {
+      if (
+        !isStatic
+      ) {
+        setStaticAvailabilityState(
+          "idle"
+        );
+        return;
+      }
+
+      if (
+        !startDate ||
+        !packageChangeoverDate ||
+        !selectedPackage
+      ) {
+        setStaticAvailabilityState(
+          "idle"
+        );
+        return;
+      }
+
+      setStaticAvailabilityState(
+        "checking"
+      );
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "search_public_billboard_availability",
+          {
+            p_start_date:
+              startDate,
+
+            p_end_date:
+              packageChangeoverDate,
+
+            p_location:
+              null,
+
+            p_billboard_type:
+              "static",
+          }
+        );
+
+      if (cancelled) {
+        return;
+      }
+
+      if (error) {
+        console.error(
+          "Unable to verify static package availability:",
+          error
+        );
+
+        setStaticAvailabilityState(
+          "error"
+        );
+
+        return;
+      }
+
+      const matchingBillboard =
+        (
+          (data ??
+            []) as AvailabilityResult[]
+        ).find(
+          (item) =>
+            item.billboard_id ===
+            billboardId
+        );
+
+      if (
+        matchingBillboard &&
+        matchingBillboard.available_static_faces >
+          0 &&
+        matchingBillboard.availability_status ===
+          "available"
+      ) {
+        setStaticAvailabilityState(
+          "available"
+        );
+      } else {
+        setStaticAvailabilityState(
+          "unavailable"
+        );
+      }
+    }
+
+    checkStaticPackageAvailability();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    billboardId,
+    isStatic,
+    packageChangeoverDate,
+    selectedPackage,
+    startDate,
+    supabase,
+  ]);
+
+  const effectiveAvailable =
+    isStatic
+      ? staticAvailabilityState ===
+        "available"
+      : available;
+
+  const availabilityChecking =
+    isStatic &&
+    staticAvailabilityState ===
+      "checking";
+
+  const packagePeriodDiffersFromSearch =
+    isStatic &&
+    Boolean(
+      changeoverDate
+    ) &&
+    Boolean(
+      packageChangeoverDate
+    ) &&
+    changeoverDate !==
+      packageChangeoverDate;
+
   return (
     <>
+      {/* STATIC RENTAL REQUIREMENT */}
+      {isStatic &&
+        packages.length >
+          0 && (
+          <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-4">
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-orange-500">
+              Static Billboard Rental
+            </p>
+
+            <p className="mt-2 font-black text-[#071226]">
+              Minimum rental:{" "}
+              {minimumRentalLabel ||
+                "Package period"}
+            </p>
+
+            <p className="mt-2 text-xs leading-5 text-slate-600">
+              Static billboards are rented in fixed package periods. Choose a package below and the changeover date will be calculated automatically from your requested start date.
+            </p>
+          </div>
+        )}
+
       {/* PACKAGE SELECTOR */}
       <div className="mt-6 border-t border-slate-100 pt-6">
 
@@ -253,7 +853,9 @@ export default function BillboardCampaignCTA({
         </h3>
 
         <p className="mt-1 text-xs leading-5 text-slate-500">
-          Select the advertising package that best suits your campaign.
+          {isStatic
+            ? "Select the rental period that best suits your campaign."
+            : "Select the advertising package that best suits your campaign."}
         </p>
 
         {loadingPackages ? (
@@ -364,6 +966,131 @@ export default function BillboardCampaignCTA({
                 </div>
               </div>
             )}
+
+            {/* STATIC PACKAGE SCHEDULE */}
+            {isStatic &&
+              selectedPackage &&
+              startDate &&
+              packageChangeoverDate && (
+                <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+
+                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-blue-600">
+                    Package Schedule
+                  </p>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Starts
+                      </p>
+
+                      <p className="mt-1 font-black text-[#071226]">
+                        {formatScheduleDate(
+                          startDate
+                        )}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        9:00 AM
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-3">
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Changeover
+                      </p>
+
+                      <p className="mt-1 font-black text-[#071226]">
+                        {formatScheduleDate(
+                          packageChangeoverDate
+                        )}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        9:00 AM
+                      </p>
+                    </div>
+                  </div>
+
+                  {packagePeriodDiffersFromSearch && (
+                    <p className="mt-3 text-xs leading-5 text-blue-700">
+                      Your original search ended on{" "}
+                      <strong>
+                        {formatScheduleDate(
+                          changeoverDate
+                        )}
+                      </strong>
+                      . Static billboard rentals use the selected package period, so this package runs until{" "}
+                      <strong>
+                        {formatScheduleDate(
+                          packageChangeoverDate
+                        )}
+                      </strong>
+                      .
+                    </p>
+                  )}
+                </div>
+              )}
+
+            {/* STATIC PACKAGE AVAILABILITY */}
+            {isStatic &&
+              selectedPackage &&
+              startDate &&
+              packageChangeoverDate && (
+                <div
+                  className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+                    availabilityChecking
+                      ? "border-slate-200 bg-slate-50 text-slate-600"
+                      : staticAvailabilityState ===
+                          "available"
+                        ? "border-green-200 bg-green-50 text-green-700"
+                        : staticAvailabilityState ===
+                            "unavailable"
+                          ? "border-amber-200 bg-amber-50 text-amber-800"
+                          : staticAvailabilityState ===
+                              "error"
+                            ? "border-red-200 bg-red-50 text-red-700"
+                            : "border-slate-200 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  {availabilityChecking && (
+                    <span className="font-semibold">
+                      Checking availability for the full{" "}
+                      {selectedPackage.duration_label ||
+                        "package"}{" "}
+                      rental period...
+                    </span>
+                  )}
+
+                  {staticAvailabilityState ===
+                    "available" && (
+                    <span className="font-semibold">
+                      ✓ Available for the full{" "}
+                      {selectedPackage.duration_label ||
+                        "package"}{" "}
+                      rental period.
+                    </span>
+                  )}
+
+                  {staticAvailabilityState ===
+                    "unavailable" && (
+                    <span className="font-semibold">
+                      This billboard is not available for the full{" "}
+                      {selectedPackage.duration_label ||
+                        "selected"}{" "}
+                      rental period. Try another start date or package.
+                    </span>
+                  )}
+
+                  {staticAvailabilityState ===
+                    "error" && (
+                    <span className="font-semibold">
+                      We could not verify the full package period right now. Please try again.
+                    </span>
+                  )}
+                </div>
+              )}
           </>
         ) : (
           <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -388,9 +1115,10 @@ export default function BillboardCampaignCTA({
       <button
         type="button"
         disabled={
-          !available ||
+          availabilityChecking ||
+          !effectiveAvailable ||
           !startDate ||
-          !changeoverDate ||
+          !packageChangeoverDate ||
           (
             packages.length > 0 &&
             !selectedPackage
@@ -401,15 +1129,19 @@ export default function BillboardCampaignCTA({
         }
         className="mt-5 w-full rounded-xl bg-orange-500 px-5 py-4 font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
       >
-        {available
-          ? "Start Campaign"
-          : "Currently Unavailable"}
+        {availabilityChecking
+          ? "Checking Package Availability..."
+          : effectiveAvailable
+            ? "Start Campaign"
+            : isStatic
+              ? "Unavailable for Selected Package"
+              : "Currently Unavailable"}
       </button>
 
       {!startDate ||
-      !changeoverDate ? (
+      !packageChangeoverDate ? (
         <p className="mt-3 text-center text-xs text-slate-400">
-          Choose campaign dates from the homepage first.
+          Choose a campaign start date from the homepage first.
         </p>
       ) : null}
 
@@ -431,7 +1163,7 @@ export default function BillboardCampaignCTA({
             startDate
           }
           changeoverDate={
-            changeoverDate
+            packageChangeoverDate
           }
 
           selectedPackageId={

@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 import BillboardCampaignCTA from "@/components/BillboardCampaignCTA";
+import CompactAvailabilitySearch from "@/components/CompactAvailabilitySearch";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 type BillboardPageProps = {
   params: Promise<{
@@ -59,6 +63,108 @@ function createPublicServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   );
+}
+
+
+export async function generateMetadata({
+  params,
+}: Pick<
+  BillboardPageProps,
+  "params"
+>): Promise<Metadata> {
+  const { id } = await params;
+
+  const supabase =
+    createPublicServerClient();
+
+  const {
+    data: billboardRows,
+  } =
+    await supabase.rpc(
+      "get_public_billboard_details",
+      {
+        p_billboard_id:
+          id,
+      }
+    );
+
+  if (
+    !billboardRows ||
+    billboardRows.length ===
+      0
+  ) {
+    return {
+      title:
+        "Billboard Advertising",
+      description:
+        "Explore billboard advertising opportunities with Ernest Rentals in Saint Lucia.",
+      robots: {
+        index: false,
+        follow: true,
+      },
+    };
+  }
+
+  const billboard =
+    billboardRows[0] as BillboardDetails;
+
+  const typeLabel =
+    billboard.billboard_type ===
+    "digital"
+      ? "Digital Billboard"
+      : "Static Billboard";
+
+  const place =
+    billboard.location ||
+    "Saint Lucia";
+
+  const title =
+    `${billboard.billboard_name} - ${typeLabel}`;
+
+  const description =
+    `View ${billboard.billboard_name} in ${place}. Check availability, billboard details and advertising packages, then start your campaign with Ernest Rentals.`;
+
+  return {
+    title,
+
+    description,
+
+    alternates: {
+      canonical:
+        `/billboards/${billboard.billboard_id}`,
+    },
+
+    openGraph: {
+      title:
+        `${title} | Ernest Rentals`,
+
+      description,
+
+      url:
+        `/billboards/${billboard.billboard_id}`,
+
+      type:
+        "website",
+
+      images: billboard.image_url
+        ? [
+            {
+              url:
+                billboard.image_url,
+              alt:
+                billboard.billboard_name,
+            },
+          ]
+        : [
+            {
+              url:
+                "/ernest-rentals-logo.png",
+              alt:
+                "Ernest Rentals",
+            },
+          ],
+    },
+  };
 }
 
 export default async function BillboardPage({
@@ -209,38 +315,7 @@ export default async function BillboardPage({
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
 
-      {/* HEADER */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-          >
-            <img
-              src="/ernest-rentals-logo.png"
-              alt="Ernest Rentals"
-              className="h-10 w-10 object-contain"
-            />
-
-            <div>
-              <p className="font-extrabold">
-                ERNEST RENTALS
-              </p>
-
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Outdoor Advertising
-              </p>
-            </div>
-          </Link>
-
-          <Link
-            href="/#availability"
-            className="rounded-xl bg-[#071226] px-5 py-3 text-sm font-bold text-white transition hover:bg-orange-600"
-          >
-            Check Availability
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* CONTENT */}
       <section className="px-5 py-10 lg:px-8">
@@ -252,6 +327,19 @@ export default async function BillboardPage({
           >
             ← Back to availability
           </Link>
+
+          <div className="mt-5">
+            <CompactAvailabilitySearch
+              initialLocation=""
+              initialBillboardType=""
+              initialStartDate={
+                startDate
+              }
+              initialChangeoverDate={
+                changeoverDate
+              }
+            />
+          </div>
 
           <div className="mt-6 grid gap-8 lg:grid-cols-[1.35fr_.65fr]">
 
@@ -613,7 +701,7 @@ export default async function BillboardPage({
 
             {/* RIGHT SIDE */}
             <aside>
-              <div className="sticky top-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+              <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
 
                 <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
                   Campaign Availability
@@ -663,7 +751,7 @@ export default async function BillboardPage({
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
-                    Choose campaign dates from the homepage to see live availability.
+                    Choose campaign dates in the search bar above to see live availability.
                   </div>
                 )}
 
@@ -766,13 +854,14 @@ export default async function BillboardPage({
 
                 <p className="mt-4 text-center text-xs leading-5 text-slate-400">
                   Submitting a request does not immediately reserve the billboard.
-                  Ernest Rentals will confirm availability, pricing and next steps.
+                  Ernest Rentals will confirm availability, package details and next steps.
                 </p>
               </div>
             </aside>
           </div>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

@@ -65,6 +65,32 @@ function titleCase(
     );
 }
 
+function formatScheduleDate(
+  value: string
+) {
+  if (!value) {
+    return "—";
+  }
+
+  try {
+    return new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }
+    ).format(
+      new Date(
+        `${value}T00:00:00Z`
+      )
+    );
+  } catch {
+    return value;
+  }
+}
+
 export default function StartCampaignForm({
   billboardId,
   billboardName,
@@ -176,6 +202,14 @@ export default function StartCampaignForm({
       selectedPackageName
     );
 
+  const isStatic =
+    billboardType ===
+    "static";
+
+  const staticPackageRequired =
+    isStatic &&
+    !hasSelectedPackage;
+
   const selectedPackageSummary =
     useMemo(() => {
       if (
@@ -244,6 +278,42 @@ export default function StartCampaignForm({
     event.preventDefault();
 
     setErrorMessage("");
+
+    if (
+      !startDate ||
+      !changeoverDate ||
+      changeoverDate <=
+        startDate
+    ) {
+      setErrorMessage(
+        "The campaign schedule is invalid. Please return to the billboard page and choose the dates again."
+      );
+
+      return;
+    }
+
+    if (
+      staticPackageRequired
+    ) {
+      setErrorMessage(
+        "Static billboards require a 3, 6 or 12-month rental package. Please choose a package from the billboard details page before submitting your request."
+      );
+
+      return;
+    }
+
+    if (
+      isStatic &&
+      selectedPackageType &&
+      selectedPackageType !==
+        "static"
+    ) {
+      setErrorMessage(
+        "The selected package does not match this static billboard."
+      );
+
+      return;
+    }
 
     if (
       !contactPerson.trim()
@@ -367,11 +437,45 @@ export default function StartCampaignForm({
           </h2>
 
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
-            Thank you. Your request has been sent to Ernest Rentals. A representative will contact you shortly to review availability, pricing and next steps.
+            Thank you. Your request has been sent to Ernest Rentals with the selected billboard, package and campaign schedule. A representative will contact you shortly to confirm the next steps.
           </p>
 
+          <div className="mx-auto mt-5 max-w-md rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Requested Schedule
+            </p>
+
+            <div className="mt-3 grid grid-cols-2 gap-3 text-left">
+              <div>
+                <p className="text-xs text-slate-400">
+                  Start
+                </p>
+
+                <p className="mt-1 font-bold text-slate-900">
+                  {formatScheduleDate(
+                    startDate
+                  )}{" "}
+                  · 9:00 AM
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400">
+                  Changeover
+                </p>
+
+                <p className="mt-1 font-bold text-slate-900">
+                  {formatScheduleDate(
+                    changeoverDate
+                  )}{" "}
+                  · 9:00 AM
+                </p>
+              </div>
+            </div>
+          </div>
+
           {selectedPackageName && (
-            <div className="mx-auto mt-5 max-w-md rounded-2xl bg-slate-50 p-4">
+            <div className="mx-auto mt-4 max-w-md rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 Requested Package
               </p>
@@ -459,9 +563,24 @@ export default function StartCampaignForm({
           {/* SCHEDULE */}
           <div className="rounded-2xl bg-slate-50 p-5">
 
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Requested Schedule
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                {isStatic &&
+                hasSelectedPackage
+                  ? "Package Schedule"
+                  : "Requested Schedule"}
+              </p>
+
+              {isStatic &&
+                hasSelectedPackage &&
+                selectedPackageDurationLabel && (
+                  <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-orange-700">
+                    {
+                      selectedPackageDurationLabel
+                    } rental
+                  </span>
+                )}
+            </div>
 
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
 
@@ -471,7 +590,10 @@ export default function StartCampaignForm({
                 </p>
 
                 <p className="mt-1 font-bold text-slate-800">
-                  {startDate} • 9:00 AM
+                  {formatScheduleDate(
+                    startDate
+                  )}{" "}
+                  • 9:00 AM
                 </p>
               </div>
 
@@ -481,11 +603,38 @@ export default function StartCampaignForm({
                 </p>
 
                 <p className="mt-1 font-bold text-slate-800">
-                  {changeoverDate} • 9:00 AM
+                  {formatScheduleDate(
+                    changeoverDate
+                  )}{" "}
+                  • 9:00 AM
                 </p>
               </div>
             </div>
+
+            {isStatic &&
+              hasSelectedPackage && (
+                <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
+                  The changeover date shown above is based on the selected static billboard rental package, not the shorter date range originally used to search.
+                </p>
+              )}
           </div>
+
+          {/* STATIC PACKAGE REQUIRED */}
+          {staticPackageRequired && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-amber-700">
+                Rental Package Required
+              </p>
+
+              <p className="mt-2 font-black text-[#071226]">
+                Static billboards require a 3, 6 or 12-month rental package.
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-amber-800">
+                Close this form, open the billboard details page and choose the rental package you want. The correct changeover date will then be calculated automatically.
+              </p>
+            </div>
+          )}
 
           {/* SELECTED PACKAGE */}
           {hasSelectedPackage && (
@@ -815,13 +964,16 @@ export default function StartCampaignForm({
             <button
               type="submit"
               disabled={
-                loading
+                loading ||
+                staticPackageRequired
               }
-              className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600 disabled:opacity-60"
+              className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100"
             >
               {loading
                 ? "Submitting..."
-                : "Submit Campaign Request"}
+                : staticPackageRequired
+                  ? "Choose Rental Package First"
+                  : "Submit Campaign Request"}
             </button>
           </div>
         </form>
