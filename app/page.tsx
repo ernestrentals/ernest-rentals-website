@@ -1,39 +1,39 @@
-import AvailabilitySearch from "@/components/AvailabilitySearch";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import Link from "next/link";
 
-const locations = [
+import AvailabilitySearch from "@/components/AvailabilitySearch";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
+
+const locationCards = [
   {
-    city: "Castries",
-    name: "Massy Building",
-    type: "Digital",
-    size: "20 × 10 ft",
-    status: "Available",
-    accent: "from-orange-500 to-red-500",
+    name: "Dennery",
+    subtitle: "Anse Canot & Dennery Valley",
+    href: "/?location=Dennery#availability",
   },
   {
-    city: "Dennery",
-    name: "Richfond",
-    type: "Static",
-    size: "10 × 20 ft",
-    status: "Available",
-    accent: "from-sky-500 to-blue-600",
-  },
-  {
-    city: "Micoud",
-    name: "Praslin",
-    type: "Static",
-    size: "8 × 20 ft",
-    status: "Available",
-    accent: "from-orange-400 to-orange-600",
-  },
-  {
-    city: "Micoud",
     name: "Mamiku",
-    type: "Static",
-    size: "8 × 20 ft",
-    status: "Limited",
-    accent: "from-sky-400 to-cyan-500",
+    subtitle: "Micoud",
+    href: "/?location=Mamiku#availability",
+  },
+  {
+    name: "Mon Repos",
+    subtitle: "Micoud",
+    href: "/?location=Mon%20Repos#availability",
+  },
+  {
+    name: "Praslin",
+    subtitle: "Micoud",
+    href: "/?location=Praslin#availability",
+  },
+  {
+    name: "Piaye",
+    subtitle: "Choiseul",
+    href: "/?location=Piaye#availability",
+  },
+  {
+    name: "Richford",
+    subtitle: "Dennery Valley",
+    href: "/?location=Richford#availability",
   },
 ];
 
@@ -44,248 +44,515 @@ export default function Home() {
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#071226] text-white">
-        <div className="absolute inset-0 opacity-25">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-orange-500 blur-3xl" />
-          <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-sky-500 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-orange-500/25 blur-3xl" />
+          <div className="absolute right-0 top-0 h-[28rem] w-[28rem] rounded-full bg-sky-500/20 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#020817]/60 to-transparent" />
         </div>
 
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-28">
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-24">
           <div className="flex flex-col justify-center">
-            <p className="mb-4 text-sm font-extrabold uppercase tracking-[0.2em] text-orange-400">
-              Saint Lucia Outdoor Advertising
-            </p>
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-orange-400" />
+              <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-200">
+                Saint Lucia Outdoor Advertising
+              </span>
+            </div>
 
-            <h1 className="max-w-3xl text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl">
-              Put your brand
+            <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Find the right billboard.
               <span className="block bg-gradient-to-r from-orange-400 via-orange-500 to-sky-400 bg-clip-text text-transparent">
-                in plain sight.
+                Get your brand seen.
               </span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Discover high-visibility static and digital billboard opportunities
-              across Saint Lucia. Check availability, compare locations and start
-              your campaign request online.
+              Search static and digital billboard opportunities across Saint Lucia,
+              compare locations and packages, and start your campaign request online.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="#availability"
-                className="rounded-xl bg-orange-500 px-6 py-3.5 font-bold text-white transition hover:bg-orange-600"
+              <Link
+                href="/#availability"
+                className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
               >
-                Find Available Billboards
-              </a>
+                Search Billboards
+              </Link>
 
-              <a
-                href="#how-it-works"
-                className="rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 font-bold text-white transition hover:bg-white/10"
+              <Link
+                href="/how-it-works"
+                className="rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
               >
                 How It Works
-              </a>
+              </Link>
             </div>
 
-            <div className="mt-10 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/10 pt-6">
+            <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3 border-t border-white/10 pt-6">
               <div>
-                <p className="text-2xl font-black">Static</p>
-                <p className="mt-1 text-sm text-slate-400">Premium roadside sites</p>
+                <p className="text-xl font-black sm:text-2xl">
+                  Static
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
+                  3, 6 & 12-month rentals
+                </p>
               </div>
+
               <div>
-                <p className="text-2xl font-black">Digital</p>
-                <p className="mt-1 text-sm text-slate-400">10s & 15s advertising</p>
+                <p className="text-xl font-black sm:text-2xl">
+                  Digital
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
+                  10s & 15s ad slots
+                </p>
               </div>
+
               <div>
-                <p className="text-2xl font-black">Islandwide</p>
-                <p className="mt-1 text-sm text-slate-400">High-traffic locations</p>
+                <p className="text-xl font-black sm:text-2xl">
+                  Live
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
+                  Availability by date
+                </p>
               </div>
             </div>
           </div>
 
-          {/* BILLBOARD VISUAL */}
-          <div className="flex items-center justify-center">
-            <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl">
-              <div className="rounded-[1.5rem] bg-gradient-to-br from-orange-400 via-orange-500 to-sky-500 p-[2px]">
-                <div className="rounded-[1.4rem] bg-[#020817] p-8">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src="/ernest-rentals-logo.png"
-                      alt=""
-                      className="h-16 w-16 object-contain"
-                    />
-                    <div>
-                      <p className="text-2xl font-black">ERNEST RENTALS</p>
-                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-                        Own the visibility. Own the location.
+          {/* HERO VISUAL */}
+          <div className="flex items-center justify-center lg:justify-end">
+            <div className="relative w-full max-w-xl">
+              <div className="absolute -inset-4 rounded-[2.25rem] bg-gradient-to-br from-orange-500/20 to-sky-500/20 blur-2xl" />
+
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur">
+                <div className="rounded-[1.5rem] bg-gradient-to-br from-orange-400 via-orange-500 to-sky-500 p-[2px]">
+                  <div className="rounded-[1.4rem] bg-[#020817] p-7 sm:p-9">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="/ernest-rentals-logo.png"
+                        alt="Ernest Rentals"
+                        className="h-14 w-14 object-contain"
+                      />
+
+                      <div>
+                        <p className="text-xl font-black sm:text-2xl">
+                          ERNEST RENTALS
+                        </p>
+
+                        <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Outdoor Advertising
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+                      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                        Your Brand Here
+                      </p>
+
+                      <p className="mt-3 text-3xl font-black leading-tight sm:text-4xl">
+                        Own the Visibility.
+                        <span className="block text-sky-400">
+                          Own the Location.
+                        </span>
                       </p>
                     </div>
                   </div>
-
-                  <div className="mt-12">
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-orange-400">
-                      Your brand belongs here
-                    </p>
-                    <p className="mt-3 text-4xl font-black leading-tight">
-                      Big brands go further.
-                    </p>
-                  </div>
                 </div>
-              </div>
 
-              <div className="mx-auto h-20 w-6 bg-slate-700" />
-              <div className="mx-auto h-4 w-48 rounded-full bg-slate-700" />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* AVAILABILITY SEARCH */}
+      {/* LIVE SEARCH */}
       <AvailabilitySearch />
 
-      {/* BENEFITS */}
-      <section className="px-5 py-12 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* QUICK VALUE */}
+      <section className="px-5 py-10 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
-            ["Premium Locations", "High-visibility advertising sites"],
-            ["Static + Digital", "Options for every campaign"],
-            ["Flexible Campaigns", "Weekly to annual advertising"],
-            ["Local Support", "Managed right here in Saint Lucia"],
+            [
+              "Live Inventory",
+              "Search your preferred dates and see what is actually available.",
+            ],
+            [
+              "Clear Packages",
+              "Compare static rental periods and digital advertising options.",
+            ],
+            [
+              "Simple Request",
+              "Choose a billboard and send your campaign details online.",
+            ],
           ].map(([title, body]) => (
-            <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 h-1 w-12 rounded-full bg-gradient-to-r from-orange-500 to-sky-500" />
-              <p className="font-bold">{title}</p>
-              <p className="mt-1 text-sm text-slate-500">{body}</p>
+            <div
+              key={title}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <div className="h-1 w-10 rounded-full bg-gradient-to-r from-orange-500 to-sky-500" />
+
+              <p className="mt-4 text-lg font-black">
+                {title}
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {body}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* FEATURED LOCATIONS */}
-      <section id="locations" className="px-5 py-16 lg:px-8">
+      {/* FORMAT CHOICE */}
+      <section
+        id="billboards"
+        className="px-5 py-20 lg:px-8"
+      >
         <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
+          <div className="grid items-end gap-6 lg:grid-cols-[1fr_auto]">
+            <div className="max-w-3xl">
               <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
-                Explore
+                Choose Your Format
               </p>
-              <h2 className="mt-2 text-4xl font-black tracking-tight">Featured Locations</h2>
-              <p className="mt-2 text-slate-500">High-traffic advertising opportunities across Saint Lucia.</p>
+
+              <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+                Two ways to own the road.
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">
+                Choose long-term static visibility or flexible digital campaigns.
+                Both are designed to keep your brand in front of the right audience.
+              </p>
             </div>
 
-            <a href="/locations" className="font-bold text-sky-600">View all locations →</a>
+            <Link
+              href="/billboards"
+              className="hidden rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600 lg:inline-flex"
+            >
+              Compare all options →
+            </Link>
           </div>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {locations.map((item) => (
-              <a
-                href={`/locations`}
-                key={`${item.city}-${item.name}`}
-                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className={`h-44 bg-gradient-to-br ${item.accent} p-5`}>
-                  <div className="flex h-full items-end rounded-xl border border-white/20 bg-[#071226]/85 p-5 text-white">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-orange-300">Your Brand Here</p>
-                      <p className="mt-2 text-2xl font-black">ERNEST RENTALS</p>
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
+            {/* STATIC */}
+            <article className="group relative overflow-hidden rounded-[2rem] bg-[#071226] p-8 text-white shadow-[0_20px_60px_rgba(7,18,38,0.18)] lg:p-10">
+              <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full border border-white/10" />
+              <div className="absolute right-8 top-10 h-28 w-28 rounded-full border border-white/10" />
+
+              <div className="relative">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="rounded-full bg-orange-500/15 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-orange-300">
+                    Static Billboards
+                  </span>
+
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+                    3 / 6 / 12 Months
+                  </span>
+                </div>
+
+                <div className="mt-10 grid items-end gap-8 sm:grid-cols-[1fr_180px]">
+                  <div>
+                    <h3 className="text-4xl font-black leading-[1.05] sm:text-5xl">
+                      Consistent roadside
+                      <span className="block text-orange-400">
+                        visibility.
+                      </span>
+                    </h3>
+
+                    <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
+                      Best for brands that want uninterrupted presence in one
+                      high-visibility location over a longer campaign period.
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-slate-300">
+                      <span className="rounded-full bg-white/5 px-3 py-2">
+                        Fixed location
+                      </span>
+                      <span className="rounded-full bg-white/5 px-3 py-2">
+                        Long-term exposure
+                      </span>
+                      <span className="rounded-full bg-white/5 px-3 py-2">
+                        Roadside impact
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="rounded-xl bg-gradient-to-br from-orange-500 to-orange-300 p-[2px]">
+                        <div className="rounded-[10px] bg-[#020817] p-4 text-center">
+                          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
+                            Your Brand
+                          </p>
+                          <p className="mt-3 text-lg font-black">
+                            HERE
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mx-auto h-8 w-2 bg-slate-600" />
+                      <div className="mx-auto h-2 w-20 rounded-full bg-slate-600" />
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-bold">{item.city}</p>
-                      <p className="text-sm text-slate-500">{item.name}</p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/?type=static#availability"
+                    className="rounded-xl bg-orange-500 px-5 py-3 font-extrabold text-white transition hover:bg-orange-600"
+                  >
+                    Search Static Billboards
+                  </Link>
+
+                  <Link
+                    href="/billboards"
+                    className="rounded-xl border border-white/15 px-5 py-3 font-extrabold text-white transition hover:bg-white/10"
+                  >
+                    Learn More
+                  </Link>
+                </div>
+              </div>
+            </article>
+
+            {/* DIGITAL */}
+            <article
+              id="digital"
+              className="group relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-orange-400 via-orange-500 to-[#ff6a00] p-8 text-[#071226] shadow-[0_20px_60px_rgba(245,130,32,0.18)] lg:p-10"
+            >
+              <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full border border-[#071226]/10" />
+              <div className="absolute right-8 top-10 h-28 w-28 rounded-full border border-[#071226]/10" />
+
+              <div className="relative">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="rounded-full bg-white/50 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em]">
+                    Digital Advertising
+                  </span>
+
+                  <span className="rounded-full border border-[#071226]/10 bg-white/30 px-3 py-1.5 text-xs font-black">
+                    10s & 15s Slots
+                  </span>
+                </div>
+
+                <div className="mt-10 grid items-end gap-8 sm:grid-cols-[1fr_180px]">
+                  <div>
+                    <h3 className="text-4xl font-black leading-[1.05] sm:text-5xl">
+                      Flexible, dynamic
+                      <span className="block text-white">
+                        advertising.
+                      </span>
+                    </h3>
+
+                    <p className="mt-5 max-w-lg text-sm leading-7 text-[#071226]/75 sm:text-base">
+                      Ideal for brands that want rotating messages, shorter campaign
+                      commitments and more creative flexibility.
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-2 text-xs font-black text-[#071226]/75">
+                      <span className="rounded-full bg-white/35 px-3 py-2">
+                        Rotating ads
+                      </span>
+                      <span className="rounded-full bg-white/35 px-3 py-2">
+                        10s & 15s slots
+                      </span>
+                      <span className="rounded-full bg-white/35 px-3 py-2">
+                        Flexible campaigns
+                      </span>
                     </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                      {item.status}
-                    </span>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-                    <span className="font-semibold text-slate-600">{item.type}</span>
-                    <span className="text-slate-400">{item.size}</span>
+                  <div className="hidden sm:block">
+                    <div className="rounded-2xl border border-[#071226]/10 bg-white/20 p-4">
+                      <div className="rounded-xl bg-[#071226] p-4 text-center text-white shadow-lg">
+                        <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
+                          Now Showing
+                        </p>
+                        <p className="mt-3 text-lg font-black">
+                          YOUR AD
+                        </p>
+                        <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-orange-400" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </a>
-            ))}
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/?type=digital#availability"
+                    className="rounded-xl bg-[#071226] px-5 py-3 font-extrabold text-white transition hover:bg-[#0b1a36]"
+                  >
+                    Search Digital Screens
+                  </Link>
+
+                  <Link
+                    href="/digital-screens"
+                    className="rounded-xl border border-[#071226]/15 bg-white/20 px-5 py-3 font-extrabold transition hover:bg-white/35"
+                  >
+                    Learn More
+                  </Link>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* STATIC / DIGITAL */}
-      <section id="billboards" className="px-5 py-16 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-3xl bg-[#071226] p-8 text-white lg:p-10">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">Static Billboards</p>
-            <h3 className="mt-3 text-4xl font-black">Make a lasting impression.</h3>
-            <p className="mt-4 max-w-xl leading-7 text-slate-300">
-              High-impact static billboard locations for businesses that want consistent visibility every day.
-            </p>
-            <a href="/billboards" className="mt-8 inline-block rounded-xl border border-orange-400 px-5 py-3 font-bold text-orange-300">
-              View Static Billboards →
-            </a>
-          </div>
+      {/* LOCATIONS */}
+      <section
+        id="locations"
+        className="bg-white px-5 py-16 lg:px-8"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-2xl">
+              <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">
+                Explore Saint Lucia
+              </p>
 
-          <div id="digital" className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 p-8 text-[#071226] lg:p-10">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em]">Digital Advertising</p>
-            <h3 className="mt-3 text-4xl font-black">Dynamic ads. Real visibility.</h3>
-            <p className="mt-4 max-w-xl leading-7 text-[#071226]/75">
-              Promote your business using vibrant 10-second and premium 15-second digital advertising packages.
-            </p>
+              <h2 className="mt-2 text-4xl font-black tracking-tight">
+                Browse by location.
+              </h2>
 
-            <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold">
-              <span className="rounded-full bg-white/70 px-4 py-2">10-Second Standard</span>
-              <span className="rounded-full bg-white/70 px-4 py-2">15-Second Premium</span>
+              <p className="mt-3 leading-7 text-slate-500">
+                Jump directly into the billboard search for one of our advertising areas.
+              </p>
             </div>
 
-            <a href="/digital-screens" className="mt-8 inline-block rounded-xl bg-[#071226] px-5 py-3 font-bold text-white">
-              View Digital Advertising →
-            </a>
+            <Link
+              href="/locations"
+              className="font-extrabold text-sky-600 transition hover:text-orange-600"
+            >
+              View all locations →
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {locationCards.map((item, index) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="group flex min-h-40 flex-col justify-between overflow-hidden rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 transition hover:-translate-y-1 hover:border-orange-200 hover:bg-white hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                    Location {String(index + 1).padStart(2, "0")}
+                  </span>
+
+                  <span className="text-slate-300 transition group-hover:text-orange-500">
+                    ↗
+                  </span>
+                </div>
+
+                <div className="mt-8">
+                  <p className="text-2xl font-black">
+                    {item.name}
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-slate-500">
+                    {item.subtitle}
+                  </p>
+
+                  <p className="mt-4 text-xs font-bold uppercase tracking-wide text-orange-500 opacity-0 transition group-hover:opacity-100">
+                    Search this area
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="bg-white px-5 py-20 lg:px-8">
+      <section
+        id="how-it-works"
+        className="px-5 py-16 lg:px-8"
+      >
         <div className="mx-auto max-w-7xl">
           <div className="max-w-2xl">
-            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
               Simple Process
             </p>
-            <h2 className="mt-2 text-4xl font-black tracking-tight">From search to campaign launch.</h2>
+
+            <h2 className="mt-2 text-4xl font-black tracking-tight">
+              From search to campaign request.
+            </h2>
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ["01", "Find a Billboard", "Browse locations and choose static or digital advertising."],
-              ["02", "Search Billboards", "Select your dates and see advertising options."],
-              ["03", "Start Your Campaign", "Send us your company and campaign information."],
-              ["04", "We Confirm & Launch", "Our team reviews, confirms and prepares your campaign."],
+              [
+                "01",
+                "Search",
+                "Choose a location, billboard type and campaign dates.",
+              ],
+              [
+                "02",
+                "Compare",
+                "Review live availability, billboard details and packages.",
+              ],
+              [
+                "03",
+                "Request",
+                "Send your contact and campaign information online.",
+              ],
+              [
+                "04",
+                "Confirm",
+                "Ernest Rentals reviews the request and coordinates next steps.",
+              ],
             ].map(([number, title, body]) => (
-              <div key={number} className="rounded-2xl border border-slate-200 p-6">
-                <p className="text-3xl font-black text-orange-500">{number}</p>
-                <p className="mt-5 text-xl font-bold">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{body}</p>
+              <div
+                key={number}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <p className="text-sm font-black text-orange-500">
+                  {number}
+                </p>
+
+                <p className="mt-5 text-xl font-black">
+                  {title}
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {body}
+                </p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-6">
+            <Link
+              href="/how-it-works"
+              className="font-extrabold text-sky-600 transition hover:text-orange-600"
+            >
+              See the full process →
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-5 py-16 lg:px-8">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#071226] px-8 py-12 text-white lg:px-12">
+      {/* FINAL CTA */}
+      <section className="px-5 pb-16 lg:px-8">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#071226] px-7 py-10 text-white sm:px-10 lg:px-12">
           <div className="flex flex-wrap items-center justify-between gap-8">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-400">Ready to be seen?</p>
-              <h2 className="mt-2 text-4xl font-black">Start your next billboard campaign.</h2>
-              <p className="mt-3 max-w-2xl text-slate-300">
-                Tell us where and when you want to advertise. We’ll help you find the best available option.
+              <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                Ready to be seen?
+              </p>
+
+              <h2 className="mt-2 max-w-2xl text-3xl font-black sm:text-4xl">
+                Start with the billboard that fits your campaign.
+              </h2>
+
+              <p className="mt-3 max-w-2xl leading-7 text-slate-300">
+                Search the available inventory and choose the location, dates and
+                package that work for your brand.
               </p>
             </div>
 
-            <a href="#availability" className="rounded-xl bg-orange-500 px-6 py-4 font-bold text-white">
+            <Link
+              href="/#availability"
+              className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+            >
               Search Billboards
-            </a>
+            </Link>
           </div>
         </div>
       </section>
