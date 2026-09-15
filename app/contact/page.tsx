@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
 };
 
+const whatsappUrl =
+  "https://wa.me/17587133701?text=Hi%20Ernest%20Rentals%2C%20I%27m%20interested%20in%20billboard%20advertising%20in%20Saint%20Lucia.";
+
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
@@ -60,6 +63,33 @@ export default function ContactPage() {
               <p className="mt-2 text-sm text-slate-500">
                 Tap to call Ernest Rentals.
               </p>
+            </a>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-emerald-600">
+                    WhatsApp
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-[#071226]">
+                    758-713-3701
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-500">
+                    Chat with Ernest Rentals about locations, packages and availability.
+                  </p>
+                </div>
+
+                <span className="shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white">
+                  CHAT
+                </span>
+              </div>
             </a>
 
             <a
@@ -115,6 +145,15 @@ export default function ContactPage() {
               >
                 Search Billboards
               </Link>
+
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl bg-emerald-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-emerald-700"
+              >
+                Chat on WhatsApp
+              </a>
 
               <Link
                 href="/how-it-works"
