@@ -91,6 +91,48 @@ function formatScheduleDate(
   }
 }
 
+function saintLuciaTodayString() {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/St_Lucia",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const year =
+    parts.find(
+      (part) =>
+        part.type ===
+        "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (part) =>
+        part.type ===
+        "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (part) =>
+        part.type ===
+        "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
 export default function StartCampaignForm({
   billboardId,
   billboardName,
@@ -117,6 +159,9 @@ export default function StartCampaignForm({
         createBrowserClient(),
       []
     );
+
+  const today =
+    saintLuciaTodayString();
 
   const [
     companyName,
@@ -287,6 +332,17 @@ export default function StartCampaignForm({
     ) {
       setErrorMessage(
         "The campaign schedule is invalid. Please return to the billboard page and choose the dates again."
+      );
+
+      return;
+    }
+
+    if (
+      startDate <
+      today
+    ) {
+      setErrorMessage(
+        "The advertising start date cannot be before today. Please return to the billboard page and choose today or a future start date."
       );
 
       return;
@@ -514,11 +570,11 @@ export default function StartCampaignForm({
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#020817]/75 px-4 pb-8 pt-28 backdrop-blur-sm md:pt-32">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-hidden bg-[#020817]/75 px-4 pb-6 pt-28 backdrop-blur-sm md:pt-32">
 
-      <div className="mx-auto w-full max-w-3xl rounded-3xl bg-white shadow-2xl">
+      <div className="mx-auto flex max-h-[calc(100dvh-8rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl md:max-h-[calc(100dvh-9rem)]">
 
-        <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-6">
+        <div className="shrink-0 flex items-start justify-between gap-5 border-b border-slate-200 bg-white p-6">
 
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
@@ -557,7 +613,7 @@ export default function StartCampaignForm({
           onSubmit={
             handleSubmit
           }
-          className="p-6"
+          className="min-h-0 flex-1 overflow-y-auto p-6"
         >
 
           {/* SCHEDULE */}
@@ -616,6 +672,13 @@ export default function StartCampaignForm({
                 <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
                   The changeover date shown above is based on the selected static billboard rental package, not the shorter date range originally used to search.
                 </p>
+              )}
+
+            {startDate &&
+              startDate < today && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  This advertising start date is in the past. Close this form and choose today or a future date.
+                </div>
               )}
           </div>
 
@@ -965,7 +1028,9 @@ export default function StartCampaignForm({
               type="submit"
               disabled={
                 loading ||
-                staticPackageRequired
+                staticPackageRequired ||
+                !startDate ||
+                startDate < today
               }
               className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100"
             >

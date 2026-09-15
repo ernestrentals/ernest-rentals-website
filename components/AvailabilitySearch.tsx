@@ -101,11 +101,56 @@ function formatSize(
   return `${width} × ${height} ft`;
 }
 
+function saintLuciaTodayString() {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/St_Lucia",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const year =
+    parts.find(
+      (part) =>
+        part.type ===
+        "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (part) =>
+        part.type ===
+        "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (part) =>
+        part.type ===
+        "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
 export default function AvailabilitySearch() {
   const supabase = useMemo(
     () => createBrowserClient(),
     []
   );
+
+  const today =
+    saintLuciaTodayString();
 
   const [location, setLocation] =
     useState("");
@@ -238,28 +283,85 @@ export default function AvailabilitySearch() {
         );
       }
 
+      const resolvedStart =
+        urlStart &&
+        urlStart < today
+          ? today
+          : urlStart;
+
       if (
-        urlStart
+        resolvedStart
       ) {
         setStartDate(
-          urlStart
+          resolvedStart
         );
       }
 
       if (
-        urlEnd
+        urlEnd &&
+        resolvedStart &&
+        urlEnd >
+          resolvedStart
       ) {
         setEndDate(
           urlEnd
         );
+      } else if (
+        urlEnd
+      ) {
+        setEndDate(
+          ""
+        );
       }
 
       if (
-        !urlStart ||
-        !urlEnd ||
-        urlEnd <=
+        urlStart &&
+        resolvedStart !==
           urlStart
       ) {
+        params.set(
+          "start",
+          resolvedStart
+        );
+
+        if (
+          urlEnd <=
+          resolvedStart
+        ) {
+          params.delete(
+            "end"
+          );
+        }
+
+        const query =
+          params.toString();
+
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${
+            query
+              ? `?${query}`
+              : ""
+          }${window.location.hash}`
+        );
+      }
+
+      if (
+        !resolvedStart ||
+        !urlEnd ||
+        urlEnd <=
+          resolvedStart
+      ) {
+        if (
+          urlStart &&
+          urlStart < today
+        ) {
+          setErrorMessage(
+            "Past advertising dates are not available. Please choose today or a future start date."
+          );
+        }
+
         return;
       }
 
@@ -287,7 +389,7 @@ export default function AvailabilitySearch() {
           "search_public_billboard_availability",
           {
             p_start_date:
-              urlStart,
+              resolvedStart,
 
             p_end_date:
               urlEnd,
@@ -365,6 +467,7 @@ export default function AvailabilitySearch() {
     };
   }, [
     supabase,
+    today,
   ]);
 
   async function handleSearch(
@@ -380,6 +483,17 @@ export default function AvailabilitySearch() {
     if (!startDate || !endDate) {
       setErrorMessage(
         "Please select a start date and changeover date."
+      );
+
+      return;
+    }
+
+    if (
+      startDate <
+      today
+    ) {
+      setErrorMessage(
+        "The advertising start date cannot be before today."
       );
 
       return;
@@ -539,11 +653,25 @@ export default function AvailabilitySearch() {
               <input
                 type="date"
                 value={startDate}
-                onChange={(event) =>
+                min={today}
+                onChange={(event) => {
+                  const nextStart =
+                    event.target.value;
+
                   setStartDate(
-                    event.target.value
-                  )
-                }
+                    nextStart
+                  );
+
+                  if (
+                    endDate &&
+                    endDate <=
+                      nextStart
+                  ) {
+                    setEndDate(
+                      ""
+                    );
+                  }
+                }}
                 required
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-orange-400"
               />
