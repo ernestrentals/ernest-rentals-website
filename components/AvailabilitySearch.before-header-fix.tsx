@@ -434,7 +434,7 @@ export default function AvailabilitySearch() {
   return (
     <section
       id="availability"
-      className="relative z-20 -mt-8 scroll-mt-28 px-5 lg:px-8"
+      className="relative z-20 -mt-8 px-5 lg:px-8"
     >
       <div className="mx-auto max-w-[1500px]">
 

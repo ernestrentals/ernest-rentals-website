@@ -425,7 +425,7 @@ export default function StartCampaignForm({
 
   if (success) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#020817]/75 px-4 py-8 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#020817]/75 px-4 py-8 backdrop-blur-sm">
         <div className="w-full max-w-xl rounded-3xl bg-white p-8 text-center shadow-2xl">
 
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-700">
@@ -514,7 +514,7 @@ export default function StartCampaignForm({
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#020817]/75 px-4 py-8 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-[#020817]/75 px-4 py-8 backdrop-blur-sm">
 
       <div className="mx-auto w-full max-w-3xl rounded-3xl bg-white shadow-2xl">
 
