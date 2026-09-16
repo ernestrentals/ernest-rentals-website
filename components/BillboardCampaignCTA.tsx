@@ -33,39 +33,26 @@ type PublicAdPackage = {
   includes_ad_creation: boolean;
 };
 
-type DigitalAvailabilityResult = {
+type StaticBillboardPackage = {
+  package_id: string;
   billboard_id: string;
+  package_code: string;
+  package_name: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  duration_label: string | null;
+  price: number;
+  currency_code: string;
+};
+
+type AvailabilityResult = {
+  billboard_id: string;
+  available_static_faces: number;
   available_standard_slots: number;
   available_premium_slots: number;
   available_shoutout_slots: number;
+  availability_status: string;
 };
-
-type DigitalPackageType =
-  | "shoutout"
-  | "standard"
-  | "premium";
-
-const DIGITAL_PACKAGE_TYPES: {
-  value: DigitalPackageType;
-  label: string;
-  duration: string;
-}[] = [
-  {
-    value: "shoutout",
-    label: "Shoutout",
-    duration: "15 sec",
-  },
-  {
-    value: "standard",
-    label: "Standard",
-    duration: "10 sec",
-  },
-  {
-    value: "premium",
-    label: "Premium",
-    duration: "15 sec",
-  },
-];
 
 function formatMoney(
   value: number,
@@ -89,9 +76,7 @@ function formatMoney(
 function packageTypeLabel(
   packageType: string
 ) {
-  switch (
-    packageType.toLowerCase()
-  ) {
+  switch (packageType.toLowerCase()) {
     case "standard":
       return "Standard";
 
@@ -106,10 +91,7 @@ function packageTypeLabel(
 
     default:
       return packageType
-        .replaceAll(
-          "_",
-          " "
-        )
+        .replaceAll("_", " ")
         .replace(
           /\b\w/g,
           (letter) =>
@@ -156,225 +138,29 @@ function packageDescription(
   );
 }
 
-function normalizedPackageType(
-  adPackage: PublicAdPackage
+
+function padDatePart(
+  value: number
 ) {
-  return adPackage.package_type
-    .toLowerCase()
-    .trim();
+  return String(
+    value
+  ).padStart(
+    2,
+    "0"
+  );
 }
 
-function isAllowedDigitalPackage(
-  adPackage: PublicAdPackage
+function formatDateKey(
+  date: Date
 ) {
-  const packageType =
-    normalizedPackageType(
-      adPackage
-    );
-
-  const unit =
-    adPackage.duration_unit
-      ?.toLowerCase()
-      .trim() ?? "";
-
-  const value =
-    Number(
-      adPackage.duration_value ??
-        0
-    );
-
-  if (
-    packageType ===
-    "shoutout"
-  ) {
-    return (
-      unit === "day" &&
-      value === 1
-    );
-  }
-
-  if (
-    packageType ===
-      "standard" ||
-    packageType ===
-      "premium"
-  ) {
-    return (
-      (
-        unit === "week" &&
-        (
-          value === 1 ||
-          value === 4
-        )
-      ) ||
-      (
-        unit === "month" &&
-        (
-          value === 3 ||
-          value === 6 ||
-          value === 12
-        )
-      )
-    );
-  }
-
-  return false;
+  return `${date.getUTCFullYear()}-${padDatePart(
+    date.getUTCMonth() + 1
+  )}-${padDatePart(
+    date.getUTCDate()
+  )}`;
 }
 
-function digitalPackageSortOrder(
-  adPackage: PublicAdPackage
-) {
-  const packageType =
-    normalizedPackageType(
-      adPackage
-    );
-
-  if (
-    packageType ===
-    "shoutout"
-  ) {
-    return adPackage.includes_ad_creation
-      ? 2
-      : 1;
-  }
-
-  const unit =
-    adPackage.duration_unit
-      ?.toLowerCase()
-      .trim() ?? "";
-
-  const value =
-    Number(
-      adPackage.duration_value ??
-        0
-    );
-
-  if (
-    unit === "week" &&
-    value === 1
-  ) {
-    return 1;
-  }
-
-  if (
-    unit === "week" &&
-    value === 4
-  ) {
-    return 2;
-  }
-
-  if (
-    unit === "month" &&
-    value === 3
-  ) {
-    return 3;
-  }
-
-  if (
-    unit === "month" &&
-    value === 6
-  ) {
-    return 4;
-  }
-
-  if (
-    unit === "month" &&
-    value === 12
-  ) {
-    return 5;
-  }
-
-  return 99;
-}
-
-function durationChoiceLabel(
-  adPackage: PublicAdPackage
-) {
-  const packageType =
-    normalizedPackageType(
-      adPackage
-    );
-
-  if (
-    packageType ===
-    "shoutout"
-  ) {
-    return adPackage.includes_ad_creation
-      ? "1 Day + Ad Creation"
-      : "1 Day";
-  }
-
-  if (
-    adPackage.duration_label
-  ) {
-    return adPackage.duration_label;
-  }
-
-  if (
-    adPackage.duration_value &&
-    adPackage.duration_unit
-  ) {
-    const value =
-      Number(
-        adPackage.duration_value
-      );
-
-    const unit =
-      adPackage.duration_unit;
-
-    return `${value} ${unit}${
-      value === 1
-        ? ""
-        : "s"
-    }`;
-  }
-
-  return adPackage.package_name;
-}
-
-function saintLuciaTodayString() {
-  const parts =
-    new Intl.DateTimeFormat(
-      "en-CA",
-      {
-        timeZone:
-          "America/St_Lucia",
-        year:
-          "numeric",
-        month:
-          "2-digit",
-        day:
-          "2-digit",
-      }
-    ).formatToParts(
-      new Date()
-    );
-
-  const year =
-    parts.find(
-      (part) =>
-        part.type ===
-        "year"
-    )?.value;
-
-  const month =
-    parts.find(
-      (part) =>
-        part.type ===
-        "month"
-    )?.value;
-
-  const day =
-    parts.find(
-      (part) =>
-        part.type ===
-        "day"
-    )?.value;
-
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(
+function addDaysToDate(
   dateString: string,
   days: number
 ) {
@@ -387,14 +173,6 @@ function addDays(
       .split("-")
       .map(Number);
 
-  if (
-    !year ||
-    !month ||
-    !day
-  ) {
-    return "";
-  }
-
   const date =
     new Date(
       Date.UTC(
@@ -404,26 +182,14 @@ function addDays(
       )
     );
 
-  return [
-    date.getUTCFullYear(),
-    String(
-      date.getUTCMonth() +
-        1
-    ).padStart(
-      2,
-      "0"
-    ),
-    String(
-      date.getUTCDate()
-    ).padStart(
-      2,
-      "0"
-    ),
-  ].join("-");
+  return formatDateKey(
+    date
+  );
 }
 
-function nextMondayOnOrAfter(
-  dateString: string
+function addMonthsToDate(
+  dateString: string,
+  months: number
 ) {
   const [
     year,
@@ -434,175 +200,127 @@ function nextMondayOnOrAfter(
       .split("-")
       .map(Number);
 
-  if (
-    !year ||
-    !month ||
-    !day
-  ) {
-    return "";
-  }
+  const targetMonthIndex =
+    month - 1 + months;
+
+  const targetYear =
+    year +
+    Math.floor(
+      targetMonthIndex /
+        12
+    );
+
+  const normalizedMonth =
+    (
+      (
+        targetMonthIndex %
+        12
+      ) +
+      12
+    ) %
+    12;
+
+  const lastDay =
+    new Date(
+      Date.UTC(
+        targetYear,
+        normalizedMonth +
+          1,
+        0
+      )
+    ).getUTCDate();
 
   const date =
     new Date(
       Date.UTC(
-        year,
-        month - 1,
-        day
+        targetYear,
+        normalizedMonth,
+        Math.min(
+          day,
+          lastDay
+        )
       )
     );
 
-  const weekday =
-    date.getUTCDay();
-
-  const daysUntilMonday =
-    (
-      8 -
-      weekday
-    ) %
-    7;
-
-  return addDays(
-    dateString,
-    daysUntilMonday
+  return formatDateKey(
+    date
   );
 }
 
-function digitalDurationWeeks(
-  adPackage: PublicAdPackage
+function packageChangeoverDate(
+  startDate: string,
+  adPackage:
+    | PublicAdPackage
+    | null,
+  fallbackChangeoverDate: string
 ) {
-  const unit =
-    adPackage.duration_unit
-      ?.toLowerCase()
-      .trim() ?? "";
+  if (
+    !startDate ||
+    !adPackage?.duration_value ||
+    !adPackage.duration_unit
+  ) {
+    return fallbackChangeoverDate;
+  }
 
   const value =
     Number(
-      adPackage.duration_value ??
-        0
+      adPackage.duration_value
     );
 
-  if (
-    unit === "week" &&
-    (
-      value === 1 ||
-      value === 4
-    )
-  ) {
-    return value;
-  }
+  const unit =
+    adPackage.duration_unit
+      .toLowerCase()
+      .trim();
 
   if (
-    unit === "month" &&
-    value === 3
+    unit === "day" ||
+    unit === "days"
   ) {
-    return 13;
-  }
-
-  if (
-    unit === "month" &&
-    value === 6
-  ) {
-    return 26;
-  }
-
-  if (
-    unit === "month" &&
-    value === 12
-  ) {
-    return 52;
-  }
-
-  return 0;
-}
-
-function calculateDigitalSchedule(
-  preferredStartDate: string,
-  adPackage: PublicAdPackage
-) {
-  if (
-    !preferredStartDate
-  ) {
-    return {
-      startDate:
-        "",
-      changeoverDate:
-        "",
-    };
-  }
-
-  const packageType =
-    normalizedPackageType(
-      adPackage
+    return addDaysToDate(
+      startDate,
+      value
     );
-
-  if (
-    packageType ===
-    "shoutout"
-  ) {
-    const tomorrow =
-      addDays(
-        saintLuciaTodayString(),
-        1
-      );
-
-    const actualStart =
-      preferredStartDate <
-      tomorrow
-        ? tomorrow
-        : preferredStartDate;
-
-    return {
-      startDate:
-        actualStart,
-      changeoverDate:
-        addDays(
-          actualStart,
-          1
-        ),
-    };
   }
 
   if (
-    packageType ===
-      "standard" ||
-    packageType ===
-      "premium"
+    unit === "week" ||
+    unit === "weeks"
   ) {
-    const actualStart =
-      nextMondayOnOrAfter(
-        preferredStartDate
-      );
-
-    const weeks =
-      digitalDurationWeeks(
-        adPackage
-      );
-
-    return {
-      startDate:
-        actualStart,
-      changeoverDate:
-        weeks > 0
-          ? addDays(
-              actualStart,
-              weeks * 7
-            )
-          : "",
-    };
+    return addDaysToDate(
+      startDate,
+      value * 7
+    );
   }
 
-  return {
-    startDate:
-      preferredStartDate,
-    changeoverDate:
-      "",
-  };
+  if (
+    unit === "month" ||
+    unit === "months"
+  ) {
+    return addMonthsToDate(
+      startDate,
+      value
+    );
+  }
+
+  if (
+    unit === "year" ||
+    unit === "years"
+  ) {
+    return addMonthsToDate(
+      startDate,
+      value * 12
+    );
+  }
+
+  return fallbackChangeoverDate;
 }
 
 function formatScheduleDate(
   value: string
 ) {
-  if (!value) {
+  if (
+    !value
+  ) {
     return "—";
   }
 
@@ -610,14 +328,10 @@ function formatScheduleDate(
     return new Intl.DateTimeFormat(
       "en-US",
       {
-        timeZone:
-          "UTC",
-        month:
-          "short",
-        day:
-          "numeric",
-        year:
-          "numeric",
+        timeZone: "UTC",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       }
     ).format(
       new Date(
@@ -627,31 +341,6 @@ function formatScheduleDate(
   } catch {
     return value;
   }
-}
-
-function typeButtonClasses(
-  type: DigitalPackageType,
-  selected: boolean,
-  disabled: boolean
-) {
-  if (disabled) {
-    return "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300";
-  }
-
-  if (selected) {
-    switch (type) {
-      case "shoutout":
-        return "border-violet-400 bg-violet-50 text-violet-800 ring-2 ring-violet-100";
-
-      case "standard":
-        return "border-sky-400 bg-sky-50 text-sky-800 ring-2 ring-sky-100";
-
-      case "premium":
-        return "border-orange-400 bg-orange-50 text-orange-800 ring-2 ring-orange-100";
-    }
-  }
-
-  return "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50";
 }
 
 export default function BillboardCampaignCTA({
@@ -669,10 +358,6 @@ export default function BillboardCampaignCTA({
         createBrowserClient(),
       []
     );
-
-  const isDigital =
-    billboardType ===
-    "digital";
 
   const [
     open,
@@ -707,22 +392,14 @@ export default function BillboardCampaignCTA({
     useState("");
 
   const [
-    selectedDigitalType,
-    setSelectedDigitalType,
-  ] =
-    useState<DigitalPackageType>(
-      "standard"
-    );
-
-  const [
     checkingPackageAvailability,
     setCheckingPackageAvailability,
   ] =
     useState(false);
 
   const [
-    selectedPackageAvailable,
-    setSelectedPackageAvailable,
+    packageAvailable,
+    setPackageAvailable,
   ] =
     useState<boolean | null>(
       null
@@ -732,8 +409,149 @@ export default function BillboardCampaignCTA({
     let cancelled = false;
 
     async function loadPackages() {
-      setLoadingPackages(true);
-      setPackageError("");
+      setLoadingPackages(
+        true
+      );
+
+      setPackageError(
+        ""
+      );
+
+      setSelectedPackageId(
+        ""
+      );
+
+      /*
+        STATIC BILLBOARDS
+
+        Static package prices are tied to a specific billboard,
+        so only packages belonging to the billboard currently
+        being viewed should appear in the dropdown.
+      */
+
+      if (
+        billboardType ===
+        "static"
+      ) {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "get_public_static_billboard_packages"
+          );
+
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        if (
+          error
+        ) {
+          console.error(
+            error
+          );
+
+          setPackageError(
+            "Pricing is available on request."
+          );
+
+          setPackages(
+            []
+          );
+
+          setLoadingPackages(
+            false
+          );
+
+          return;
+        }
+
+        const staticPackages =
+          (
+            data ??
+            []
+          ) as StaticBillboardPackage[];
+
+        const matchingPackages =
+          staticPackages
+            .filter(
+              (
+                item
+              ) =>
+                item.billboard_id ===
+                billboardId
+            )
+            .map(
+              (
+                item
+              ): PublicAdPackage => ({
+                package_id:
+                  item.package_id,
+
+                package_code:
+                  item.package_code,
+
+                package_name:
+                  item.package_name,
+
+                package_type:
+                  "static",
+
+                slot_duration_seconds:
+                  null,
+
+                duration_value:
+                  item.duration_value,
+
+                duration_unit:
+                  item.duration_unit,
+
+                duration_label:
+                  item.duration_label,
+
+                price:
+                  Number(
+                    item.price
+                  ),
+
+                currency_code:
+                  item.currency_code,
+
+                includes_ad_creation:
+                  false,
+              })
+            );
+
+        setPackages(
+          matchingPackages
+        );
+
+        if (
+          matchingPackages.length >
+          0
+        ) {
+          setSelectedPackageId(
+            matchingPackages[0]
+              .package_id
+          );
+        }
+
+        setLoadingPackages(
+          false
+        );
+
+        return;
+      }
+
+      /*
+        DIGITAL BILLBOARDS
+
+        Digital packages are shared by billboard type/category,
+        so the existing public package RPC remains appropriate.
+      */
 
       const {
         data,
@@ -747,151 +565,70 @@ export default function BillboardCampaignCTA({
           }
         );
 
-      if (cancelled) {
+      if (
+        cancelled
+      ) {
         return;
       }
 
-      if (error) {
-        console.error(error);
+      if (
+        error
+      ) {
+        console.error(
+          error
+        );
 
         setPackageError(
           "Pricing is available on request."
         );
 
-        setPackages([]);
-        setSelectedPackageId("");
-        setLoadingPackages(false);
+        setPackages(
+          []
+        );
+
+        setLoadingPackages(
+          false
+        );
 
         return;
       }
 
       const loadedPackages =
-        (data ??
-          []) as PublicAdPackage[];
+        (
+          data ??
+          []
+        ) as PublicAdPackage[];
 
       setPackages(
         loadedPackages
       );
 
       if (
-        billboardType ===
-        "digital"
+        loadedPackages.length >
+        0
       ) {
-        const allowedPackages =
-          loadedPackages
-            .filter(
-              isAllowedDigitalPackage
-            )
-            .sort(
-              (
-                a,
-                b
-              ) =>
-                digitalPackageSortOrder(
-                  a
-                ) -
-                digitalPackageSortOrder(
-                  b
-                )
-            );
-
-        const preferredType:
-          DigitalPackageType =
-          allowedPackages.some(
-            (item) =>
-              normalizedPackageType(
-                item
-              ) ===
-              "standard"
-          )
-            ? "standard"
-            : allowedPackages.some(
-                  (item) =>
-                    normalizedPackageType(
-                      item
-                    ) ===
-                    "premium"
-                )
-              ? "premium"
-              : "shoutout";
-
-        setSelectedDigitalType(
-          preferredType
-        );
-
-        const firstPackage =
-          allowedPackages.find(
-            (item) =>
-              normalizedPackageType(
-                item
-              ) ===
-              preferredType
-          );
-
-        setSelectedPackageId(
-          firstPackage?.package_id ??
-            ""
-        );
-      } else {
         setSelectedPackageId(
           loadedPackages[0]
-            ?.package_id ??
-            ""
+            .package_id
         );
       }
 
-      setLoadingPackages(false);
+      setLoadingPackages(
+        false
+      );
     }
 
     loadPackages();
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
     };
   }, [
+    billboardId,
     billboardType,
     supabase,
   ]);
-
-  const digitalPackages =
-    useMemo(
-      () =>
-        packages.filter(
-          isAllowedDigitalPackage
-        ),
-      [
-        packages,
-      ]
-    );
-
-  const selectedTypePackages =
-    useMemo(
-      () =>
-        digitalPackages
-          .filter(
-            (item) =>
-              normalizedPackageType(
-                item
-              ) ===
-              selectedDigitalType
-          )
-          .sort(
-            (
-              a,
-              b
-            ) =>
-              digitalPackageSortOrder(
-                a
-              ) -
-              digitalPackageSortOrder(
-                b
-              )
-          ),
-      [
-        digitalPackages,
-        selectedDigitalType,
-      ]
-    );
 
   const selectedPackage =
     packages.find(
@@ -900,64 +637,42 @@ export default function BillboardCampaignCTA({
         selectedPackageId
     ) ?? null;
 
-  const digitalSchedule =
-    useMemo(
-      () => {
-        if (
-          !isDigital ||
-          !selectedPackage
-        ) {
-          return {
-            startDate,
-            changeoverDate,
-          };
-        }
-
-        return calculateDigitalSchedule(
-          startDate,
-          selectedPackage
-        );
-      },
-      [
-        isDigital,
-        selectedPackage,
-        startDate,
-        changeoverDate,
-      ]
+  const effectiveChangeoverDate =
+    packageChangeoverDate(
+      startDate,
+      selectedPackage,
+      changeoverDate
     );
 
-  const effectiveStartDate =
-    isDigital
-      ? digitalSchedule.startDate
-      : startDate;
-
-  const effectiveChangeoverDate =
-    isDigital
-      ? digitalSchedule.changeoverDate
-      : changeoverDate;
+  const scheduleChangedByPackage =
+    Boolean(
+      selectedPackage &&
+      effectiveChangeoverDate &&
+      effectiveChangeoverDate !==
+        changeoverDate
+    );
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled =
+      false;
 
-    async function checkDigitalPackageAvailability() {
+    async function checkPackageAvailability() {
       if (
-        !isDigital ||
         !selectedPackage ||
-        !effectiveStartDate ||
-        !effectiveChangeoverDate
+        !startDate ||
+        !effectiveChangeoverDate ||
+        effectiveChangeoverDate <=
+          startDate
       ) {
-        setSelectedPackageAvailable(
+        setPackageAvailable(
           null
         );
+
         return;
       }
 
       setCheckingPackageAvailability(
         true
-      );
-
-      setSelectedPackageAvailable(
-        null
       );
 
       const {
@@ -968,13 +683,16 @@ export default function BillboardCampaignCTA({
           "search_public_billboard_availability",
           {
             p_start_date:
-              effectiveStartDate,
+              startDate,
+
             p_end_date:
               effectiveChangeoverDate,
+
             p_location:
               null,
+
             p_billboard_type:
-              "digital",
+              billboardType,
           }
         );
 
@@ -984,16 +702,18 @@ export default function BillboardCampaignCTA({
         return;
       }
 
-      setCheckingPackageAvailability(
-        false
-      );
-
-      if (error) {
+      if (
+        error
+      ) {
         console.error(
           error
         );
 
-        setSelectedPackageAvailable(
+        setPackageAvailable(
+          false
+        );
+
+        setCheckingPackageAvailability(
           false
         );
 
@@ -1002,347 +722,318 @@ export default function BillboardCampaignCTA({
 
       const match =
         (
-          (data ??
-            []) as DigitalAvailabilityResult[]
+          data ??
+          []
         ).find(
-          (item) =>
+          (
+            item: AvailabilityResult
+          ) =>
             item.billboard_id ===
             billboardId
+        ) as
+          | AvailabilityResult
+          | undefined;
+
+      if (
+        !match
+      ) {
+        setPackageAvailable(
+          false
         );
 
-      if (!match) {
-        setSelectedPackageAvailable(
+        setCheckingPackageAvailability(
           false
         );
 
         return;
       }
 
-      const packageType =
-        normalizedPackageType(
-          selectedPackage
-        );
+      let inventoryAvailable =
+        false;
 
       if (
-        packageType ===
-        "standard"
+        billboardType ===
+        "static"
       ) {
-        setSelectedPackageAvailable(
-          match.available_standard_slots >
-            0
-        );
-      } else if (
-        packageType ===
-        "premium"
-      ) {
-        setSelectedPackageAvailable(
-          match.available_premium_slots >
-            0
-        );
-      } else if (
-        packageType ===
-        "shoutout"
-      ) {
-        setSelectedPackageAvailable(
-          match.available_shoutout_slots >
-            0
-        );
+        inventoryAvailable =
+          Number(
+            match.available_static_faces ??
+              0
+          ) >
+          0;
       } else {
-        setSelectedPackageAvailable(
-          false
-        );
+        switch (
+          selectedPackage.package_type
+            .toLowerCase()
+            .trim()
+        ) {
+          case "premium":
+            inventoryAvailable =
+              Number(
+                match.available_premium_slots ??
+                  0
+              ) >
+              0;
+            break;
+
+          case "shoutout":
+            inventoryAvailable =
+              Number(
+                match.available_shoutout_slots ??
+                  0
+              ) >
+              0;
+            break;
+
+          case "standard":
+          default:
+            inventoryAvailable =
+              Number(
+                match.available_standard_slots ??
+                  0
+              ) >
+              0;
+            break;
+        }
       }
+
+      setPackageAvailable(
+        match.availability_status ===
+          "available" &&
+          inventoryAvailable
+      );
+
+      setCheckingPackageAvailability(
+        false
+      );
     }
 
-    checkDigitalPackageAvailability();
+    checkPackageAvailability();
 
     return () => {
-      cancelled = true;
+      cancelled =
+        true;
     };
   }, [
-    isDigital,
-    selectedPackage,
-    effectiveStartDate,
-    effectiveChangeoverDate,
     billboardId,
+    billboardType,
+    effectiveChangeoverDate,
+    selectedPackage,
+    startDate,
     supabase,
   ]);
 
-  function chooseDigitalType(
-    type: DigitalPackageType
-  ) {
-    const typePackages =
-      digitalPackages
-        .filter(
-          (item) =>
-            normalizedPackageType(
-              item
-            ) ===
-            type
-        )
-        .sort(
-          (
-            a,
-            b
-          ) =>
-            digitalPackageSortOrder(
-              a
-            ) -
-            digitalPackageSortOrder(
-              b
-            )
-        );
-
-    if (
-      typePackages.length ===
-      0
-    ) {
-      return;
-    }
-
-    setSelectedDigitalType(
-      type
+  const canStartCampaign =
+    Boolean(
+      available &&
+      selectedPackage &&
+      startDate &&
+      effectiveChangeoverDate &&
+      effectiveChangeoverDate >
+        startDate &&
+      packageAvailable ===
+        true &&
+      !checkingPackageAvailability
     );
-
-    setSelectedPackageId(
-      typePackages[0]
-        .package_id
-    );
-  }
-
-  const packagesAvailableForDisplay =
-    isDigital
-      ? digitalPackages.length >
-        0
-      : packages.length >
-        0;
 
   return (
     <>
-      <div className="mt-6 border-t border-slate-100 pt-6">
+      {/* PACKAGE SELECTOR */}
+      <div className="mt-5 border-t border-slate-100 pt-5">
+
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
           Advertising Package
         </p>
 
-        <h3 className="mt-1 text-lg font-black text-[#071226]">
+        <h3 className="mt-1 text-base font-black text-[#071226]">
           Choose your package
         </h3>
 
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          {isDigital
-            ? "Choose an advertising type, then select how long you want the campaign to run."
+        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+          {billboardType ===
+          "static"
+            ? `Showing packages for ${billboardName} only.`
             : "Select the advertising package that best suits your campaign."}
         </p>
 
         {loadingPackages ? (
-          <div className="mt-4 rounded-xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-400">
-            Loading packages...
+          <div className="mt-4 space-y-3">
+            {[1, 2, 3].map(
+              (item) => (
+                <div
+                  key={item}
+                  className="h-[108px] animate-pulse rounded-2xl border border-slate-200 bg-slate-50"
+                />
+              )
+            )}
           </div>
-        ) : packagesAvailableForDisplay ? (
+        ) : packages.length > 0 ? (
           <>
-            {isDigital ? (
-              <>
-                <div className="mt-4">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Advertising Type
-                  </p>
+            <div className="mt-4 space-y-3">
+              {packages.map(
+                (
+                  adPackage
+                ) => {
+                  const selected =
+                    adPackage.package_id ===
+                    selectedPackageId;
 
-                  <div className="grid grid-cols-3 gap-2">
-                    {DIGITAL_PACKAGE_TYPES.map(
-                      (
-                        item
-                      ) => {
-                        const hasPackages =
-                          digitalPackages.some(
-                            (
-                              adPackage
-                            ) =>
-                              normalizedPackageType(
-                                adPackage
-                              ) ===
-                              item.value
-                          );
+                  const durationText =
+                    adPackage.duration_label ||
+                    (
+                      adPackage.duration_value &&
+                      adPackage.duration_unit
+                        ? `${adPackage.duration_value} ${adPackage.duration_unit}${
+                            adPackage.duration_value === 1
+                              ? ""
+                              : "s"
+                          }`
+                        : null
+                    );
 
-                        const selected =
-                          selectedDigitalType ===
-                          item.value;
+                  const cleanName =
+                    billboardType ===
+                      "static" &&
+                    adPackage.package_name
+                      .toLowerCase()
+                      .startsWith(
+                        billboardName.toLowerCase()
+                      )
+                      ? adPackage.package_name
+                          .slice(
+                            billboardName.length
+                          )
+                          .replace(
+                            /^\s*[-–—]\s*/,
+                            ""
+                          )
+                      : adPackage.package_name;
 
-                        return (
-                          <button
-                            key={
-                              item.value
-                            }
-                            type="button"
-                            disabled={
-                              !hasPackages
-                            }
-                            onClick={() =>
-                              chooseDigitalType(
-                                item.value
-                              )
-                            }
-                            className={`rounded-xl border px-2 py-3 text-center transition ${typeButtonClasses(
-                              item.value,
-                              selected,
-                              !hasPackages
-                            )}`}
-                          >
-                            <span className="block text-xs font-black sm:text-sm">
-                              {
-                                item.label
-                              }
-                            </span>
-
-                            <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide opacity-70">
-                              {
-                                item.duration
-                              }
-                            </span>
-                          </button>
-                        );
+                  return (
+                    <button
+                      key={
+                        adPackage.package_id
                       }
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-5">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                    {selectedDigitalType ===
-                    "shoutout"
-                      ? "Shoutout Option"
-                      : "Campaign Duration"}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedTypePackages.map(
-                      (
-                        adPackage
-                      ) => {
-                        const selected =
-                          adPackage.package_id ===
-                          selectedPackageId;
-
-                        return (
-                          <button
-                            key={
-                              adPackage.package_id
-                            }
-                            type="button"
-                            onClick={() =>
-                              setSelectedPackageId(
-                                adPackage.package_id
-                              )
-                            }
-                            className={`rounded-xl border px-3 py-3 text-left transition ${
-                              selected
-                                ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="block text-xs font-black text-slate-900">
-                              {durationChoiceLabel(
-                                adPackage
-                              )}
-                            </span>
-
+                      type="button"
+                      onClick={() =>
+                        setSelectedPackageId(
+                          adPackage.package_id
+                        )
+                      }
+                      aria-pressed={
+                        selected
+                      }
+                      className={`group w-full rounded-xl border px-3.5 py-3 text-left transition ${
+                        selected
+                          ? "border-orange-400 bg-orange-50/60 shadow-sm ring-2 ring-orange-100"
+                          : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span
-                              className={`mt-1 block text-sm font-black ${
+                              className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
                                 selected
-                                  ? "text-orange-600"
-                                  : "text-slate-600"
+                                  ? "bg-orange-500 text-white"
+                                  : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {formatMoney(
-                                Number(
-                                  adPackage.price
-                                ),
-                                adPackage.currency_code
+                              {packageTypeLabel(
+                                adPackage.package_type
                               )}
                             </span>
-                          </button>
-                        );
-                      }
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="mt-4">
-                <label className="block">
-                  <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-400">
-                    Package
-                  </span>
 
-                  <select
-                    value={
-                      selectedPackageId
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setSelectedPackageId(
-                        event.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold text-slate-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                  >
-                    {packages.map(
-                      (
-                        adPackage
-                      ) => (
-                        <option
-                          key={
-                            adPackage.package_id
-                          }
-                          value={
-                            adPackage.package_id
-                          }
-                        >
-                          {
-                            adPackage.package_name
-                          }{" "}
-                          —{" "}
-                          {formatMoney(
-                            Number(
-                              adPackage.price
-                            ),
-                            adPackage.currency_code
+                            {adPackage.slot_duration_seconds && (
+                              <span className="inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-[9px] font-bold text-sky-700">
+                                {
+                                  adPackage.slot_duration_seconds
+                                }
+                                s ad
+                              </span>
+                            )}
+
+                            {adPackage.includes_ad_creation && (
+                              <span className="inline-flex rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold text-violet-700">
+                                Ad creation included
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="mt-2 font-extrabold leading-5 text-slate-900">
+                            {cleanName}
+                          </p>
+
+                          {durationText && (
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                              {durationText}
+                            </p>
                           )}
-                        </option>
-                      )
-                    )}
-                  </select>
-                </label>
-              </div>
-            )}
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <div
+                            className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full border ${
+                              selected
+                                ? "border-orange-500 bg-orange-500 text-white"
+                                : "border-slate-300 bg-white text-transparent"
+                            }`}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              className="h-3 w-3"
+                              aria-hidden="true"
+                            >
+                              <path d="m5 12 4 4L19 6" />
+                            </svg>
+                          </div>
+
+                          <p className="mt-2.5 text-base font-black text-orange-500">
+                            {formatMoney(
+                              Number(
+                                adPackage.price
+                              ),
+                              adPackage.currency_code
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                }
+              )}
+            </div>
 
             {selectedPackage && (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mt-3 rounded-xl bg-[#071226] px-3.5 py-3 text-white shadow-sm">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                      Selected Package
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-orange-400">
+                      Your Selection
                     </p>
 
-                    <p className="mt-1 font-black text-slate-900">
+                    <p className="mt-1 font-black leading-5">
                       {
                         selectedPackage.package_name
                       }
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-500">
-                      {packageTypeLabel(
-                        selectedPackage.package_type
+                    <p className="mt-2 text-xs text-slate-300">
+                      {packageDescription(
+                        selectedPackage
                       )}
                     </p>
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                       Price
                     </p>
 
-                    <p className="mt-1 text-xl font-black text-orange-500">
+                    <p className="mt-1 text-lg font-black text-orange-400">
                       {formatMoney(
                         Number(
                           selectedPackage.price
@@ -1352,115 +1043,87 @@ export default function BillboardCampaignCTA({
                     </p>
                   </div>
                 </div>
-
-                <div className="mt-4 border-t border-slate-200 pt-4">
-                  <p className="text-sm font-semibold text-slate-700">
-                    {packageDescription(
-                      selectedPackage
-                    )}
-                  </p>
-
-                  {selectedPackage.includes_ad_creation && (
-                    <p className="mt-2 text-xs font-semibold text-sky-700">
-                      ✓ Ad creation included
-                    </p>
-                  )}
-                </div>
               </div>
             )}
 
-            {isDigital &&
-              selectedPackage &&
-              effectiveStartDate &&
+            {selectedPackage &&
+              startDate &&
               effectiveChangeoverDate && (
-                <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50/60 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-sky-600">
-                        Package Schedule
-                      </p>
+              <div className="mt-2.5 rounded-xl border border-sky-200 bg-sky-50/70 px-3.5 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-sky-700">
+                    Package Schedule
+                  </p>
 
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {normalizedPackageType(
-                          selectedPackage
-                        ) ===
-                        "shoutout"
-                          ? "Shoutouts require at least one day of lead time."
-                          : "Standard and Premium campaigns start and change over on Mondays at 9:00 AM."}
-                      </p>
-                    </div>
-
-                    {checkingPackageAvailability ? (
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-slate-500">
-                        CHECKING
-                      </span>
-                    ) : selectedPackageAvailable ===
-                      true ? (
-                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
-                        AVAILABLE
-                      </span>
-                    ) : selectedPackageAvailable ===
-                      false ? (
-                      <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-bold text-red-700">
-                        UNAVAILABLE
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-white p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        Starts
-                      </p>
-
-                      <p className="mt-1 text-sm font-black text-slate-900">
-                        {formatScheduleDate(
-                          effectiveStartDate
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-xs font-semibold text-sky-700">
-                        9:00 AM
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl bg-white p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        Changeover
-                      </p>
-
-                      <p className="mt-1 text-sm font-black text-slate-900">
-                        {formatScheduleDate(
-                          effectiveChangeoverDate
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-xs font-semibold text-sky-700">
-                        9:00 AM
-                      </p>
-                    </div>
-                  </div>
-
-                  {effectiveStartDate !==
-                    startDate && (
-                    <p className="mt-3 border-t border-sky-200 pt-3 text-xs leading-5 text-sky-800">
-                      Your preferred search date was{" "}
-                      <strong>
-                        {formatScheduleDate(
-                          startDate
-                        )}
-                      </strong>
-                      . This package&apos;s scheduling rules move the campaign start to{" "}
-                      <strong>
-                        {formatScheduleDate(
-                          effectiveStartDate
-                        )}
-                      </strong>
-                      .
-                    </p>
-                  )}
+                  {checkingPackageAvailability ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      Checking availability...
+                    </span>
+                  ) : packageAvailable ===
+                    true ? (
+                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                      Available
+                    </span>
+                  ) : packageAvailable ===
+                    false ? (
+                    <span className="rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                      Unavailable
+                    </span>
+                  ) : null}
                 </div>
-              )}
+
+                <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                      Start
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-slate-900">
+                      {formatScheduleDate(
+                        startDate
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      9:00 AM
+                    </p>
+                  </div>
+
+                  <div className="text-sky-400">
+                    →
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                      Changeover
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-slate-900">
+                      {formatScheduleDate(
+                        effectiveChangeoverDate
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      9:00 AM
+                    </p>
+                  </div>
+                </div>
+
+                {scheduleChangedByPackage && (
+                  <p className="mt-2.5 border-t border-sky-100 pt-2.5 text-[11px] leading-4 text-sky-800">
+                    The changeover date has been updated automatically to match the selected{" "}
+                    <strong>
+                      {selectedPackage.duration_label ||
+                        packageDescription(
+                          selectedPackage
+                        )}
+                    </strong>{" "}
+                    package.
+                  </p>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -1468,7 +1131,7 @@ export default function BillboardCampaignCTA({
               Pricing available on request
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-[11px] leading-4 text-slate-500">
               Submit a campaign request and Ernest Rentals will provide pricing for this billboard.
             </p>
           </div>
@@ -1481,40 +1144,23 @@ export default function BillboardCampaignCTA({
         )}
       </div>
 
+      {/* CTA */}
       <button
         type="button"
         disabled={
-          !effectiveStartDate ||
-          !effectiveChangeoverDate ||
-          (
-            packagesAvailableForDisplay &&
-            !selectedPackage
-          ) ||
-          (
-            isDigital
-              ? checkingPackageAvailability ||
-                selectedPackageAvailable !==
-                  true
-              : !available
-          )
+          !canStartCampaign
         }
         onClick={() =>
           setOpen(true)
         }
-        className="mt-5 w-full rounded-xl bg-orange-500 px-5 py-4 font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="mt-4 w-full rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
       >
-        {isDigital &&
-        checkingPackageAvailability
+        {checkingPackageAvailability
           ? "Checking Package Availability..."
-          : isDigital &&
-              selectedPackageAvailable ===
-                false
-            ? "Selected Package Unavailable"
-            : available ||
-                selectedPackageAvailable ===
-                  true
-              ? "Start Campaign"
-              : "Currently Unavailable"}
+          : packageAvailable ===
+              false
+            ? "Package Unavailable for These Dates"
+            : "Start Campaign"}
       </button>
 
       {!startDate ||
@@ -1539,27 +1185,32 @@ export default function BillboardCampaignCTA({
             location
           }
           startDate={
-            effectiveStartDate
+            startDate
           }
           changeoverDate={
             effectiveChangeoverDate
           }
+
           selectedPackageId={
             selectedPackage?.package_id ??
             null
           }
+
           selectedPackageName={
             selectedPackage?.package_name ??
             null
           }
+
           selectedPackageCode={
             selectedPackage?.package_code ??
             null
           }
+
           selectedPackageType={
             selectedPackage?.package_type ??
             null
           }
+
           selectedPackagePrice={
             selectedPackage
               ? Number(
@@ -1567,22 +1218,27 @@ export default function BillboardCampaignCTA({
                 )
               : null
           }
+
           selectedPackageCurrency={
             selectedPackage?.currency_code ??
             null
           }
+
           selectedPackageDurationLabel={
             selectedPackage?.duration_label ??
             null
           }
+
           selectedPackageSlotDuration={
             selectedPackage?.slot_duration_seconds ??
             null
           }
+
           selectedPackageIncludesAdCreation={
             selectedPackage?.includes_ad_creation ??
             false
           }
+
           onClose={() =>
             setOpen(false)
           }

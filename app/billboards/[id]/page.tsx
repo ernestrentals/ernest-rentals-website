@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 import BillboardCampaignCTA from "@/components/BillboardCampaignCTA";
+import BillboardShareButtons from "@/components/BillboardShareButtons";
+import BillboardReviews from "@/components/BillboardReviews";
 import CompactAvailabilitySearch from "@/components/CompactAvailabilitySearch";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -246,6 +248,21 @@ export async function generateMetadata({
             },
           ],
     },
+
+    twitter: {
+      card:
+        "summary_large_image",
+
+      title:
+        `${title} | Ernest Rentals`,
+
+      description,
+
+      images: [
+        billboard.image_url ||
+          "/ernest-rentals-logo.png",
+      ],
+    },
   };
 }
 
@@ -474,6 +491,31 @@ export default async function BillboardPage({
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       mapQuery
     )}`;
+
+  const siteUrl =
+    (
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      "https://ernest-rentals-website.vercel.app"
+    ).replace(
+      /\/$/,
+      ""
+    );
+
+  const shareUrl =
+    `${siteUrl}/billboards/${billboard.billboard_id}`;
+
+  const shareTitle =
+    `${billboard.billboard_name} - ${
+      isDigital
+        ? "Digital Billboard"
+        : "Static Billboard"
+    }`;
+
+  const shareDescription =
+    `View ${billboard.billboard_name} in ${
+      billboard.location ||
+      "Saint Lucia"
+    }. Check billboard details, availability and advertising opportunities with Ernest Rentals.`;
 
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
@@ -1022,8 +1064,34 @@ export default async function BillboardPage({
               </div>
             </aside>
           </div>
+
+          {/* REVIEWS */}
+          <BillboardReviews
+            billboardId={
+              billboard.billboard_id
+            }
+            billboardName={
+              billboard.billboard_name
+            }
+          />
+
+          {/* SHARE */}
+          <section className="mx-auto mt-10 max-w-4xl">
+            <BillboardShareButtons
+              title={
+                shareTitle
+              }
+              description={
+                shareDescription
+              }
+              url={
+                shareUrl
+              }
+            />
+          </section>
         </div>
       </section>
+
       <SiteFooter />
     </main>
   );
