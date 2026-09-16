@@ -392,6 +392,18 @@ export default function BillboardCampaignCTA({
     useState("");
 
   const [
+    selectedDigitalType,
+    setSelectedDigitalType,
+  ] =
+    useState<
+      "standard" |
+      "premium" |
+      "shoutout"
+    >(
+      "standard"
+    );
+
+  const [
     checkingPackageAvailability,
     setCheckingPackageAvailability,
   ] =
@@ -607,9 +619,38 @@ export default function BillboardCampaignCTA({
         loadedPackages.length >
         0
       ) {
+        const preferredPackage =
+          loadedPackages.find(
+            (
+              item
+            ) =>
+              item.package_type
+                .toLowerCase()
+                .trim() ===
+              "standard"
+          ) ??
+          loadedPackages[0];
+
+        const preferredType =
+          preferredPackage.package_type
+            .toLowerCase()
+            .trim();
+
+        if (
+          preferredType ===
+            "standard" ||
+          preferredType ===
+            "premium" ||
+          preferredType ===
+            "shoutout"
+        ) {
+          setSelectedDigitalType(
+            preferredType
+          );
+        }
+
         setSelectedPackageId(
-          loadedPackages[0]
-            .package_id
+          preferredPackage.package_id
         );
       }
 
@@ -628,6 +669,74 @@ export default function BillboardCampaignCTA({
     billboardId,
     billboardType,
     supabase,
+  ]);
+
+  const digitalPackages =
+    billboardType ===
+      "digital"
+      ? packages.filter(
+          (
+            item
+          ) =>
+            item.package_type
+              .toLowerCase()
+              .trim() ===
+            selectedDigitalType
+        )
+      : [];
+
+  useEffect(() => {
+    if (
+      billboardType !==
+        "digital" ||
+      packages.length ===
+        0
+    ) {
+      return;
+    }
+
+    const current =
+      packages.find(
+        (
+          item
+        ) =>
+          item.package_id ===
+          selectedPackageId
+      );
+
+    if (
+      current &&
+      current.package_type
+        .toLowerCase()
+        .trim() ===
+        selectedDigitalType
+    ) {
+      return;
+    }
+
+    const firstForType =
+      packages.find(
+        (
+          item
+        ) =>
+          item.package_type
+            .toLowerCase()
+            .trim() ===
+          selectedDigitalType
+      );
+
+    if (
+      firstForType
+    ) {
+      setSelectedPackageId(
+        firstForType.package_id
+      );
+    }
+  }, [
+    billboardType,
+    packages,
+    selectedDigitalType,
+    selectedPackageId,
   ]);
 
   const selectedPackage =
@@ -869,143 +978,333 @@ export default function BillboardCampaignCTA({
           </div>
         ) : packages.length > 0 ? (
           <>
-            <div className="mt-4 space-y-3">
-              {packages.map(
-                (
-                  adPackage
-                ) => {
-                  const selected =
-                    adPackage.package_id ===
-                    selectedPackageId;
+            {billboardType ===
+            "digital" ? (
+              <>
+                {/* DIGITAL PACKAGE TYPE */}
+                <div className="mt-4">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                    1. Choose Ad Type
+                  </p>
 
-                  const durationText =
-                    adPackage.duration_label ||
-                    (
-                      adPackage.duration_value &&
-                      adPackage.duration_unit
-                        ? `${adPackage.duration_value} ${adPackage.duration_unit}${
-                            adPackage.duration_value === 1
-                              ? ""
-                              : "s"
-                          }`
-                        : null
-                    );
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        {
+                          key:
+                            "standard",
+                          label:
+                            "Standard",
+                          duration:
+                            "10 sec",
+                          helper:
+                            "Best value",
+                        },
+                        {
+                          key:
+                            "premium",
+                          label:
+                            "Premium",
+                          duration:
+                            "15 sec",
+                          helper:
+                            "More exposure",
+                        },
+                        {
+                          key:
+                            "shoutout",
+                          label:
+                            "Shoutout",
+                          duration:
+                            "15 sec",
+                          helper:
+                            "1-day feature",
+                        },
+                      ] as const
+                    ).map(
+                      (
+                        option
+                      ) => {
+                        const hasPackages =
+                          packages.some(
+                            (
+                              item
+                            ) =>
+                              item.package_type
+                                .toLowerCase()
+                                .trim() ===
+                              option.key
+                          );
 
-                  const cleanName =
-                    billboardType ===
-                      "static" &&
-                    adPackage.package_name
-                      .toLowerCase()
-                      .startsWith(
-                        billboardName.toLowerCase()
-                      )
-                      ? adPackage.package_name
-                          .slice(
-                            billboardName.length
-                          )
-                          .replace(
-                            /^\s*[-–—]\s*/,
-                            ""
-                          )
-                      : adPackage.package_name;
+                        const selected =
+                          selectedDigitalType ===
+                          option.key;
 
-                  return (
-                    <button
-                      key={
-                        adPackage.package_id
-                      }
-                      type="button"
-                      onClick={() =>
-                        setSelectedPackageId(
-                          adPackage.package_id
-                        )
-                      }
-                      aria-pressed={
-                        selected
-                      }
-                      className={`group w-full rounded-xl border px-3.5 py-3 text-left transition ${
-                        selected
-                          ? "border-orange-400 bg-orange-50/60 shadow-sm ring-2 ring-orange-100"
-                          : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
+                        return (
+                          <button
+                            key={
+                              option.key
+                            }
+                            type="button"
+                            disabled={
+                              !hasPackages
+                            }
+                            onClick={() =>
+                              setSelectedDigitalType(
+                                option.key
+                              )
+                            }
+                            className={`rounded-xl border px-2.5 py-3 text-center transition ${
+                              selected
+                                ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            } disabled:cursor-not-allowed disabled:opacity-40`}
+                          >
                             <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
-                                selected
-                                  ? "bg-orange-500 text-white"
-                                  : "bg-slate-100 text-slate-600"
+                              className={`mx-auto inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
+                                option.key ===
+                                "premium"
+                                  ? "bg-orange-50 text-orange-600"
+                                  : option.key ===
+                                      "shoutout"
+                                    ? "bg-violet-50 text-violet-700"
+                                    : "bg-sky-50 text-sky-700"
                               }`}
                             >
-                              {packageTypeLabel(
-                                adPackage.package_type
-                              )}
+                              {
+                                option.duration
+                              }
                             </span>
 
-                            {adPackage.slot_duration_seconds && (
-                              <span className="inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-[9px] font-bold text-sky-700">
-                                {
-                                  adPackage.slot_duration_seconds
-                                }
-                                s ad
-                              </span>
-                            )}
-
-                            {adPackage.includes_ad_creation && (
-                              <span className="inline-flex rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold text-violet-700">
-                                Ad creation included
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="mt-2 font-extrabold leading-5 text-slate-900">
-                            {cleanName}
-                          </p>
-
-                          {durationText && (
-                            <p className="mt-1 text-xs font-semibold text-slate-500">
-                              {durationText}
+                            <p className="mt-2 text-xs font-black text-slate-900">
+                              {
+                                option.label
+                              }
                             </p>
-                          )}
-                        </div>
 
-                        <div className="shrink-0 text-right">
-                          <div
-                            className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full border ${
+                            <p className="mt-0.5 text-[9px] font-semibold text-slate-400">
+                              {
+                                option.helper
+                              }
+                            </p>
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+
+                {/* DIGITAL DURATION */}
+                <div className="mt-4">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                    2. Choose Duration
+                  </p>
+
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {digitalPackages.map(
+                      (
+                        adPackage
+                      ) => {
+                        const selected =
+                          adPackage.package_id ===
+                          selectedPackageId;
+
+                        const durationText =
+                          adPackage.duration_label ||
+                          (
+                            adPackage.duration_value &&
+                            adPackage.duration_unit
+                              ? `${adPackage.duration_value} ${adPackage.duration_unit}${
+                                  adPackage.duration_value ===
+                                  1
+                                    ? ""
+                                    : "s"
+                                }`
+                              : "Campaign"
+                          );
+
+                        return (
+                          <button
+                            key={
+                              adPackage.package_id
+                            }
+                            type="button"
+                            onClick={() =>
+                              setSelectedPackageId(
+                                adPackage.package_id
+                              )
+                            }
+                            className={`rounded-xl border px-3 py-3 text-left transition ${
                               selected
-                                ? "border-orange-500 bg-orange-500 text-white"
-                                : "border-slate-300 bg-white text-transparent"
+                                ? "border-orange-400 bg-orange-50/70 ring-2 ring-orange-100"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
                             }`}
                           >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              className="h-3 w-3"
-                              aria-hidden="true"
-                            >
-                              <path d="m5 12 4 4L19 6" />
-                            </svg>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-black text-slate-900">
+                                  {
+                                    durationText
+                                  }
+                                </p>
+
+                                {adPackage.includes_ad_creation && (
+                                  <p className="mt-1 text-[10px] font-bold text-violet-700">
+                                    + Ad Creation
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="shrink-0 text-right">
+                                <div
+                                  className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full border ${
+                                    selected
+                                      ? "border-orange-500 bg-orange-500 text-white"
+                                      : "border-slate-300 bg-white text-transparent"
+                                  }`}
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    className="h-3 w-3"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="m5 12 4 4L19 6" />
+                                  </svg>
+                                </div>
+
+                                <p className="mt-2 text-sm font-black text-orange-500">
+                                  {formatMoney(
+                                    Number(
+                                      adPackage.price
+                                    ),
+                                    adPackage.currency_code
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {packages.map(
+                  (
+                    adPackage
+                  ) => {
+                    const selected =
+                      adPackage.package_id ===
+                      selectedPackageId;
+
+                    const durationText =
+                      adPackage.duration_label ||
+                      (
+                        adPackage.duration_value &&
+                        adPackage.duration_unit
+                          ? `${adPackage.duration_value} ${adPackage.duration_unit}${
+                              adPackage.duration_value ===
+                              1
+                                ? ""
+                                : "s"
+                            }`
+                          : null
+                      );
+
+                    const cleanName =
+                      adPackage.package_name
+                        .toLowerCase()
+                        .startsWith(
+                          billboardName.toLowerCase()
+                        )
+                        ? adPackage.package_name
+                            .slice(
+                              billboardName.length
+                            )
+                            .replace(
+                              /^\s*[-–—]\s*/,
+                              ""
+                            )
+                        : adPackage.package_name;
+
+                    return (
+                      <button
+                        key={
+                          adPackage.package_id
+                        }
+                        type="button"
+                        onClick={() =>
+                          setSelectedPackageId(
+                            adPackage.package_id
+                          )
+                        }
+                        aria-pressed={
+                          selected
+                        }
+                        className={`group w-full rounded-xl border px-3.5 py-3 text-left transition ${
+                          selected
+                            ? "border-orange-400 bg-orange-50/60 shadow-sm ring-2 ring-orange-100"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="font-extrabold leading-5 text-slate-900">
+                              {cleanName}
+                            </p>
+
+                            {durationText && (
+                              <p className="mt-1 text-xs font-semibold text-slate-500">
+                                {
+                                  durationText
+                                }
+                              </p>
+                            )}
                           </div>
 
-                          <p className="mt-2.5 text-base font-black text-orange-500">
-                            {formatMoney(
-                              Number(
-                                adPackage.price
-                              ),
-                              adPackage.currency_code
-                            )}
-                          </p>
+                          <div className="shrink-0 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <p className="text-base font-black text-orange-500">
+                                {formatMoney(
+                                  Number(
+                                    adPackage.price
+                                  ),
+                                  adPackage.currency_code
+                                )}
+                              </p>
+
+                              <div
+                                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                                  selected
+                                    ? "border-orange-500 bg-orange-500 text-white"
+                                    : "border-slate-300 bg-white text-transparent"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  className="h-3 w-3"
+                                  aria-hidden="true"
+                                >
+                                  <path d="m5 12 4 4L19 6" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                }
-              )}
-            </div>
+                      </button>
+                    );
+                  }
+                )}
+              </div>
+            )}
 
             {selectedPackage && (
               <div className="mt-3 rounded-xl bg-[#071226] px-3.5 py-3 text-white shadow-sm">
