@@ -31,6 +31,18 @@ type StartCampaignFormProps = {
   onClose: () => void;
 };
 
+type Step =
+  | 1
+  | 2
+  | 3
+  | 4;
+
+type ArtworkChoice =
+  | ""
+  | "ready"
+  | "need_creation"
+  | "later";
+
 function formatMoney(
   value: number,
   currency: string
@@ -60,7 +72,9 @@ function titleCase(
     )
     .replace(
       /\b\w/g,
-      (letter) =>
+      (
+        letter
+      ) =>
         letter.toUpperCase()
     );
 }
@@ -68,7 +82,9 @@ function titleCase(
 function formatScheduleDate(
   value: string
 ) {
-  if (!value) {
+  if (
+    !value
+  ) {
     return "—";
   }
 
@@ -76,10 +92,14 @@ function formatScheduleDate(
     return new Intl.DateTimeFormat(
       "en-US",
       {
-        timeZone: "UTC",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+        timeZone:
+          "UTC",
+        year:
+          "numeric",
+        month:
+          "short",
+        day:
+          "numeric",
       }
     ).format(
       new Date(
@@ -111,26 +131,120 @@ function saintLuciaTodayString() {
 
   const year =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "year"
     )?.value;
 
   const month =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "month"
     )?.value;
 
   const day =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "day"
     )?.value;
 
   return `${year}-${month}-${day}`;
+}
+
+function StepBadge({
+  number,
+  label,
+  currentStep,
+}: {
+  number: Step;
+  label: string;
+  currentStep: Step;
+}) {
+  const completed =
+    currentStep >
+    number;
+
+  const active =
+    currentStep ===
+    number;
+
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition ${
+          completed
+            ? "bg-emerald-500 text-white"
+            : active
+              ? "bg-orange-500 text-white shadow-sm"
+              : "bg-slate-100 text-slate-400"
+        }`}
+      >
+        {completed
+          ? "✓"
+          : number}
+      </div>
+
+      <div className="hidden min-w-0 sm:block">
+        <p
+          className={`truncate text-[10px] font-extrabold uppercase tracking-wide ${
+            active
+              ? "text-orange-600"
+              : completed
+                ? "text-emerald-600"
+                : "text-slate-400"
+          }`}
+        >
+          Step {number}
+        </p>
+
+        <p
+          className={`truncate text-xs font-bold ${
+            active
+              ? "text-slate-900"
+              : "text-slate-500"
+          }`}
+        >
+          {label}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SummaryItem({
+  label,
+  value,
+  accent = false,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+
+      <p
+        className={`mt-1 text-sm font-black ${
+          accent
+            ? "text-orange-500"
+            : "text-slate-900"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
 }
 
 export default function StartCampaignForm({
@@ -162,6 +276,14 @@ export default function StartCampaignForm({
 
   const today =
     saintLuciaTodayString();
+
+  const [
+    step,
+    setStep,
+  ] =
+    useState<Step>(
+      1
+    );
 
   const [
     companyName,
@@ -212,10 +334,12 @@ export default function StartCampaignForm({
     useState("");
 
   const [
-    artworkReady,
-    setArtworkReady,
+    artworkChoice,
+    setArtworkChoice,
   ] =
-    useState("");
+    useState<ArtworkChoice>(
+      ""
+    );
 
   const [
     message,
@@ -256,74 +380,85 @@ export default function StartCampaignForm({
     !hasSelectedPackage;
 
   const selectedPackageSummary =
-    useMemo(() => {
-      if (
-        !selectedPackageName
-      ) {
-        return "";
-      }
+    useMemo(
+      () => {
+        if (
+          !selectedPackageName
+        ) {
+          return "";
+        }
 
-      const parts: string[] =
-        [
+        const parts:
+          string[] = [
           selectedPackageName,
         ];
 
-      if (
-        selectedPackageCode
-      ) {
-        parts.push(
-          `Code: ${selectedPackageCode}`
-        );
-      }
+        if (
+          selectedPackageCode
+        ) {
+          parts.push(
+            `Code: ${selectedPackageCode}`
+          );
+        }
 
-      if (
-        selectedPackagePrice !==
-          null &&
-        selectedPackageCurrency
-      ) {
-        parts.push(
-          `Price: ${formatMoney(
-            selectedPackagePrice,
-            selectedPackageCurrency
-          )}`
-        );
-      }
+        if (
+          selectedPackagePrice !==
+            null &&
+          selectedPackageCurrency
+        ) {
+          parts.push(
+            `Price: ${formatMoney(
+              selectedPackagePrice,
+              selectedPackageCurrency
+            )}`
+          );
+        }
 
-      if (
-        selectedPackageSlotDuration
-      ) {
-        parts.push(
-          `${selectedPackageSlotDuration}-second ad`
-        );
-      }
+        if (
+          selectedPackageSlotDuration
+        ) {
+          parts.push(
+            `${selectedPackageSlotDuration}-second ad`
+          );
+        }
 
-      if (
-        selectedPackageDurationLabel
-      ) {
-        parts.push(
+        if (
           selectedPackageDurationLabel
+        ) {
+          parts.push(
+            selectedPackageDurationLabel
+          );
+        }
+
+        return parts.join(
+          " | "
         );
-      }
+      },
+      [
+        selectedPackageName,
+        selectedPackageCode,
+        selectedPackagePrice,
+        selectedPackageCurrency,
+        selectedPackageSlotDuration,
+        selectedPackageDurationLabel,
+      ]
+    );
 
-      return parts.join(
-        " | "
-      );
-    }, [
-      selectedPackageName,
-      selectedPackageCode,
-      selectedPackagePrice,
-      selectedPackageCurrency,
-      selectedPackageSlotDuration,
-      selectedPackageDurationLabel,
-    ]);
+  const artworkLabel =
+    artworkChoice ===
+      "ready"
+      ? "Artwork ready"
+      : artworkChoice ===
+          "need_creation"
+        ? selectedPackageIncludesAdCreation
+          ? "Use included ad creation"
+          : "Need Ernest Rentals to create my ad"
+        : artworkChoice ===
+            "later"
+          ? "Artwork will be provided later"
+          : "Not selected";
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
-
-    setErrorMessage("");
-
+  function validateSchedule() {
     if (
       !startDate ||
       !changeoverDate ||
@@ -334,7 +469,7 @@ export default function StartCampaignForm({
         "The campaign schedule is invalid. Please return to the billboard page and choose the dates again."
       );
 
-      return;
+      return false;
     }
 
     if (
@@ -345,17 +480,17 @@ export default function StartCampaignForm({
         "The advertising start date cannot be before today. Please return to the billboard page and choose today or a future start date."
       );
 
-      return;
+      return false;
     }
 
     if (
       staticPackageRequired
     ) {
       setErrorMessage(
-        "Static billboards require a 3, 6 or 12-month rental package. Please choose a package from the billboard details page before submitting your request."
+        "Static billboards require a 3, 6 or 12-month rental package. Please choose a package from the billboard details page before continuing."
       );
 
-      return;
+      return false;
     }
 
     if (
@@ -368,9 +503,13 @@ export default function StartCampaignForm({
         "The selected package does not match this static billboard."
       );
 
-      return;
+      return false;
     }
 
+    return true;
+  }
+
+  function validateCustomerDetails() {
     if (
       !contactPerson.trim()
     ) {
@@ -378,7 +517,7 @@ export default function StartCampaignForm({
         "Please enter a contact person."
       );
 
-      return;
+      return false;
     }
 
     if (
@@ -390,16 +529,143 @@ export default function StartCampaignForm({
         "Please provide an email address, phone number or WhatsApp number."
       );
 
+      return false;
+    }
+
+    return true;
+  }
+
+  function goNext() {
+    setErrorMessage(
+      ""
+    );
+
+    if (
+      step ===
+      1
+    ) {
+      if (
+        !validateSchedule()
+      ) {
+        return;
+      }
+
+      setStep(
+        2
+      );
+
       return;
     }
 
-    setLoading(true);
+    if (
+      step ===
+      2
+    ) {
+      if (
+        !validateCustomerDetails()
+      ) {
+        return;
+      }
+
+      setStep(
+        3
+      );
+
+      return;
+    }
+
+    if (
+      step ===
+      3
+    ) {
+      setStep(
+        4
+      );
+    }
+  }
+
+  function goBack() {
+    setErrorMessage(
+      ""
+    );
+
+    setStep(
+      (
+        current
+      ) =>
+        Math.max(
+          1,
+          current - 1
+        ) as Step
+    );
+  }
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setErrorMessage(
+      ""
+    );
+
+    if (
+      !validateSchedule()
+    ) {
+      setStep(
+        1
+      );
+
+      return;
+    }
+
+    if (
+      !validateCustomerDetails()
+    ) {
+      setStep(
+        2
+      );
+
+      return;
+    }
+
+    setLoading(
+      true
+    );
 
     const advertisingOption =
       hasSelectedPackage
         ? selectedPackageSummary
         : adOption.trim() ||
           null;
+
+    const artworkReady =
+      artworkChoice ===
+      "ready";
+
+    const artworkNote =
+      artworkChoice ===
+      "need_creation"
+        ? selectedPackageIncludesAdCreation
+          ? "Artwork request: Customer selected the package's included ad creation service."
+          : "Artwork request: Customer would like Ernest Rentals to create the advertisement."
+        : artworkChoice ===
+            "later"
+          ? "Artwork request: Customer will provide artwork later."
+          : null;
+
+    const combinedMessage = [
+      artworkNote,
+      message.trim() ||
+        null,
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        "\n\n"
+      ) ||
+      null;
 
     const {
       error,
@@ -450,24 +716,29 @@ export default function StartCampaignForm({
             null,
 
           p_artwork_ready:
-            artworkReady === ""
+            artworkChoice ===
+              ""
               ? null
-              : artworkReady ===
-                "yes",
+              : artworkReady,
 
           p_message:
-            message.trim() ||
-            null,
+            combinedMessage,
 
           p_requested_package_id:
             selectedPackageId,
         }
       );
 
-    setLoading(false);
+    setLoading(
+      false
+    );
 
-    if (error) {
-      console.error(error);
+    if (
+      error
+    ) {
+      console.error(
+        error
+      );
 
       setErrorMessage(
         "We could not submit your request right now. Please try again."
@@ -476,14 +747,17 @@ export default function StartCampaignForm({
       return;
     }
 
-    setSuccess(true);
+    setSuccess(
+      true
+    );
   }
 
-  if (success) {
+  if (
+    success
+  ) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-[#020817]/75 px-4 pb-8 pt-28 backdrop-blur-sm md:pt-32">
+      <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-[#020817]/75 px-4 pb-8 pt-24 backdrop-blur-sm md:pt-28">
         <div className="w-full max-w-xl rounded-3xl bg-white p-8 text-center shadow-2xl">
-
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-700">
             ✓
           </div>
@@ -502,55 +776,44 @@ export default function StartCampaignForm({
             </p>
 
             <div className="mt-3 grid grid-cols-2 gap-3 text-left">
-              <div>
-                <p className="text-xs text-slate-400">
-                  Start
-                </p>
+              <SummaryItem
+                label="Start"
+                value={`${formatScheduleDate(
+                  startDate
+                )} · 9:00 AM`}
+              />
 
-                <p className="mt-1 font-bold text-slate-900">
-                  {formatScheduleDate(
-                    startDate
-                  )}{" "}
-                  · 9:00 AM
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Changeover
-                </p>
-
-                <p className="mt-1 font-bold text-slate-900">
-                  {formatScheduleDate(
-                    changeoverDate
-                  )}{" "}
-                  · 9:00 AM
-                </p>
-              </div>
+              <SummaryItem
+                label="Changeover"
+                value={`${formatScheduleDate(
+                  changeoverDate
+                )} · 9:00 AM`}
+              />
             </div>
           </div>
 
           {selectedPackageName && (
-            <div className="mx-auto mt-4 max-w-md rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                Requested Package
-              </p>
-
-              <p className="mt-1 font-black text-slate-900">
-                {
+            <div className="mx-auto mt-4 max-w-md rounded-2xl bg-slate-50 p-4 text-left">
+              <SummaryItem
+                label="Requested Package"
+                value={
                   selectedPackageName
                 }
-              </p>
+              />
 
               {selectedPackagePrice !==
                 null &&
                 selectedPackageCurrency && (
-                <p className="mt-1 font-bold text-orange-500">
-                  {formatMoney(
-                    selectedPackagePrice,
-                    selectedPackageCurrency
-                  )}
-                </p>
+                <div className="mt-3">
+                  <SummaryItem
+                    label="Package Price"
+                    value={formatMoney(
+                      selectedPackagePrice,
+                      selectedPackageCurrency
+                    )}
+                    accent
+                  />
+                </div>
               )}
             </div>
           )}
@@ -570,476 +833,822 @@ export default function StartCampaignForm({
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-hidden bg-[#020817]/75 px-4 pb-6 pt-28 backdrop-blur-sm md:pt-32">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-hidden bg-[#020817]/75 px-4 pb-6 pt-20 backdrop-blur-sm md:pt-24">
+      <div className="mx-auto flex max-h-[calc(100dvh-6rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
 
-      <div className="mx-auto flex max-h-[calc(100dvh-8rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl md:max-h-[calc(100dvh-9rem)]">
-
-        <div className="shrink-0 flex items-start justify-between gap-5 border-b border-slate-200 bg-white p-6">
-
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
-              Start Campaign
-            </p>
-
-            <h2 className="mt-1 text-2xl font-black text-[#071226]">
-              {
-                billboardName
-              }
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              {location ||
-                "Saint Lucia"}{" "}
-              •{" "}
-              {billboardType ===
-              "digital"
-                ? "Digital Billboard"
-                : "Static Billboard"}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={
-              onClose
-            }
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-500 transition hover:bg-slate-50"
-          >
-            Close
-          </button>
-        </div>
-
-        <form
-          onSubmit={
-            handleSubmit
-          }
-          className="min-h-0 flex-1 overflow-y-auto p-6"
-        >
-
-          {/* SCHEDULE */}
-          <div className="rounded-2xl bg-slate-50 p-5">
-
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                {isStatic &&
-                hasSelectedPackage
-                  ? "Package Schedule"
-                  : "Requested Schedule"}
+        {/* HEADER */}
+        <div className="shrink-0 border-b border-slate-200 bg-white">
+          <div className="flex items-start justify-between gap-5 px-6 py-5">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
+                Start Campaign
               </p>
 
-              {isStatic &&
-                hasSelectedPackage &&
-                selectedPackageDurationLabel && (
-                  <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-orange-700">
-                    {
-                      selectedPackageDurationLabel
-                    } rental
-                  </span>
-                )}
-            </div>
+              <h2 className="mt-1 text-xl font-black text-[#071226] sm:text-2xl">
+                {billboardName}
+              </h2>
 
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Start
-                </p>
-
-                <p className="mt-1 font-bold text-slate-800">
-                  {formatScheduleDate(
-                    startDate
-                  )}{" "}
-                  • 9:00 AM
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">
-                  Changeover
-                </p>
-
-                <p className="mt-1 font-bold text-slate-800">
-                  {formatScheduleDate(
-                    changeoverDate
-                  )}{" "}
-                  • 9:00 AM
-                </p>
-              </div>
-            </div>
-
-            {isStatic &&
-              hasSelectedPackage && (
-                <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
-                  The changeover date shown above is based on the selected static billboard rental package, not the shorter date range originally used to search.
-                </p>
-              )}
-
-            {startDate &&
-              startDate < today && (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                  This advertising start date is in the past. Close this form and choose today or a future date.
-                </div>
-              )}
-          </div>
-
-          {/* STATIC PACKAGE REQUIRED */}
-          {staticPackageRequired && (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-amber-700">
-                Rental Package Required
-              </p>
-
-              <p className="mt-2 font-black text-[#071226]">
-                Static billboards require a 3, 6 or 12-month rental package.
-              </p>
-
-              <p className="mt-2 text-sm leading-6 text-amber-800">
-                Close this form, open the billboard details page and choose the rental package you want. The correct changeover date will then be calculated automatically.
+              <p className="mt-1 text-sm text-slate-500">
+                {location ||
+                  "Saint Lucia"}{" "}
+                •{" "}
+                {billboardType ===
+                "digital"
+                  ? "Digital Billboard"
+                  : "Static Billboard"}
               </p>
             </div>
-          )}
-
-          {/* SELECTED PACKAGE */}
-          {hasSelectedPackage && (
-            <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
-
-              <div className="flex flex-wrap items-start justify-between gap-4">
-
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
-                    Selected Package
-                  </p>
-
-                  <p className="mt-1 text-lg font-black text-[#071226]">
-                    {
-                      selectedPackageName
-                    }
-                  </p>
-
-                  {selectedPackageType && (
-                    <p className="mt-1 text-xs font-semibold text-slate-500">
-                      {titleCase(
-                        selectedPackageType
-                      )}
-                      {selectedPackageSlotDuration
-                        ? ` · ${selectedPackageSlotDuration}-second ad`
-                        : ""}
-                      {selectedPackageDurationLabel
-                        ? ` · ${selectedPackageDurationLabel}`
-                        : ""}
-                    </p>
-                  )}
-                </div>
-
-                {selectedPackagePrice !==
-                  null &&
-                  selectedPackageCurrency && (
-                  <div className="text-right">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                      Package Price
-                    </p>
-
-                    <p className="mt-1 text-2xl font-black text-orange-500">
-                      {formatMoney(
-                        selectedPackagePrice,
-                        selectedPackageCurrency
-                      )}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {selectedPackageIncludesAdCreation && (
-                <p className="mt-3 border-t border-orange-100 pt-3 text-xs font-bold text-sky-700">
-                  ✓ Ad creation included
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Company Name
-              </span>
-
-              <input
-                value={
-                  companyName
-                }
-                onChange={(
-                  event
-                ) =>
-                  setCompanyName(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Contact Person *
-              </span>
-
-              <input
-                value={
-                  contactPerson
-                }
-                onChange={(
-                  event
-                ) =>
-                  setContactPerson(
-                    event.target.value
-                  )
-                }
-                required
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Email
-              </span>
-
-              <input
-                type="email"
-                value={
-                  email
-                }
-                onChange={(
-                  event
-                ) =>
-                  setEmail(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Phone
-              </span>
-
-              <input
-                value={
-                  phone
-                }
-                onChange={(
-                  event
-                ) =>
-                  setPhone(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                WhatsApp
-              </span>
-
-              <input
-                value={
-                  whatsapp
-                }
-                onChange={(
-                  event
-                ) =>
-                  setWhatsapp(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Campaign Name
-              </span>
-
-              <input
-                value={
-                  campaignName
-                }
-                onChange={(
-                  event
-                ) =>
-                  setCampaignName(
-                    event.target.value
-                  )
-                }
-                placeholder="Optional"
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            {!hasSelectedPackage && (
-              <label className="md:col-span-2">
-                <span className="text-sm font-semibold text-slate-700">
-                  Advertising Option
-                </span>
-
-                <select
-                  value={
-                    adOption
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setAdOption(
-                      event.target.value
-                    )
-                  }
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-orange-400"
-                >
-                  <option value="">
-                    Select an option
-                  </option>
-
-                  {billboardType ===
-                  "digital" ? (
-                    <>
-                      <option value="Standard 10-Second Advertising">
-                        Standard 10-Second Advertising
-                      </option>
-
-                      <option value="Premium 15-Second Advertising">
-                        Premium 15-Second Advertising
-                      </option>
-
-                      <option value="Shoutout Advertising">
-                        Shoutout Advertising
-                      </option>
-                    </>
-                  ) : (
-                    <option value="Static Billboard Advertising">
-                      Static Billboard Advertising
-                    </option>
-                  )}
-                </select>
-              </label>
-            )}
-
-            <label className="md:col-span-2">
-              <span className="text-sm font-semibold text-slate-700">
-                Campaign Objective
-              </span>
-
-              <input
-                value={
-                  campaignObjective
-                }
-                onChange={(
-                  event
-                ) =>
-                  setCampaignObjective(
-                    event.target.value
-                  )
-                }
-                placeholder="e.g. Brand awareness, product launch, event promotion"
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-
-            <label>
-              <span className="text-sm font-semibold text-slate-700">
-                Is your artwork ready?
-              </span>
-
-              <select
-                value={
-                  artworkReady
-                }
-                onChange={(
-                  event
-                ) =>
-                  setArtworkReady(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-orange-400"
-              >
-                <option value="">
-                  Not sure yet
-                </option>
-
-                <option value="yes">
-                  Yes
-                </option>
-
-                <option value="no">
-                  No
-                </option>
-              </select>
-            </label>
-
-            <label className="md:col-span-2">
-              <span className="text-sm font-semibold text-slate-700">
-                Additional Information
-              </span>
-
-              <textarea
-                rows={4}
-                value={
-                  message
-                }
-                onChange={(
-                  event
-                ) =>
-                  setMessage(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-orange-400"
-              />
-            </label>
-          </div>
-
-          {errorMessage && (
-            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {
-                errorMessage
-              }
-            </div>
-          )}
-
-          <div className="mt-7 flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
 
             <button
               type="button"
               onClick={
                 onClose
               }
-              className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-600"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-500 transition hover:bg-slate-50"
             >
-              Cancel
+              Close
             </button>
+          </div>
 
-            <button
-              type="submit"
-              disabled={
-                loading ||
-                staticPackageRequired ||
-                !startDate ||
-                startDate < today
-              }
-              className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100"
-            >
-              {loading
-                ? "Submitting..."
-                : staticPackageRequired
-                  ? "Choose Rental Package First"
+          {/* STEPS */}
+          <div className="border-t border-slate-100 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <StepBadge
+                number={
+                  1
+                }
+                label="Campaign"
+                currentStep={
+                  step
+                }
+              />
+
+              <div className="h-px flex-1 bg-slate-200" />
+
+              <StepBadge
+                number={
+                  2
+                }
+                label="Your Details"
+                currentStep={
+                  step
+                }
+              />
+
+              <div className="h-px flex-1 bg-slate-200" />
+
+              <StepBadge
+                number={
+                  3
+                }
+                label="Artwork"
+                currentStep={
+                  step
+                }
+              />
+
+              <div className="h-px flex-1 bg-slate-200" />
+
+              <StepBadge
+                number={
+                  4
+                }
+                label="Review"
+                currentStep={
+                  step
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        <form
+          onSubmit={
+            handleSubmit
+          }
+          className="min-h-0 flex-1 overflow-y-auto"
+        >
+          <div className="p-6">
+
+            {/* STEP 1 */}
+            {step ===
+              1 && (
+              <div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
+                    Step 1 of 4
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-black text-slate-900">
+                    Review your campaign
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Confirm the billboard, package and campaign schedule before continuing.
+                  </p>
+                </div>
+
+                <div className="mt-5 rounded-2xl bg-[#071226] p-5 text-white">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-orange-400">
+                    Selected Billboard
+                  </p>
+
+                  <p className="mt-1 text-lg font-black">
+                    {billboardName}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-300">
+                    {location ||
+                      "Saint Lucia"}{" "}
+                    ·{" "}
+                    {billboardType ===
+                    "digital"
+                      ? "Digital Billboard"
+                      : "Static Billboard"}
+                  </p>
+                </div>
+
+                <div className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:grid-cols-2">
+                  <SummaryItem
+                    label="Start"
+                    value={`${formatScheduleDate(
+                      startDate
+                    )} · 9:00 AM`}
+                  />
+
+                  <SummaryItem
+                    label="Changeover"
+                    value={`${formatScheduleDate(
+                      changeoverDate
+                    )} · 9:00 AM`}
+                  />
+                </div>
+
+                {hasSelectedPackage ? (
+                  <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
+                          Selected Package
+                        </p>
+
+                        <p className="mt-1 text-lg font-black text-[#071226]">
+                          {
+                            selectedPackageName
+                          }
+                        </p>
+
+                        {selectedPackageType && (
+                          <p className="mt-1 text-xs font-semibold text-slate-500">
+                            {titleCase(
+                              selectedPackageType
+                            )}
+                            {selectedPackageSlotDuration
+                              ? ` · ${selectedPackageSlotDuration}-second ad`
+                              : ""}
+                            {selectedPackageDurationLabel
+                              ? ` · ${selectedPackageDurationLabel}`
+                              : ""}
+                          </p>
+                        )}
+                      </div>
+
+                      {selectedPackagePrice !==
+                        null &&
+                        selectedPackageCurrency && (
+                        <div className="text-right">
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                            Package Price
+                          </p>
+
+                          <p className="mt-1 text-2xl font-black text-orange-500">
+                            {formatMoney(
+                              selectedPackagePrice,
+                              selectedPackageCurrency
+                            )}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedPackageIncludesAdCreation && (
+                      <p className="mt-3 border-t border-orange-100 pt-3 text-xs font-bold text-violet-700">
+                        ✓ Ad creation included with this package
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <label>
+                      <span className="text-sm font-semibold text-slate-700">
+                        Advertising Option
+                      </span>
+
+                      <select
+                        value={
+                          adOption
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          setAdOption(
+                            event.target.value
+                          )
+                        }
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-orange-400"
+                      >
+                        <option value="">
+                          Select an option
+                        </option>
+
+                        {billboardType ===
+                        "digital" ? (
+                          <>
+                            <option value="Standard 10-Second Advertising">
+                              Standard 10-Second Advertising
+                            </option>
+
+                            <option value="Premium 15-Second Advertising">
+                              Premium 15-Second Advertising
+                            </option>
+
+                            <option value="Shoutout Advertising">
+                              Shoutout Advertising
+                            </option>
+                          </>
+                        ) : (
+                          <option value="Static Billboard Advertising">
+                            Static Billboard Advertising
+                          </option>
+                        )}
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                {staticPackageRequired && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-bold text-amber-800">
+                      Choose a rental package first
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-amber-700">
+                      Static billboards require a 3, 6 or 12-month package before a campaign request can be submitted.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP 2 */}
+            {step ===
+              2 && (
+              <div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
+                    Step 2 of 4
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-black text-slate-900">
+                    Tell us about you
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    We only need enough information to contact you and confirm the campaign.
+                  </p>
+                </div>
+
+                <div className="mt-6 grid gap-5 md:grid-cols-2">
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Company Name
+                    </span>
+
+                    <input
+                      value={
+                        companyName
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setCompanyName(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Optional"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Contact Person *
+                    </span>
+
+                    <input
+                      value={
+                        contactPerson
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setContactPerson(
+                          event.target.value
+                        )
+                      }
+                      required
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Email
+                    </span>
+
+                    <input
+                      type="email"
+                      value={
+                        email
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setEmail(
+                          event.target.value
+                        )
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Phone
+                    </span>
+
+                    <input
+                      value={
+                        phone
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setPhone(
+                          event.target.value
+                        )
+                      }
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <label className="md:col-span-2">
+                    <span className="text-sm font-semibold text-slate-700">
+                      WhatsApp
+                    </span>
+
+                    <input
+                      value={
+                        whatsapp
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setWhatsapp(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Recommended"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-5 rounded-xl bg-sky-50 p-4 text-xs leading-5 text-sky-800">
+                  Please provide at least one contact method: email, phone or WhatsApp.
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 */}
+            {step ===
+              3 && (
+              <div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
+                    Step 3 of 4
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-black text-slate-900">
+                    Campaign & artwork
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Tell us what you are advertising and how you want to handle the artwork.
+                  </p>
+                </div>
+
+                <div className="mt-6 grid gap-5 md:grid-cols-2">
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Campaign Name
+                    </span>
+
+                    <input
+                      value={
+                        campaignName
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setCampaignName(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Optional"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+
+                  <label>
+                    <span className="text-sm font-semibold text-slate-700">
+                      Campaign Objective
+                    </span>
+
+                    <input
+                      value={
+                        campaignObjective
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setCampaignObjective(
+                          event.target.value
+                        )
+                      }
+                      placeholder="Brand awareness, launch, event..."
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-sm font-semibold text-slate-700">
+                    What about your artwork?
+                  </p>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setArtworkChoice(
+                          "ready"
+                        )
+                      }
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        artworkChoice ===
+                        "ready"
+                          ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-100"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-lg">
+                        ✓
+                      </div>
+
+                      <p className="mt-2 text-sm font-black text-slate-900">
+                        Artwork Ready
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        I already have the artwork and can provide it.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setArtworkChoice(
+                          "need_creation"
+                        )
+                      }
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        artworkChoice ===
+                        "need_creation"
+                          ? "border-violet-400 bg-violet-50 ring-2 ring-violet-100"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-lg">
+                        ✦
+                      </div>
+
+                      <p className="mt-2 text-sm font-black text-slate-900">
+                        Need Ad Creation
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        {selectedPackageIncludesAdCreation
+                          ? "Use the ad creation included with this package."
+                          : "I would like Ernest Rentals to create my ad."}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setArtworkChoice(
+                          "later"
+                        )
+                      }
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        artworkChoice ===
+                        "later"
+                          ? "border-sky-400 bg-sky-50 ring-2 ring-sky-100"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-lg">
+                        ◷
+                      </div>
+
+                      <p className="mt-2 text-sm font-black text-slate-900">
+                        Provide Later
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        I will send the artwork after my request is confirmed.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+                <label className="mt-6 block">
+                  <span className="text-sm font-semibold text-slate-700">
+                    Additional Information
+                  </span>
+
+                  <textarea
+                    rows={
+                      4
+                    }
+                    value={
+                      message
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setMessage(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Anything else Ernest Rentals should know?"
+                    className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+              </div>
+            )}
+
+            {/* STEP 4 */}
+            {step ===
+              4 && (
+              <div>
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-orange-500">
+                    Step 4 of 4
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-black text-slate-900">
+                    Review & submit
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Check the details below before sending your campaign request.
+                  </p>
+                </div>
+
+                <div className="mt-6 rounded-2xl bg-[#071226] p-5 text-white">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <SummaryItem
+                      label="Billboard"
+                      value={
+                        billboardName
+                      }
+                    />
+
+                    <SummaryItem
+                      label="Location"
+                      value={
+                        location ||
+                        "Saint Lucia"
+                      }
+                    />
+
+                    <SummaryItem
+                      label="Start"
+                      value={`${formatScheduleDate(
+                        startDate
+                      )} · 9:00 AM`}
+                    />
+
+                    <SummaryItem
+                      label="Changeover"
+                      value={`${formatScheduleDate(
+                        changeoverDate
+                      )} · 9:00 AM`}
+                    />
+                  </div>
+                </div>
+
+                {hasSelectedPackage && (
+                  <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <SummaryItem
+                        label="Package"
+                        value={
+                          selectedPackageName ||
+                          "Selected Package"
+                        }
+                      />
+
+                      {selectedPackagePrice !==
+                        null &&
+                        selectedPackageCurrency && (
+                        <SummaryItem
+                          label="Price"
+                          value={formatMoney(
+                            selectedPackagePrice,
+                            selectedPackageCurrency
+                          )}
+                          accent
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 sm:grid-cols-2">
+                  <SummaryItem
+                    label="Contact"
+                    value={
+                      contactPerson
+                    }
+                  />
+
+                  <SummaryItem
+                    label="Company"
+                    value={
+                      companyName ||
+                      "—"
+                    }
+                  />
+
+                  <SummaryItem
+                    label="Email"
+                    value={
+                      email ||
+                      "—"
+                    }
+                  />
+
+                  <SummaryItem
+                    label="Phone / WhatsApp"
+                    value={
+                      whatsapp ||
+                      phone ||
+                      "—"
+                    }
+                  />
+
+                  <SummaryItem
+                    label="Campaign"
+                    value={
+                      campaignName ||
+                      "—"
+                    }
+                  />
+
+                  <SummaryItem
+                    label="Artwork"
+                    value={
+                      artworkLabel
+                    }
+                  />
+                </div>
+
+                {(campaignObjective ||
+                  message) && (
+                  <div className="mt-4 rounded-2xl bg-slate-50 p-5">
+                    {campaignObjective && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Campaign Objective
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {
+                            campaignObjective
+                          }
+                        </p>
+                      </div>
+                    )}
+
+                    {message && (
+                      <div
+                        className={
+                          campaignObjective
+                            ? "mt-4 border-t border-slate-200 pt-4"
+                            : ""
+                        }
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Additional Information
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          {
+                            message
+                          }
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs leading-5 text-sky-800">
+                  Submitting this form sends a campaign request to Ernest Rentals. The billboard is not reserved until the request is confirmed.
+                </div>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {
+                  errorMessage
+                }
+              </div>
+            )}
+          </div>
+
+          {/* FOOTER */}
+          <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur">
+            <div>
+              {step >
+              1 ? (
+                <button
+                  type="button"
+                  onClick={
+                    goBack
+                  }
+                  disabled={
+                    loading
+                  }
+                  className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                >
+                  ← Back
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={
+                    onClose
+                  }
+                  className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+
+            {step <
+            4 ? (
+              <button
+                type="button"
+                onClick={
+                  goNext
+                }
+                disabled={
+                  staticPackageRequired
+                }
+                className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {staticPackageRequired
+                  ? "Choose Package First"
+                  : "Continue →"}
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={
+                  loading
+                }
+                className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {loading
+                  ? "Submitting..."
                   : "Submit Campaign Request"}
-            </button>
+              </button>
+            )}
           </div>
         </form>
       </div>
