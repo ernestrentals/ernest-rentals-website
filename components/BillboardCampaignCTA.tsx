@@ -247,6 +247,151 @@ function addMonthsToDate(
   );
 }
 
+
+function saintLuciaTodayString() {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/St_Lucia",
+        year:
+          "numeric",
+        month:
+          "2-digit",
+        day:
+          "2-digit",
+      }
+    ).formatToParts(
+      new Date()
+    );
+
+  const year =
+    parts.find(
+      (
+        part
+      ) =>
+        part.type ===
+        "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (
+        part
+      ) =>
+        part.type ===
+        "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (
+        part
+      ) =>
+        part.type ===
+        "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+function weekdayForDate(
+  dateString: string
+) {
+  const [
+    year,
+    month,
+    day,
+  ] =
+    dateString
+      .split("-")
+      .map(Number);
+
+  return new Date(
+    Date.UTC(
+      year,
+      month - 1,
+      day
+    )
+  ).getUTCDay();
+}
+
+function mondayOnOrAfter(
+  dateString: string
+) {
+  const weekday =
+    weekdayForDate(
+      dateString
+    );
+
+  const daysUntilMonday =
+    (
+      8 -
+      weekday
+    ) %
+    7;
+
+  return addDaysToDate(
+    dateString,
+    daysUntilMonday
+  );
+}
+
+function digitalPackageStartDate(
+  requestedStartDate: string,
+  adPackage:
+    | PublicAdPackage
+    | null
+) {
+  if (
+    !requestedStartDate ||
+    !adPackage
+  ) {
+    return requestedStartDate;
+  }
+
+  const packageType =
+    adPackage.package_type
+      .toLowerCase()
+      .trim();
+
+  const today =
+    saintLuciaTodayString();
+
+  const tomorrow =
+    addDaysToDate(
+      today,
+      1
+    );
+
+  const earliestCandidate =
+    requestedStartDate >
+    tomorrow
+      ? requestedStartDate
+      : tomorrow;
+
+  if (
+    packageType ===
+    "shoutout"
+  ) {
+    return earliestCandidate;
+  }
+
+  if (
+    packageType ===
+      "standard" ||
+    packageType ===
+      "premium"
+  ) {
+    return mondayOnOrAfter(
+      earliestCandidate
+    );
+  }
+
+  return requestedStartDate;
+}
+
 function packageChangeoverDate(
   startDate: string,
   adPackage:
@@ -746,11 +891,28 @@ export default function BillboardCampaignCTA({
         selectedPackageId
     ) ?? null;
 
+  const effectiveStartDate =
+    billboardType ===
+      "digital"
+      ? digitalPackageStartDate(
+          startDate,
+          selectedPackage
+        )
+      : startDate;
+
   const effectiveChangeoverDate =
     packageChangeoverDate(
-      startDate,
+      effectiveStartDate,
       selectedPackage,
       changeoverDate
+    );
+
+  const startChangedByPackageRule =
+    Boolean(
+      selectedPackage &&
+      effectiveStartDate &&
+      effectiveStartDate !==
+        startDate
     );
 
   const scheduleChangedByPackage =
@@ -768,10 +930,10 @@ export default function BillboardCampaignCTA({
     async function checkPackageAvailability() {
       if (
         !selectedPackage ||
-        !startDate ||
+        !effectiveStartDate ||
         !effectiveChangeoverDate ||
         effectiveChangeoverDate <=
-          startDate
+          effectiveStartDate
       ) {
         setPackageAvailable(
           null
@@ -792,7 +954,7 @@ export default function BillboardCampaignCTA({
           "search_public_billboard_availability",
           {
             p_start_date:
-              startDate,
+              effectiveStartDate,
 
             p_end_date:
               effectiveChangeoverDate,
@@ -927,19 +1089,18 @@ export default function BillboardCampaignCTA({
     billboardId,
     billboardType,
     effectiveChangeoverDate,
+    effectiveStartDate,
     selectedPackage,
-    startDate,
     supabase,
   ]);
 
   const canStartCampaign =
     Boolean(
-      available &&
       selectedPackage &&
-      startDate &&
+      effectiveStartDate &&
       effectiveChangeoverDate &&
       effectiveChangeoverDate >
-        startDate &&
+        effectiveStartDate &&
       packageAvailable ===
         true &&
       !checkingPackageAvailability
@@ -983,11 +1144,23 @@ export default function BillboardCampaignCTA({
               <>
                 {/* DIGITAL PACKAGE TYPE */}
                 <div className="mt-4">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
-                    1. Choose Ad Type
-                  </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                        Step 1
+                      </p>
 
-                  <div className="mt-2 grid grid-cols-3 gap-2">
+                      <p className="mt-0.5 text-sm font-black text-slate-900">
+                        Choose ad type
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-500">
+                      Digital
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-3 gap-2">
                     {(
                       [
                         {
@@ -999,6 +1172,10 @@ export default function BillboardCampaignCTA({
                             "10 sec",
                           helper:
                             "Best value",
+                          badgeClass:
+                            "bg-sky-50 text-sky-700",
+                          iconClass:
+                            "bg-sky-100 text-sky-700",
                         },
                         {
                           key:
@@ -1009,6 +1186,10 @@ export default function BillboardCampaignCTA({
                             "15 sec",
                           helper:
                             "More exposure",
+                          badgeClass:
+                            "bg-orange-50 text-orange-700",
+                          iconClass:
+                            "bg-orange-100 text-orange-700",
                         },
                         {
                           key:
@@ -1019,6 +1200,10 @@ export default function BillboardCampaignCTA({
                             "15 sec",
                           helper:
                             "1-day feature",
+                          badgeClass:
+                            "bg-violet-50 text-violet-700",
+                          iconClass:
+                            "bg-violet-100 text-violet-700",
                         },
                       ] as const
                     ).map(
@@ -1054,39 +1239,61 @@ export default function BillboardCampaignCTA({
                                 option.key
                               )
                             }
-                            className={`rounded-xl border px-2.5 py-3 text-center transition ${
+                            className={`relative overflow-hidden rounded-2xl border px-2.5 py-3.5 text-center transition-all ${
                               selected
-                                ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
-                                : "border-slate-200 bg-white hover:border-slate-300"
+                                ? "border-orange-400 bg-white shadow-md ring-2 ring-orange-100"
+                                : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
                             } disabled:cursor-not-allowed disabled:opacity-40`}
                           >
-                            <span
-                              className={`mx-auto inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide ${
-                                option.key ===
-                                "premium"
-                                  ? "bg-orange-50 text-orange-600"
-                                  : option.key ===
-                                      "shoutout"
-                                    ? "bg-violet-50 text-violet-700"
-                                    : "bg-sky-50 text-sky-700"
-                              }`}
-                            >
-                              {
-                                option.duration
-                              }
-                            </span>
+                            {selected && (
+                              <span className="absolute inset-x-0 top-0 h-1 bg-orange-500" />
+                            )}
 
-                            <p className="mt-2 text-xs font-black text-slate-900">
+                            <div
+                              className={`mx-auto flex h-8 w-8 items-center justify-center rounded-xl text-[10px] font-black ${option.iconClass}`}
+                            >
+                              {option.duration.replace(
+                                " sec",
+                                "s"
+                              )}
+                            </div>
+
+                            <p className="mt-2 text-[11px] font-black text-slate-900">
                               {
                                 option.label
                               }
                             </p>
 
-                            <p className="mt-0.5 text-[9px] font-semibold text-slate-400">
+                            <p className="mt-0.5 text-[9px] font-semibold leading-4 text-slate-400">
                               {
                                 option.helper
                               }
                             </p>
+
+                            <div className="mt-2 flex justify-center">
+                              <span
+                                className={`inline-flex rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide ${option.badgeClass}`}
+                              >
+                                {
+                                  option.duration
+                                }
+                              </span>
+                            </div>
+
+                            {selected && (
+                              <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  className="h-3 w-3"
+                                  aria-hidden="true"
+                                >
+                                  <path d="m5 12 4 4L19 6" />
+                                </svg>
+                              </span>
+                            )}
                           </button>
                         );
                       }
@@ -1095,12 +1302,28 @@ export default function BillboardCampaignCTA({
                 </div>
 
                 {/* DIGITAL DURATION */}
-                <div className="mt-4">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
-                    2. Choose Duration
-                  </p>
+                <div className="mt-5 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                        Step 2
+                      </p>
 
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <p className="mt-0.5 text-sm font-black text-slate-900">
+                        Choose duration
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[9px] font-bold text-orange-700">
+                      {digitalPackages.length} option
+                      {digitalPackages.length ===
+                      1
+                        ? ""
+                        : "s"}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid gap-2">
                     {digitalPackages.map(
                       (
                         adPackage
@@ -1134,14 +1357,18 @@ export default function BillboardCampaignCTA({
                                 adPackage.package_id
                               )
                             }
-                            className={`rounded-xl border px-3 py-3 text-left transition ${
+                            className={`group relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border px-4 py-3.5 text-left transition-all ${
                               selected
-                                ? "border-orange-400 bg-orange-50/70 ring-2 ring-orange-100"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                                ? "border-orange-400 bg-orange-50/50 shadow-sm ring-2 ring-orange-100"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
+                            {selected && (
+                              <span className="absolute inset-y-0 left-0 w-1 bg-orange-500" />
+                            )}
+
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-sm font-black text-slate-900">
                                   {
                                     durationText
@@ -1149,40 +1376,46 @@ export default function BillboardCampaignCTA({
                                 </p>
 
                                 {adPackage.includes_ad_creation && (
-                                  <p className="mt-1 text-[10px] font-bold text-violet-700">
-                                    + Ad Creation
-                                  </p>
+                                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-violet-700">
+                                    Ad Creation
+                                  </span>
                                 )}
                               </div>
 
-                              <div className="shrink-0 text-right">
-                                <div
-                                  className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full border ${
-                                    selected
-                                      ? "border-orange-500 bg-orange-500 text-white"
-                                      : "border-slate-300 bg-white text-transparent"
-                                  }`}
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    className="h-3 w-3"
-                                    aria-hidden="true"
-                                  >
-                                    <path d="m5 12 4 4L19 6" />
-                                  </svg>
-                                </div>
+                              <p className="mt-1 text-[10px] font-medium text-slate-400">
+                                {selected
+                                  ? "Selected package"
+                                  : "Tap to select"}
+                              </p>
+                            </div>
 
-                                <p className="mt-2 text-sm font-black text-orange-500">
-                                  {formatMoney(
-                                    Number(
-                                      adPackage.price
-                                    ),
-                                    adPackage.currency_code
-                                  )}
-                                </p>
+                            <div className="flex shrink-0 items-center gap-3">
+                              <p className="text-base font-black text-orange-500">
+                                {formatMoney(
+                                  Number(
+                                    adPackage.price
+                                  ),
+                                  adPackage.currency_code
+                                )}
+                              </p>
+
+                              <div
+                                className={`flex h-6 w-6 items-center justify-center rounded-full border transition ${
+                                  selected
+                                    ? "border-orange-500 bg-orange-500 text-white"
+                                    : "border-slate-300 bg-white text-transparent group-hover:border-orange-300"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                >
+                                  <path d="m5 12 4 4L19 6" />
+                                </svg>
                               </div>
                             </div>
                           </button>
@@ -1346,7 +1579,7 @@ export default function BillboardCampaignCTA({
             )}
 
             {selectedPackage &&
-              startDate &&
+              effectiveStartDate &&
               effectiveChangeoverDate && (
               <div className="mt-2.5 rounded-xl border border-sky-200 bg-sky-50/70 px-3.5 py-3">
                 <div className="flex items-center justify-between gap-3">
@@ -1379,7 +1612,7 @@ export default function BillboardCampaignCTA({
 
                     <p className="mt-1 text-sm font-black text-slate-900">
                       {formatScheduleDate(
-                        startDate
+                        effectiveStartDate
                       )}
                     </p>
 
@@ -1409,9 +1642,33 @@ export default function BillboardCampaignCTA({
                   </div>
                 </div>
 
-                {scheduleChangedByPackage && (
+                {billboardType ===
+                  "digital" && (
                   <p className="mt-2.5 border-t border-sky-100 pt-2.5 text-[11px] leading-4 text-sky-800">
-                    The changeover date has been updated automatically to match the selected{" "}
+                    {selectedPackage.package_type
+                      .toLowerCase()
+                      .trim() ===
+                    "shoutout"
+                      ? "Shoutout campaigns can begin from the next day at 9:00 AM."
+                      : "Standard and Premium campaigns start on Mondays at 9:00 AM."}
+                  </p>
+                )}
+
+                {startChangedByPackageRule && (
+                  <p className="mt-2 text-[11px] leading-4 text-sky-800">
+                    Your start date was adjusted automatically to{" "}
+                    <strong>
+                      {formatScheduleDate(
+                        effectiveStartDate
+                      )}
+                    </strong>
+                    .
+                  </p>
+                )}
+
+                {scheduleChangedByPackage && (
+                  <p className="mt-2 text-[11px] leading-4 text-sky-800">
+                    The changeover date was updated automatically to match the selected{" "}
                     <strong>
                       {selectedPackage.duration_label ||
                         packageDescription(
@@ -1484,7 +1741,7 @@ export default function BillboardCampaignCTA({
             location
           }
           startDate={
-            startDate
+            effectiveStartDate
           }
           changeoverDate={
             effectiveChangeoverDate
