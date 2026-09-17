@@ -57,6 +57,7 @@ export const metadata: Metadata = {
 const locations = [
   {
     name: "Dennery",
+    slug: "dennery",
     area: "Anse Canot, Dennery",
     description:
       "Static billboard advertising opportunities including V-Shape advertising faces.",
@@ -65,6 +66,7 @@ const locations = [
   },
   {
     name: "Mamiku",
+    slug: "mamiku",
     area: "Mamiku, Micoud",
     description:
       "Static roadside billboard advertising along the east coast corridor.",
@@ -73,6 +75,7 @@ const locations = [
   },
   {
     name: "Mon Repos",
+    slug: "mon-repos",
     area: "Mon Repos, Micoud",
     description:
       "Static billboard advertising opportunities serving traffic through the Micoud area.",
@@ -81,6 +84,7 @@ const locations = [
   },
   {
     name: "Piaye",
+    slug: "piaye",
     area: "Piaye, Choiseul",
     description:
       "Large-format static billboard advertising in Saint Lucia's south-west corridor.",
@@ -89,6 +93,7 @@ const locations = [
   },
   {
     name: "Praslin",
+    slug: "praslin",
     area: "Praslin, Micoud",
     description:
       "V-Shape static billboard advertising with directional face options.",
@@ -97,6 +102,7 @@ const locations = [
   },
   {
     name: "Richford",
+    slug: "richford",
     area: "Richford, Dennery Valley",
     description:
       "Large-format static billboard advertising in the Dennery Valley area.",
@@ -105,6 +111,7 @@ const locations = [
   },
   {
     name: "Rodney Bay",
+    slug: "rodney-bay",
     area: "Rodney Bay, Gros Islet",
     description:
       "Digital billboard advertising inventory in one of Saint Lucia's busiest commercial areas.",
@@ -114,11 +121,9 @@ const locations = [
 ];
 
 const locationsStructuredData = {
-  "@context":
-    "https://schema.org",
+  "@context": "https://schema.org",
 
-  "@type":
-    "ItemList",
+  "@type": "ItemList",
 
   "@id":
     "https://www.ernestrentals.com/locations#billboard-locations",
@@ -133,66 +138,60 @@ const locationsStructuredData = {
     locations.length,
 
   itemListElement:
-    locations.map(
-      (location, index) => ({
-        "@type":
-          "ListItem",
+    locations.map((location, index) => ({
+      "@type": "ListItem",
 
-        position:
-          index + 1,
+      position:
+        index + 1,
 
-        item: {
-          "@type":
-            "Place",
+      url:
+        `https://www.ernestrentals.com/locations/${location.slug}`,
 
-          name:
-            `${location.name} Billboard Advertising`,
+      item: {
+        "@type": "Place",
 
-          description:
-            location.description,
+        name:
+          `${location.name} Billboard Advertising`,
 
-          address: {
-            "@type":
-              "PostalAddress",
+        url:
+          `https://www.ernestrentals.com/locations/${location.slug}`,
 
-            addressLocality:
-              location.area,
+        description:
+          location.description,
 
-            addressCountry:
-              "LC",
-          },
+        address: {
+          "@type": "PostalAddress",
+
+          addressLocality:
+            location.area,
+
+          addressCountry:
+            "LC",
         },
-      })
-    ),
+      },
+    })),
 };
 
 const breadcrumbStructuredData = {
-  "@context":
-    "https://schema.org",
+  "@context": "https://schema.org",
 
-  "@type":
-    "BreadcrumbList",
+  "@type": "BreadcrumbList",
 
   itemListElement: [
     {
-      "@type":
-        "ListItem",
+      "@type": "ListItem",
 
-      position:
-        1,
+      position: 1,
 
-      name:
-        "Home",
+      name: "Home",
 
       item:
         "https://www.ernestrentals.com",
     },
     {
-      "@type":
-        "ListItem",
+      "@type": "ListItem",
 
-      position:
-        2,
+      position: 2,
 
       name:
         "Billboard Locations",
@@ -283,62 +282,61 @@ export default function LocationsPage() {
       {/* LOCATION CARDS */}
       <section className="px-5 py-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {locations.map(
-            (location) => (
-              <article
-                key={
-                  location.name
-                }
-                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="h-2 bg-gradient-to-r from-orange-500 to-sky-500" />
+          {locations.map((location) => (
+            <article
+              key={location.name}
+              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="h-2 bg-gradient-to-r from-orange-500 to-sky-500" />
 
-                <div className="p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                      Saint Lucia
-                    </p>
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
-                      {
-                        location.type
-                      }
-                    </span>
-                  </div>
-
-                  <h2 className="mt-3 text-2xl font-black">
-                    {
-                      location.name
-                    }
-                  </h2>
-
-                  <p className="mt-1 text-sm font-semibold text-orange-500">
-                    {
-                      location.area
-                    }
+              <div className="p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                    Saint Lucia
                   </p>
 
-                  <p className="mt-4 text-sm leading-6 text-slate-500">
-                    {
-                      location.description
-                    }
-                  </p>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                    {location.type}
+                  </span>
+                </div>
+
+                <h2 className="mt-3 text-2xl font-black">
+                  <Link
+                    href={`/locations/${location.slug}`}
+                    className="transition hover:text-orange-500"
+                  >
+                    {location.name}
+                  </Link>
+                </h2>
+
+                <p className="mt-1 text-sm font-semibold text-orange-500">
+                  {location.area}
+                </p>
+
+                <p className="mt-4 text-sm leading-6 text-slate-500">
+                  {location.description}
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href={`/locations/${location.slug}`}
+                    className="inline-flex rounded-xl bg-[#071226] px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-orange-500"
+                  >
+                    View {location.name}
+                  </Link>
 
                   <Link
                     href={`/?location=${encodeURIComponent(
                       location.search
                     )}#availability`}
-                    className="mt-6 inline-flex rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition group-hover:bg-[#071226] group-hover:text-white"
+                    className="inline-flex rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
                   >
-                    Search Billboards in{" "}
-                    {
-                      location.name
-                    }
+                    Check Availability
                   </Link>
                 </div>
-              </article>
-            )
-          )}
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 

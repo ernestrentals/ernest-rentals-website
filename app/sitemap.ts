@@ -4,10 +4,20 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   "https://www.ernestrentals.com";
 
+const locationSlugs = [
+  "dennery",
+  "mamiku",
+  "mon-repos",
+  "piaye",
+  "praslin",
+  "richford",
+  "rodney-bay",
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${siteUrl}/`,
       lastModified: now,
@@ -44,5 +54,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+  ];
+
+  const locationPages: MetadataRoute.Sitemap =
+    locationSlugs.map((slug) => ({
+      url: `${siteUrl}/locations/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    }));
+
+  return [
+    ...staticPages,
+    ...locationPages,
   ];
 }
