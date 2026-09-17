@@ -54,21 +54,23 @@ export default function Home() {
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
               <span className="h-2 w-2 rounded-full bg-orange-400" />
+
               <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-200">
                 Saint Lucia Outdoor Advertising
               </span>
             </div>
 
-            <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-              Find the right billboard.
+            <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Billboard & Outdoor Advertising
               <span className="block bg-gradient-to-r from-orange-400 via-orange-500 to-sky-400 bg-clip-text text-transparent">
-                Get your brand seen.
+                in Saint Lucia.
               </span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Search static and digital billboard opportunities across Saint Lucia,
-              compare locations and packages, and start your campaign request online.
+              Get your brand seen with strategically located static and digital
+              billboards across Saint Lucia. Search billboard locations, compare
+              advertising options, check availability and start your campaign online.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -80,40 +82,52 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/how-it-works"
+                href="/locations"
                 className="rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
               >
-                How It Works
+                Explore Billboard Locations
               </Link>
             </div>
 
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3 border-t border-white/10 pt-6">
-              <div>
-                <p className="text-xl font-black sm:text-2xl">
+              <Link
+                href="/billboards"
+                className="group"
+              >
+                <p className="text-xl font-black transition group-hover:text-orange-400 sm:text-2xl">
                   Static
                 </p>
+
                 <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
                   3, 6 & 12-month rentals
                 </p>
-              </div>
+              </Link>
 
-              <div>
-                <p className="text-xl font-black sm:text-2xl">
+              <Link
+                href="/digital-screens"
+                className="group"
+              >
+                <p className="text-xl font-black transition group-hover:text-orange-400 sm:text-2xl">
                   Digital
                 </p>
+
                 <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
                   10s & 15s ad slots
                 </p>
-              </div>
+              </Link>
 
-              <div>
-                <p className="text-xl font-black sm:text-2xl">
+              <Link
+                href="/#availability"
+                className="group"
+              >
+                <p className="text-xl font-black transition group-hover:text-orange-400 sm:text-2xl">
                   Live
                 </p>
+
                 <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
                   Availability by date
                 </p>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -128,7 +142,7 @@ export default function Home() {
                     <div className="flex items-center gap-4">
                       <img
                         src="/ernest-rentals-logo.png"
-                        alt="Ernest Rentals"
+                        alt="Ernest Rentals billboard advertising in Saint Lucia"
                         className="h-14 w-14 object-contain"
                       />
 
@@ -157,7 +171,6 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
@@ -172,16 +185,16 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {[
             [
-              "Live Inventory",
-              "Search your preferred dates and see what is actually available.",
+              "Live Billboard Inventory",
+              "Search your preferred campaign dates and see which billboard locations are available.",
             ],
             [
-              "Clear Packages",
-              "Compare static rental periods and digital advertising options.",
+              "Static & Digital Packages",
+              "Compare long-term static billboard rentals and flexible digital advertising options.",
             ],
             [
-              "Simple Request",
-              "Choose a billboard and send your campaign details online.",
+              "Simple Campaign Request",
+              "Choose a billboard and send your advertising campaign details online.",
             ],
           ].map(([title, body]) => (
             <div
@@ -211,16 +224,17 @@ export default function Home() {
           <div className="grid items-end gap-6 lg:grid-cols-[1fr_auto]">
             <div className="max-w-3xl">
               <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
-                Choose Your Format
+                Billboard Advertising Options
               </p>
 
               <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                Two ways to own the road.
+                Static & digital billboard advertising in Saint Lucia.
               </h2>
 
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">
-                Choose long-term static visibility or flexible digital campaigns.
-                Both are designed to keep your brand in front of the right audience.
+                Choose long-term static roadside advertising or flexible digital
+                billboard campaigns. Both options help put your brand in front of
+                motorists and communities across Saint Lucia.
               </p>
             </div>
 
@@ -228,7 +242,7 @@ export default function Home() {
               href="/billboards"
               className="hidden rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600 lg:inline-flex"
             >
-              Compare all options →
+              Explore Billboard Advertising →
             </Link>
           </div>
 
@@ -252,24 +266,27 @@ export default function Home() {
                 <div className="mt-10 grid items-end gap-8 sm:grid-cols-[1fr_180px]">
                   <div>
                     <h3 className="text-4xl font-black leading-[1.05] sm:text-5xl">
-                      Consistent roadside
+                      Long-term roadside
                       <span className="block text-orange-400">
                         visibility.
                       </span>
                     </h3>
 
                     <p className="mt-5 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
-                      Best for brands that want uninterrupted presence in one
-                      high-visibility location over a longer campaign period.
+                      Static billboard advertising is ideal for brands that want
+                      uninterrupted visibility in a high-exposure Saint Lucia location
+                      over a longer campaign period.
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-2 text-xs font-bold text-slate-300">
                       <span className="rounded-full bg-white/5 px-3 py-2">
                         Fixed location
                       </span>
+
                       <span className="rounded-full bg-white/5 px-3 py-2">
                         Long-term exposure
                       </span>
+
                       <span className="rounded-full bg-white/5 px-3 py-2">
                         Roadside impact
                       </span>
@@ -283,11 +300,13 @@ export default function Home() {
                           <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
                             Your Brand
                           </p>
+
                           <p className="mt-3 text-lg font-black">
                             HERE
                           </p>
                         </div>
                       </div>
+
                       <div className="mx-auto h-8 w-2 bg-slate-600" />
                       <div className="mx-auto h-2 w-20 rounded-full bg-slate-600" />
                     </div>
@@ -306,7 +325,7 @@ export default function Home() {
                     href="/billboards"
                     className="rounded-xl border border-white/15 px-5 py-3 font-extrabold text-white transition hover:bg-white/10"
                   >
-                    Learn More
+                    Learn About Static Billboards
                   </Link>
                 </div>
               </div>
@@ -323,7 +342,7 @@ export default function Home() {
               <div className="relative">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="rounded-full bg-white/50 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em]">
-                    Digital Advertising
+                    Digital Billboard Advertising
                   </span>
 
                   <span className="rounded-full border border-[#071226]/10 bg-white/30 px-3 py-1.5 text-xs font-black">
@@ -334,24 +353,27 @@ export default function Home() {
                 <div className="mt-10 grid items-end gap-8 sm:grid-cols-[1fr_180px]">
                   <div>
                     <h3 className="text-4xl font-black leading-[1.05] sm:text-5xl">
-                      Flexible, dynamic
+                      Flexible digital
                       <span className="block text-white">
                         advertising.
                       </span>
                     </h3>
 
                     <p className="mt-5 max-w-lg text-sm leading-7 text-[#071226]/75 sm:text-base">
-                      Ideal for brands that want rotating messages, shorter campaign
-                      commitments and more creative flexibility.
+                      Digital billboard advertising is ideal for brands that want
+                      rotating messages, shorter campaign commitments and more creative
+                      flexibility.
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-2 text-xs font-black text-[#071226]/75">
                       <span className="rounded-full bg-white/35 px-3 py-2">
                         Rotating ads
                       </span>
+
                       <span className="rounded-full bg-white/35 px-3 py-2">
                         10s & 15s slots
                       </span>
+
                       <span className="rounded-full bg-white/35 px-3 py-2">
                         Flexible campaigns
                       </span>
@@ -364,9 +386,11 @@ export default function Home() {
                         <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
                           Now Showing
                         </p>
+
                         <p className="mt-3 text-lg font-black">
                           YOUR AD
                         </p>
+
                         <div className="mx-auto mt-4 h-1.5 w-16 rounded-full bg-orange-400" />
                       </div>
                     </div>
@@ -385,7 +409,7 @@ export default function Home() {
                     href="/digital-screens"
                     className="rounded-xl border border-[#071226]/15 bg-white/20 px-5 py-3 font-extrabold transition hover:bg-white/35"
                   >
-                    Learn More
+                    Learn About Digital Billboards
                   </Link>
                 </div>
               </div>
@@ -403,15 +427,16 @@ export default function Home() {
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div className="max-w-2xl">
               <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">
-                Explore Saint Lucia
+                Billboard Locations Across Saint Lucia
               </p>
 
               <h2 className="mt-2 text-4xl font-black tracking-tight">
-                Browse by location.
+                Explore billboard advertising locations.
               </h2>
 
               <p className="mt-3 leading-7 text-slate-500">
-                Jump directly into the billboard search for one of our advertising areas.
+                Browse outdoor advertising opportunities in key communities across
+                Saint Lucia and search availability for your preferred campaign dates.
               </p>
             </div>
 
@@ -419,7 +444,7 @@ export default function Home() {
               href="/locations"
               className="font-extrabold text-sky-600 transition hover:text-orange-600"
             >
-              View all locations →
+              View All Billboard Locations →
             </Link>
           </div>
 
@@ -450,7 +475,7 @@ export default function Home() {
                   </p>
 
                   <p className="mt-4 text-xs font-bold uppercase tracking-wide text-orange-500 opacity-0 transition group-hover:opacity-100">
-                    Search this area
+                    Search Billboards in This Area
                   </p>
                 </div>
               </Link>
@@ -467,11 +492,11 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="max-w-2xl">
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
-              Simple Process
+              Simple Advertising Process
             </p>
 
             <h2 className="mt-2 text-4xl font-black tracking-tight">
-              From search to campaign request.
+              From billboard search to campaign request.
             </h2>
           </div>
 
@@ -480,12 +505,12 @@ export default function Home() {
               [
                 "01",
                 "Search",
-                "Choose a location, billboard type and campaign dates.",
+                "Choose a Saint Lucia location, billboard type and campaign dates.",
               ],
               [
                 "02",
                 "Compare",
-                "Review live availability, billboard details and packages.",
+                "Review live availability, billboard details and advertising packages.",
               ],
               [
                 "03",
@@ -495,7 +520,7 @@ export default function Home() {
               [
                 "04",
                 "Confirm",
-                "Ernest Rentals reviews the request and coordinates next steps.",
+                "Ernest Rentals reviews your campaign request and coordinates the next steps.",
               ],
             ].map(([number, title, body]) => (
               <div
@@ -522,7 +547,7 @@ export default function Home() {
               href="/how-it-works"
               className="font-extrabold text-sky-600 transition hover:text-orange-600"
             >
-              See the full process →
+              See How Billboard Advertising Works →
             </Link>
           </div>
         </div>
@@ -534,16 +559,17 @@ export default function Home() {
           <div className="flex flex-wrap items-center justify-between gap-8">
             <div>
               <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-400">
-                Ready to be seen?
+                Ready to advertise in Saint Lucia?
               </p>
 
               <h2 className="mt-2 max-w-2xl text-3xl font-black sm:text-4xl">
-                Start with the billboard that fits your campaign.
+                Find the billboard that fits your campaign.
               </h2>
 
               <p className="mt-3 max-w-2xl leading-7 text-slate-300">
-                Search the available inventory and choose the location, dates and
-                package that work for your brand.
+                Search available static and digital billboard inventory and choose
+                the location, campaign dates and advertising option that work for your
+                brand.
               </p>
             </div>
 
@@ -551,7 +577,7 @@ export default function Home() {
               href="/#availability"
               className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
             >
-              Search Billboards
+              Search Billboard Availability
             </Link>
           </div>
         </div>

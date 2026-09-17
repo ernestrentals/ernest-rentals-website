@@ -7,44 +7,36 @@ import { Montserrat } from "next/font/google";
 
 import "./globals.css";
 
-const montserrat =
-  Montserrat({
-    subsets: [
-      "latin",
-    ],
-    display:
-      "swap",
-    variable:
-      "--font-montserrat",
-  });
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-montserrat",
+});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  "https://ernest-rentals-website.vercel.app";
+  "https://www.ernestrentals.com";
 
 export const metadata: Metadata = {
-  metadataBase:
-    new URL(
-      siteUrl
-    ),
+  metadataBase: new URL(siteUrl),
 
   title: {
     default:
-      "Ernest Rentals | Billboard Advertising in Saint Lucia",
+      "Billboard & Outdoor Advertising in Saint Lucia | Ernest Rentals",
     template:
       "%s | Ernest Rentals",
   },
 
   description:
-    "Search static and digital billboard advertising opportunities across Saint Lucia. Compare locations, check availability, view packages and start your Ernest Rentals campaign online.",
+    "Advertise across Saint Lucia with Ernest Rentals. Explore static and digital billboard locations, check availability, compare advertising options and start your campaign online.",
 
   applicationName:
     "Ernest Rentals",
 
   authors: [
     {
-      name:
-        "Ernest Rentals",
+      name: "Ernest Rentals",
+      url: siteUrl,
     },
   ],
 
@@ -60,14 +52,18 @@ export const metadata: Metadata = {
   keywords: [
     "billboard advertising Saint Lucia",
     "billboards Saint Lucia",
-    "digital billboard Saint Lucia",
-    "static billboard Saint Lucia",
     "outdoor advertising Saint Lucia",
-    "advertising Saint Lucia",
-    "Ernest Rentals",
+    "digital billboards Saint Lucia",
+    "digital billboard advertising Saint Lucia",
+    "static billboards Saint Lucia",
     "billboard rental Saint Lucia",
-    "digital advertising Saint Lucia",
+    "LED billboard Saint Lucia",
+    "OOH advertising Saint Lucia",
+    "out of home advertising Saint Lucia",
     "roadside advertising Saint Lucia",
+    "advertising Castries Saint Lucia",
+    "digital advertising Saint Lucia",
+    "Ernest Rentals",
   ],
 
   alternates: {
@@ -78,26 +74,29 @@ export const metadata: Metadata = {
   openGraph: {
     type:
       "website",
+
     locale:
       "en_LC",
+
     url:
       "/",
+
     siteName:
       "Ernest Rentals",
+
     title:
-      "Ernest Rentals | Billboard Advertising in Saint Lucia",
+      "Billboard & Outdoor Advertising in Saint Lucia | Ernest Rentals",
+
     description:
-      "Discover static and digital billboard advertising opportunities across Saint Lucia. Search locations, check availability and start your campaign online.",
+      "Explore static and digital billboard advertising across Saint Lucia. Search locations, check availability and start your campaign with Ernest Rentals.",
+
     images: [
       {
         url:
           "/ernest-rentals-logo.png",
-        width:
-          1200,
-        height:
-          630,
+
         alt:
-          "Ernest Rentals Outdoor Advertising",
+          "Ernest Rentals Billboard and Outdoor Advertising in Saint Lucia",
       },
     ],
   },
@@ -105,10 +104,13 @@ export const metadata: Metadata = {
   twitter: {
     card:
       "summary_large_image",
+
     title:
-      "Ernest Rentals | Billboard Advertising in Saint Lucia",
+      "Billboard & Outdoor Advertising in Saint Lucia | Ernest Rentals",
+
     description:
-      "Search static and digital billboard advertising opportunities across Saint Lucia.",
+      "Explore static and digital billboard advertising opportunities across Saint Lucia.",
+
     images: [
       "/ernest-rentals-logo.png",
     ],
@@ -117,17 +119,23 @@ export const metadata: Metadata = {
   robots: {
     index:
       true,
+
     follow:
       true,
+
     googleBot: {
       index:
         true,
+
       follow:
         true,
+
       "max-image-preview":
         "large",
+
       "max-snippet":
         -1,
+
       "max-video-preview":
         -1,
     },
@@ -138,12 +146,15 @@ export const metadata: Metadata = {
       {
         url:
           "/ernest-rentals-logo.png",
+
         type:
           "image/png",
       },
     ],
+
     shortcut:
       "/ernest-rentals-logo.png",
+
     apple:
       "/ernest-rentals-logo.png",
   },
@@ -151,6 +162,7 @@ export const metadata: Metadata = {
   other: {
     "geo.region":
       "LC",
+
     "geo.placename":
       "Saint Lucia",
   },
@@ -159,10 +171,92 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width:
     "device-width",
+
   initialScale:
     1,
+
   themeColor:
     "#071226",
+};
+
+const organizationStructuredData = {
+  "@context":
+    "https://schema.org",
+
+  "@type": [
+    "Organization",
+    "LocalBusiness",
+  ],
+
+  "@id":
+    "https://www.ernestrentals.com/#organization",
+
+  name:
+    "Ernest Rentals",
+
+  url:
+    "https://www.ernestrentals.com",
+
+  logo:
+    "https://www.ernestrentals.com/ernest-rentals-logo.png",
+
+  image:
+    "https://www.ernestrentals.com/ernest-rentals-logo.png",
+
+  description:
+    "Ernest Rentals provides static and digital billboard advertising and outdoor advertising opportunities across Saint Lucia.",
+
+  telephone:
+    "+1-758-713-3701",
+
+  areaServed: {
+    "@type":
+      "Country",
+
+    name:
+      "Saint Lucia",
+  },
+
+  knowsAbout: [
+    "Billboard Advertising",
+    "Outdoor Advertising",
+    "Digital Billboards",
+    "Static Billboards",
+    "Out-of-Home Advertising",
+    "Roadside Advertising",
+  ],
+
+  serviceType: [
+    "Billboard Advertising",
+    "Digital Billboard Advertising",
+    "Static Billboard Advertising",
+    "Outdoor Advertising",
+  ],
+};
+
+const websiteStructuredData = {
+  "@context":
+    "https://schema.org",
+
+  "@type":
+    "WebSite",
+
+  "@id":
+    "https://www.ernestrentals.com/#website",
+
+  url:
+    "https://www.ernestrentals.com",
+
+  name:
+    "Ernest Rentals",
+
+  publisher: {
+    "@id":
+      "https://www.ernestrentals.com/#organization",
+  },
+
+  inLanguage:
+    "en",
 };
 
 export default function RootLayout({
@@ -174,11 +268,29 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={
-        montserrat.variable
-      }
+      className={montserrat.variable}
     >
       <body className="min-h-screen bg-[#f5f8fc] font-sans text-[#071226] antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html:
+              JSON.stringify(
+                organizationStructuredData
+              ),
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html:
+              JSON.stringify(
+                websiteStructuredData
+              ),
+          }}
+        />
+
         {children}
       </body>
     </html>
