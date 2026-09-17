@@ -60,6 +60,11 @@ type AvailabilityVariant =
   | "shoutout"
   | "static";
 
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  "https://www.ernestrentals.com"
+).replace(/\/$/, "");
+
 function createPublicServerClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,6 +72,74 @@ function createPublicServerClient() {
   );
 }
 
+function getLocationSeoSlug(
+  location: string | null
+) {
+  const value =
+    (location ?? "").toLowerCase();
+
+  if (
+    value.includes("rodney")
+  ) {
+    return "rodney-bay";
+  }
+
+  if (
+    value.includes("mamiku")
+  ) {
+    return "mamiku";
+  }
+
+  if (
+    value.includes("mon repos")
+  ) {
+    return "mon-repos";
+  }
+
+  if (
+    value.includes("piaye")
+  ) {
+    return "piaye";
+  }
+
+  if (
+    value.includes("praslin")
+  ) {
+    return "praslin";
+  }
+
+  if (
+    value.includes("richford")
+  ) {
+    return "richford";
+  }
+
+  if (
+    value.includes("dennery")
+  ) {
+    return "dennery";
+  }
+
+  return null;
+}
+
+function getAreaServedName(
+  location: string | null
+) {
+  if (!location) {
+    return "Saint Lucia";
+  }
+
+  if (
+    location
+      .toLowerCase()
+      .includes("saint lucia")
+  ) {
+    return location;
+  }
+
+  return `${location}, Saint Lucia`;
+}
 
 function saintLuciaTodayString() {
   const parts =
@@ -149,14 +222,14 @@ function isDateString(
   );
 }
 
-
 export async function generateMetadata({
   params,
 }: Pick<
   BillboardPageProps,
   "params"
 >): Promise<Metadata> {
-  const { id } = await params;
+  const { id } =
+    await params;
 
   const supabase =
     createPublicServerClient();
@@ -179,12 +252,16 @@ export async function generateMetadata({
   ) {
     return {
       title:
-        "Billboard Advertising",
+        "Billboard Advertising in Saint Lucia",
+
       description:
-        "Explore billboard advertising opportunities with Ernest Rentals in Saint Lucia.",
+        "Explore static and digital billboard advertising opportunities with Ernest Rentals in Saint Lucia.",
+
       robots: {
-        index: false,
-        follow: true,
+        index:
+          false,
+        follow:
+          true,
       },
     };
   }
@@ -202,11 +279,32 @@ export async function generateMetadata({
     billboard.location ||
     "Saint Lucia";
 
+  const size =
+    billboard.width_ft &&
+    billboard.height_ft
+      ? `${billboard.width_ft} x ${billboard.height_ft} ft`
+      : null;
+
   const title =
-    `${billboard.billboard_name} - ${typeLabel}`;
+    `${billboard.billboard_code} Billboard Advertising in ${place}`;
+
+  const descriptionParts = [
+    `View ${billboard.billboard_name}, a ${typeLabel.toLowerCase()} advertising location in ${place}.`,
+
+    size
+      ? `${size} billboard.`
+      : null,
+
+    "Check availability, campaign options and start your advertising request with Ernest Rentals.",
+  ].filter(Boolean);
 
   const description =
-    `View ${billboard.billboard_name} in ${place}. Check availability, billboard details and advertising packages, then start your campaign with Ernest Rentals.`;
+    descriptionParts.join(
+      " "
+    );
+
+  const pageUrl =
+    `${siteUrl}/billboards/${billboard.billboard_id}`;
 
   return {
     title,
@@ -215,7 +313,14 @@ export async function generateMetadata({
 
     alternates: {
       canonical:
-        `/billboards/${billboard.billboard_id}`,
+        pageUrl,
+    },
+
+    robots: {
+      index:
+        true,
+      follow:
+        true,
     },
 
     openGraph: {
@@ -225,28 +330,31 @@ export async function generateMetadata({
       description,
 
       url:
-        `/billboards/${billboard.billboard_id}`,
+        pageUrl,
 
       type:
         "website",
 
-      images: billboard.image_url
-        ? [
-            {
-              url:
-                billboard.image_url,
-              alt:
-                billboard.billboard_name,
-            },
-          ]
-        : [
-            {
-              url:
-                "/ernest-rentals-logo.png",
-              alt:
-                "Ernest Rentals",
-            },
-          ],
+      images:
+        billboard.image_url
+          ? [
+              {
+                url:
+                  billboard.image_url,
+
+                alt:
+                  `${billboard.billboard_name} billboard advertising in ${place}`,
+              },
+            ]
+          : [
+              {
+                url:
+                  "/ernest-rentals-logo.png",
+
+                alt:
+                  "Ernest Rentals billboard advertising in Saint Lucia",
+              },
+            ],
     },
 
     twitter: {
@@ -270,8 +378,11 @@ export default async function BillboardPage({
   params,
   searchParams,
 }: BillboardPageProps) {
-  const { id } = await params;
-  const filters = await searchParams;
+  const { id } =
+    await params;
+
+  const filters =
+    await searchParams;
 
   const today =
     saintLuciaTodayString();
@@ -360,17 +471,20 @@ export default async function BillboardPage({
   const {
     data: billboardRows,
     error: billboardError,
-  } = await supabase.rpc(
-    "get_public_billboard_details",
-    {
-      p_billboard_id: id,
-    }
-  );
+  } =
+    await supabase.rpc(
+      "get_public_billboard_details",
+      {
+        p_billboard_id:
+          id,
+      }
+    );
 
   if (
     billboardError ||
     !billboardRows ||
-    billboardRows.length === 0
+    billboardRows.length ===
+      0
   ) {
     notFound();
   }
@@ -380,13 +494,14 @@ export default async function BillboardPage({
 
   const {
     data: photoRows,
-  } = await supabase.rpc(
-    "get_public_billboard_photos",
-    {
-      p_billboard_id:
-        billboard.billboard_id,
-    }
-  );
+  } =
+    await supabase.rpc(
+      "get_public_billboard_photos",
+      {
+        p_billboard_id:
+          billboard.billboard_id,
+      }
+    );
 
   const photos =
     (photoRows ??
@@ -447,6 +562,11 @@ export default async function BillboardPage({
     billboard.billboard_type ===
     "digital";
 
+  const typeLabel =
+    isDigital
+      ? "Digital Billboard"
+      : "Static Billboard";
+
   const isAvailable =
     availability?.availability_status ===
     "available";
@@ -492,24 +612,14 @@ export default async function BillboardPage({
       mapQuery
     )}`;
 
-  const siteUrl =
-    (
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      "https://ernest-rentals-website.vercel.app"
-    ).replace(
-      /\/$/,
-      ""
-    );
-
-  const shareUrl =
+  const pageUrl =
     `${siteUrl}/billboards/${billboard.billboard_id}`;
 
+  const shareUrl =
+    pageUrl;
+
   const shareTitle =
-    `${billboard.billboard_name} - ${
-      isDigital
-        ? "Digital Billboard"
-        : "Static Billboard"
-    }`;
+    `${billboard.billboard_name} - ${typeLabel}`;
 
   const shareDescription =
     `View ${billboard.billboard_name} in ${
@@ -517,8 +627,154 @@ export default async function BillboardPage({
       "Saint Lucia"
     }. Check billboard details, availability and advertising opportunities with Ernest Rentals.`;
 
+  const locationSlug =
+    getLocationSeoSlug(
+      billboard.location
+    );
+
+  const structuredDescription =
+    `${billboard.billboard_name} is a ${typeLabel.toLowerCase()} advertising location in ${
+      billboard.location ||
+      "Saint Lucia"
+    } operated by Ernest Rentals.`;
+
+  const billboardServiceStructuredData = {
+    "@context":
+      "https://schema.org",
+
+    "@type":
+      "Service",
+
+    "@id":
+      `${pageUrl}#service`,
+
+    name:
+      `${billboard.billboard_code} Billboard Advertising`,
+
+    serviceType:
+      `${typeLabel} Advertising`,
+
+    description:
+      structuredDescription,
+
+    url:
+      pageUrl,
+
+    provider: {
+      "@id":
+        "https://www.ernestrentals.com/#organization",
+    },
+
+    areaServed: {
+      "@type":
+        "Place",
+
+      name:
+        getAreaServedName(
+          billboard.location
+        ),
+    },
+
+    image:
+      primaryPhoto?.image_url ||
+      billboard.image_url ||
+      "https://www.ernestrentals.com/ernest-rentals-logo.png",
+  };
+
+  const breadcrumbStructuredData = {
+    "@context":
+      "https://schema.org",
+
+    "@type":
+      "BreadcrumbList",
+
+    itemListElement: [
+      {
+        "@type":
+          "ListItem",
+
+        position:
+          1,
+
+        name:
+          "Home",
+
+        item:
+          "https://www.ernestrentals.com",
+      },
+
+      {
+        "@type":
+          "ListItem",
+
+        position:
+          2,
+
+        name:
+          "Billboards",
+
+        item:
+          "https://www.ernestrentals.com/billboards",
+      },
+
+      ...(locationSlug
+        ? [
+            {
+              "@type":
+                "ListItem",
+
+              position:
+                3,
+
+              name:
+                billboard.location ||
+                "Location",
+
+              item:
+                `https://www.ernestrentals.com/locations/${locationSlug}`,
+            },
+          ]
+        : []),
+
+      {
+        "@type":
+          "ListItem",
+
+        position:
+          locationSlug
+            ? 4
+            : 3,
+
+        name:
+          billboard.billboard_name,
+
+        item:
+          pageUrl,
+      },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html:
+            JSON.stringify(
+              billboardServiceStructuredData
+            ),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html:
+            JSON.stringify(
+              breadcrumbStructuredData
+            ),
+        }}
+      />
 
       <SiteHeader />
 
@@ -563,9 +819,10 @@ export default async function BillboardPage({
                         fallbackImage ||
                         ""
                       }
-                      alt={
-                        billboard.billboard_name
-                      }
+                      alt={`${billboard.billboard_name} ${typeLabel.toLowerCase()} in ${
+                        billboard.location ||
+                        "Saint Lucia"
+                      }`}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
 
@@ -583,9 +840,17 @@ export default async function BillboardPage({
                           }
                         </h1>
 
-                        <p className="mt-3 text-lg text-slate-200">
+                        <p className="mt-3 text-lg font-semibold text-slate-200">
+                          {typeLabel} Advertising in{" "}
                           {billboard.location ||
                             "Saint Lucia"}
+                        </p>
+
+                        <p className="mt-2 text-sm text-slate-300">
+                          Reference:{" "}
+                          {
+                            billboard.billboard_code
+                          }
                         </p>
 
                         {primaryPhoto?.caption && (
@@ -623,7 +888,7 @@ export default async function BillboardPage({
                               }
                               alt={
                                 photo.caption ||
-                                `${billboard.billboard_name} photo ${
+                                `${billboard.billboard_name} billboard photo ${
                                   index +
                                   2
                                 }`
@@ -688,7 +953,20 @@ export default async function BillboardPage({
                       }
                     </h1>
 
-                    <p className="mt-3 text-lg text-slate-300">
+                    <p className="mt-3 text-lg font-semibold text-slate-300">
+                      {typeLabel} Advertising in{" "}
+                      {billboard.location ||
+                        "Saint Lucia"}
+                    </p>
+
+                    <p className="mt-2 text-sm text-slate-400">
+                      Reference:{" "}
+                      {
+                        billboard.billboard_code
+                      }
+                    </p>
+
+                    <p className="mt-4 text-sm text-slate-300">
                       Billboard photos coming soon
                     </p>
                   </div>
@@ -818,6 +1096,18 @@ export default async function BillboardPage({
                       </p>
                     </div>
                   </div>
+
+                  {locationSlug && (
+                    <div className="mt-5">
+                      <Link
+                        href={`/locations/${locationSlug}`}
+                        className="inline-flex rounded-xl bg-[#071226] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-orange-500"
+                      >
+                        Explore Billboard Advertising in{" "}
+                        {billboard.location}
+                      </Link>
+                    </div>
+                  )}
                 </div>
 
                 <div className="h-[360px] border-t border-slate-200 bg-slate-100">
@@ -854,9 +1144,7 @@ export default async function BillboardPage({
                   <Detail
                     label="Type"
                     value={
-                      isDigital
-                        ? "Digital Billboard"
-                        : "Static Billboard"
+                      typeLabel
                     }
                   />
 
@@ -902,6 +1190,53 @@ export default async function BillboardPage({
                   />
                 </div>
               </div>
+
+              {/* SEO CONTENT */}
+              <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-600">
+                  Outdoor Advertising
+                </p>
+
+                <h2 className="mt-3 text-3xl font-black tracking-tight">
+                  Advertise with this billboard in{" "}
+                  {billboard.location ||
+                    "Saint Lucia"}.
+                </h2>
+
+                <p className="mt-4 leading-8 text-slate-600">
+                  {billboard.billboard_name} is an Ernest Rentals{" "}
+                  {typeLabel.toLowerCase()} advertising location serving{" "}
+                  {billboard.location ||
+                    "Saint Lucia"}. Businesses can review billboard details,
+                  search campaign availability and submit an advertising
+                  request directly online.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href="/billboards"
+                    className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                  >
+                    Explore All Billboards
+                  </Link>
+
+                  <Link
+                    href="/locations"
+                    className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                  >
+                    Explore Billboard Locations
+                  </Link>
+
+                  {isDigital && (
+                    <Link
+                      href="/digital-screens"
+                      className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                    >
+                      Digital Billboard Advertising
+                    </Link>
+                  )}
+                </div>
+              </section>
             </div>
 
             {/* RIGHT SIDE */}
@@ -960,7 +1295,7 @@ export default async function BillboardPage({
                   </div>
                 )}
 
-                {/* NEW AVAILABILITY DESIGN */}
+                {/* AVAILABILITY */}
                 {availability && (
                   <div className="mt-6">
 
