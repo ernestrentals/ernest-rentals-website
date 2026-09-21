@@ -1,22 +1,37 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
+import MeetingScheduler from "@/components/MeetingScheduler";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "Contact Ernest Rentals",
+  title:
+    "Contact Ernest Rentals",
+
   description:
     "Contact Ernest Rentals in Saint Lucia for help with static billboards, digital advertising, locations, availability and campaign planning.",
+
   alternates: {
-    canonical: "/contact",
+    canonical:
+      "/contact",
   },
+
   openGraph: {
-    title: "Contact Ernest Rentals",
+    title:
+      "Contact Ernest Rentals",
+
     description:
       "Get help planning your next static or digital billboard campaign in Saint Lucia.",
-    url: "/contact",
-    type: "website",
+
+    url:
+      "/contact",
+
+    type:
+      "website",
   },
 };
 
@@ -28,6 +43,7 @@ export default function ContactPage() {
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
       <SiteHeader />
 
+      {/* HERO */}
       <section className="bg-white px-5 py-16 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-500">
@@ -39,12 +55,30 @@ export default function ContactPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-500">
-            Need help choosing a location, billboard type or advertising package?
-            Contact Ernest Rentals or start by searching available billboard inventory.
+            Need help choosing a location, billboard type or advertising
+            package? Contact Ernest Rentals, schedule a meeting or start by
+            searching available billboard inventory.
           </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href="#schedule"
+              className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+            >
+              Schedule a Meeting
+            </a>
+
+            <Link
+              href="/#availability"
+              className="rounded-xl border border-slate-200 bg-white px-6 py-3.5 font-extrabold text-[#071226] transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              Search Billboards
+            </Link>
+          </div>
         </div>
       </section>
 
+      {/* CONTACT OPTIONS */}
       <section className="px-5 py-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[.9fr_1.1fr]">
           <div className="space-y-4">
@@ -66,7 +100,9 @@ export default function ContactPage() {
             </a>
 
             <a
-              href={whatsappUrl}
+              href={
+                whatsappUrl
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="block rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg"
@@ -82,7 +118,8 @@ export default function ContactPage() {
                   </p>
 
                   <p className="mt-2 text-sm text-slate-500">
-                    Chat with Ernest Rentals about locations, packages and availability.
+                    Chat with Ernest Rentals about locations, packages and
+                    availability.
                   </p>
                 </div>
 
@@ -105,7 +142,8 @@ export default function ContactPage() {
               </p>
 
               <p className="mt-2 text-sm text-slate-500">
-                Send campaign, artwork or general advertising questions by email.
+                Send campaign, artwork or general advertising questions by
+                email.
               </p>
             </a>
 
@@ -134,8 +172,9 @@ export default function ContactPage() {
             </h2>
 
             <p className="mt-5 max-w-xl leading-7 text-slate-300">
-              The search shows available static and digital billboard opportunities,
-              package options and the information needed to begin a campaign request.
+              The search shows available static and digital billboard
+              opportunities, package options and the information needed to
+              begin a campaign request.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -147,7 +186,16 @@ export default function ContactPage() {
               </Link>
 
               <a
-                href={whatsappUrl}
+                href="#schedule"
+                className="rounded-xl bg-white px-6 py-3.5 font-extrabold text-[#071226] transition hover:bg-slate-100"
+              >
+                Schedule Meeting
+              </a>
+
+              <a
+                href={
+                  whatsappUrl
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl bg-emerald-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-emerald-700"
@@ -169,11 +217,56 @@ export default function ContactPage() {
               </p>
 
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                Open the billboard from the availability results, choose the appropriate
-                package and submit your campaign request directly from its detail page.
+                Open the billboard from the availability results, choose the
+                appropriate package and submit your campaign request directly
+                from its detail page.
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* MEETING SCHEDULER */}
+      <section
+        id="schedule"
+        className="scroll-mt-24 border-t border-slate-200 bg-white px-5 py-16 lg:px-8 lg:py-20"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-500">
+              Schedule a Meeting
+            </p>
+
+            <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+              Pick a time that works for you.
+            </h2>
+
+            <p className="mt-5 text-lg leading-8 text-slate-500">
+              Choose the type of meeting you need, select an available time
+              from our live calendar and we&apos;ll send you a calendar
+              invitation once the meeting is confirmed.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                Monday–Friday
+              </span>
+
+              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                10:00 AM–3:00 PM
+              </span>
+
+              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                Saint Lucia Time
+              </span>
+
+              <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600">
+                Live Availability
+              </span>
+            </div>
+          </div>
+
+          <MeetingScheduler />
         </div>
       </section>
 

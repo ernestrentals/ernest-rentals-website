@@ -1,0 +1,683 @@
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
+import {
+  google,
+} from "googleapis";
+
+export const runtime =
+  "nodejs";
+
+const TIME_ZONE =
+  "America/St_Lucia";
+
+const BUSINESS_START_HOUR =
+  10;
+
+const BUSINESS_END_HOUR =
+  15;
+
+const SLOT_INTERVAL_MINUTES =
+  15;
+
+const BUFFER_MINUTES =
+  15;
+
+const MIN_NOTICE_HOURS =
+  2;
+
+const MAX_BOOKING_DAYS =
+  30;
+
+const MEETING_TYPES = {
+  quick_consultation: {
+    label:
+      "Quick Advertising Consultation",
+    durationMinutes:
+      15,
+  },
+
+  campaign_planning: {
+    label:
+      "Campaign Planning Meeting",
+    durationMinutes:
+      30,
+  },
+
+  account_meeting: {
+    label:
+      "Existing Client / Account Meeting",
+    durationMinutes:
+      30,
+  },
+} as const;
+
+type MeetingType =
+  keyof typeof MEETING_TYPES;
+
+function isValidDate(
+  value: string
+) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(
+      value
+    )
+  ) {
+    return false;
+  }
+
+  const [
+    year,
+    month,
+    day,
+  ] =
+    value
+      .split("-")
+      .map(Number);
+
+  const date =
+    new Date(
+      Date.UTC(
+        year,
+        month - 1,
+        day
+      )
+    );
+
+  return (
+    date.getUTCFullYear() ===
+      year &&
+    date.getUTCMonth() ===
+      month - 1 &&
+    date.getUTCDate() ===
+      day
+  );
+}
+
+function saintLuciaDateTime(
+  date: string,
+  hour: number,
+  minute: number
+) {
+  return new Date(
+    `${date}T${String(
+      hour
+    ).padStart(
+      2,
+      "0"
+    )}:${String(
+      minute
+    ).padStart(
+      2,
+      "0"
+    )}:00-04:00`
+  );
+}
+
+function addMinutes(
+  date: Date,
+  minutes: number
+) {
+  return new Date(
+    date.getTime() +
+      minutes *
+        60 *
+        1000
+  );
+}
+
+function addDaysToDateKey(
+  dateKey: string,
+  days: number
+) {
+  const [
+    year,
+    month,
+    day,
+  ] =
+    dateKey
+      .split("-")
+      .map(Number);
+
+  const date =
+    new Date(
+      Date.UTC(
+        year,
+        month - 1,
+        day + days
+      )
+    );
+
+  return date
+    .toISOString()
+    .slice(0, 10);
+}
+
+function overlaps(
+  startA: Date,
+  endA: Date,
+  startB: Date,
+  endB: Date
+) {
+  return (
+    startA < endB &&
+    endA > startB
+  );
+}
+
+function formatTime(
+  date: Date
+) {
+  return new Intl.DateTimeFormat(
+    "en-US",
+    {
+      timeZone:
+        TIME_ZONE,
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit",
+
+      hour12:
+        true,
+    }
+  ).format(date);
+}
+
+function getSaintLuciaDateKey(
+  date: Date
+) {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone:
+          TIME_ZONE,
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+      }
+    ).formatToParts(date);
+
+  const year =
+    parts.find(
+      (part) =>
+        part.type ===
+        "year"
+    )?.value;
+
+  const month =
+    parts.find(
+      (part) =>
+        part.type ===
+        "month"
+    )?.value;
+
+  const day =
+    parts.find(
+      (part) =>
+        part.type ===
+        "day"
+    )?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+function getDayOfWeek(
+  date: string
+) {
+  return saintLuciaDateTime(
+    date,
+    12,
+    0
+  ).getUTCDay();
+}
+
+export async function GET(
+  request: NextRequest
+) {
+  const date =
+    request.nextUrl
+      .searchParams
+      .get("date");
+
+  const meetingType =
+    request.nextUrl
+      .searchParams
+      .get("type") as
+      | MeetingType
+      | null;
+
+  if (
+    !date ||
+    !isValidDate(date)
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "A valid date is required.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  if (
+    !meetingType ||
+    !MEETING_TYPES[
+      meetingType
+    ]
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "A valid meeting type is required.",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const clientId =
+    process.env
+      .GOOGLE_CLIENT_ID;
+
+  const clientSecret =
+    process.env
+      .GOOGLE_CLIENT_SECRET;
+
+  const refreshToken =
+    process.env
+      .GOOGLE_CALENDAR_REFRESH_TOKEN;
+
+  const calendarId =
+    process.env
+      .GOOGLE_CALENDAR_ID;
+
+  if (
+    !clientId ||
+    !clientSecret ||
+    !refreshToken ||
+    !calendarId
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Google Calendar configuration is incomplete.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+
+  const dayOfWeek =
+    getDayOfWeek(date);
+
+  if (
+    dayOfWeek === 0 ||
+    dayOfWeek === 6
+  ) {
+    return NextResponse.json({
+      success: true,
+      date,
+      meetingType,
+      available: false,
+      reason:
+        "Meetings are available Monday through Friday only.",
+      slots: [],
+    });
+  }
+
+  const now =
+    new Date();
+
+  const todayKey =
+    getSaintLuciaDateKey(
+      now
+    );
+
+  const minimumDateKey =
+    addDaysToDateKey(
+      todayKey,
+      1
+    );
+
+  const maxDateKey =
+    addDaysToDateKey(
+      todayKey,
+      MAX_BOOKING_DAYS
+    );
+
+  if (
+    date <
+    minimumDateKey
+  ) {
+    return NextResponse.json({
+      success: true,
+      date,
+      meetingType,
+      available: false,
+      reason:
+        "Appointments must be booked at least one day in advance.",
+      slots: [],
+    });
+  }
+
+  if (
+    date >
+    maxDateKey
+  ) {
+    return NextResponse.json({
+      success: true,
+      date,
+      meetingType,
+      available: false,
+      reason:
+        `Meetings may be booked up to ${MAX_BOOKING_DAYS} days in advance.`,
+      slots: [],
+    });
+  }
+
+  const meeting =
+    MEETING_TYPES[
+      meetingType
+    ];
+
+  const businessStart =
+    saintLuciaDateTime(
+      date,
+      BUSINESS_START_HOUR,
+      0
+    );
+
+  const businessEnd =
+    saintLuciaDateTime(
+      date,
+      BUSINESS_END_HOUR,
+      0
+    );
+
+  const minimumStartTime =
+    new Date(
+      now.getTime() +
+        MIN_NOTICE_HOURS *
+          60 *
+          60 *
+          1000
+    );
+
+  try {
+    const auth =
+      new google.auth.OAuth2(
+        clientId,
+        clientSecret
+      );
+
+    auth.setCredentials({
+      refresh_token:
+        refreshToken,
+    });
+
+    const calendar =
+      google.calendar({
+        version: "v3",
+        auth,
+      });
+
+    const freeBusyResult =
+      await calendar.freebusy.query({
+        requestBody: {
+          timeMin:
+            businessStart.toISOString(),
+
+          timeMax:
+            businessEnd.toISOString(),
+
+          timeZone:
+            TIME_ZONE,
+
+          items: [
+            {
+              id:
+                calendarId,
+            },
+          ],
+        },
+      });
+
+    const calendarData =
+      freeBusyResult
+        .data
+        .calendars?.[
+          calendarId
+        ];
+
+    if (
+      calendarData
+        ?.errors
+        ?.length
+    ) {
+      console.error(
+        "Google Calendar availability errors:",
+        calendarData.errors
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Unable to retrieve meeting availability.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    const busyPeriods =
+      (
+        calendarData
+          ?.busy ?? []
+      )
+        .filter(
+          (
+            period
+          ) =>
+            period.start &&
+            period.end
+        )
+        .map(
+          (
+            period
+          ) => ({
+            start:
+              new Date(
+                period.start!
+              ),
+
+            end:
+              addMinutes(
+                new Date(
+                  period.end!
+                ),
+                BUFFER_MINUTES
+              ),
+          })
+        );
+
+    const slots: Array<{
+      start: string;
+      end: string;
+      display: string;
+      label: string;
+    }> = [];
+
+    let slotStart =
+      new Date(
+        businessStart
+      );
+
+    while (
+      slotStart <
+      businessEnd
+    ) {
+      const appointmentEnd =
+        addMinutes(
+          slotStart,
+          meeting.durationMinutes
+        );
+
+      const proposedBlockedUntil =
+        addMinutes(
+          appointmentEnd,
+          BUFFER_MINUTES
+        );
+
+      const appointmentFits =
+        appointmentEnd <=
+        businessEnd;
+
+      const respectsNotice =
+        slotStart >=
+        minimumStartTime;
+
+      const hasConflict =
+        busyPeriods.some(
+          (
+            busy
+          ) =>
+            overlaps(
+              slotStart,
+              proposedBlockedUntil,
+              busy.start,
+              busy.end
+            )
+        );
+
+      if (
+        appointmentFits &&
+        respectsNotice &&
+        !hasConflict
+      ) {
+        slots.push({
+          start:
+            slotStart.toISOString(),
+
+          end:
+            appointmentEnd.toISOString(),
+
+          display:
+            formatTime(
+              slotStart
+            ),
+
+          label:
+            `${formatTime(
+              slotStart
+            )} – ${formatTime(
+              appointmentEnd
+            )}`,
+        });
+      }
+
+      slotStart =
+        addMinutes(
+          slotStart,
+          SLOT_INTERVAL_MINUTES
+        );
+    }
+
+    return NextResponse.json({
+      success: true,
+
+      date,
+
+      timeZone:
+        TIME_ZONE,
+
+      businessHours: {
+        start:
+          "10:00 AM",
+
+        end:
+          "3:00 PM",
+      },
+
+      schedulingRules: {
+        weekdays:
+          "Monday - Friday",
+
+        minimumAdvanceDays:
+          1,
+
+        minimumNoticeHours:
+          MIN_NOTICE_HOURS,
+
+        bookingWindowDays:
+          MAX_BOOKING_DAYS,
+
+        slotIntervalMinutes:
+          SLOT_INTERVAL_MINUTES,
+
+        bufferMinutes:
+          BUFFER_MINUTES,
+      },
+
+      meeting: {
+        type:
+          meetingType,
+
+        label:
+          meeting.label,
+
+        durationMinutes:
+          meeting.durationMinutes,
+
+        bufferMinutes:
+          BUFFER_MINUTES,
+      },
+
+      available:
+        slots.length > 0,
+
+      slots,
+    });
+  } catch (
+    error
+  ) {
+    console.error(
+      "Meeting availability error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to retrieve meeting availability.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
