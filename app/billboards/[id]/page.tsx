@@ -1291,8 +1291,8 @@ export default async function BillboardPage({
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
-                    Choose campaign dates in the search bar above to see live availability.
-                  </div>
+  Choose a package below to see the next available campaign dates, or use the search bar above to check specific dates.
+</div>
                 )}
 
                 {/* AVAILABILITY */}

@@ -6,6 +6,10 @@ import {
   useState,
 } from "react";
 
+import {
+  useRouter,
+} from "next/navigation";
+
 import StartCampaignForm from "@/components/StartCampaignForm";
 import { createBrowserClient } from "@/lib/supabase/client";
 
@@ -54,6 +58,11 @@ type AvailabilityResult = {
   availability_status: string;
 };
 
+type NextAvailabilityResult = {
+  next_start_date: string;
+  next_end_date: string;
+};
+
 function formatMoney(
   value: number,
   currency: string
@@ -70,33 +79,6 @@ function formatMoney(
     ).format(value);
   } catch {
     return `${currency} ${value.toFixed(0)}`;
-  }
-}
-
-function packageTypeLabel(
-  packageType: string
-) {
-  switch (packageType.toLowerCase()) {
-    case "standard":
-      return "Standard";
-
-    case "premium":
-      return "Premium";
-
-    case "shoutout":
-      return "Shoutout";
-
-    case "static":
-      return "Static Billboard";
-
-    default:
-      return packageType
-        .replaceAll("_", " ")
-        .replace(
-          /\b\w/g,
-          (letter) =>
-            letter.toUpperCase()
-        );
   }
 }
 
@@ -137,7 +119,6 @@ function packageDescription(
     "Campaign package"
   );
 }
-
 
 function padDatePart(
   value: number
@@ -224,8 +205,7 @@ function addMonthsToDate(
     new Date(
       Date.UTC(
         targetYear,
-        normalizedMonth +
-          1,
+        normalizedMonth + 1,
         0
       )
     ).getUTCDate();
@@ -246,7 +226,6 @@ function addMonthsToDate(
     date
   );
 }
-
 
 function saintLuciaTodayString() {
   const parts =
@@ -473,10 +452,16 @@ function formatScheduleDate(
     return new Intl.DateTimeFormat(
       "en-US",
       {
-        timeZone: "UTC",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+        timeZone:
+          "UTC",
+        weekday:
+          "short",
+        year:
+          "numeric",
+        month:
+          "short",
+        day:
+          "numeric",
       }
     ).format(
       new Date(
@@ -495,8 +480,10 @@ export default function BillboardCampaignCTA({
   location,
   startDate,
   changeoverDate,
-  available,
 }: BillboardCampaignCTAProps) {
+  const router =
+    useRouter();
+
   const supabase =
     useMemo(
       () =>
@@ -541,9 +528,9 @@ export default function BillboardCampaignCTA({
     setSelectedDigitalType,
   ] =
     useState<
-      "standard" |
-      "premium" |
-      "shoutout"
+      | "standard"
+      | "premium"
+      | "shoutout"
     >(
       "standard"
     );
@@ -558,12 +545,42 @@ export default function BillboardCampaignCTA({
     packageAvailable,
     setPackageAvailable,
   ] =
-    useState<boolean | null>(
+    useState<
+      boolean |
+      null
+    >(
       null
     );
 
+  const [
+    checkingNextAvailability,
+    setCheckingNextAvailability,
+  ] =
+    useState(false);
+
+  const [
+    nextAvailability,
+    setNextAvailability,
+  ] =
+    useState<
+      NextAvailabilityResult |
+      null
+    >(
+      null
+    );
+
+  const [
+    nextAvailabilityError,
+    setNextAvailabilityError,
+  ] =
+    useState("");
+
+  /*
+    LOAD PACKAGES
+  */
   useEffect(() => {
-    let cancelled = false;
+    let cancelled =
+      false;
 
     async function loadPackages() {
       setLoadingPackages(
@@ -580,12 +597,7 @@ export default function BillboardCampaignCTA({
 
       /*
         STATIC BILLBOARDS
-
-        Static package prices are tied to a specific billboard,
-        so only packages belonging to the billboard currently
-        being viewed should appear in the dropdown.
       */
-
       if (
         billboardType ===
         "static"
@@ -705,11 +717,7 @@ export default function BillboardCampaignCTA({
 
       /*
         DIGITAL BILLBOARDS
-
-        Digital packages are shared by billboard type/category,
-        so the existing public package RPC remains appropriate.
       */
-
       const {
         data,
         error,
@@ -830,6 +838,10 @@ export default function BillboardCampaignCTA({
         )
       : [];
 
+  /*
+    KEEP DIGITAL PACKAGE SELECTION
+    WITHIN THE CHOSEN DIGITAL TYPE
+  */
   useEffect(() => {
     if (
       billboardType !==
@@ -886,14 +898,17 @@ export default function BillboardCampaignCTA({
 
   const selectedPackage =
     packages.find(
-      (item) =>
+      (
+        item
+      ) =>
         item.package_id ===
         selectedPackageId
-    ) ?? null;
+    ) ??
+    null;
 
   const effectiveStartDate =
     billboardType ===
-      "digital"
+    "digital"
       ? digitalPackageStartDate(
           startDate,
           selectedPackage
@@ -923,6 +938,9 @@ export default function BillboardCampaignCTA({
         changeoverDate
     );
 
+  /*
+    CHECK SELECTED DATES
+  */
   useEffect(() => {
     let cancelled =
       false;
@@ -997,7 +1015,8 @@ export default function BillboardCampaignCTA({
           []
         ).find(
           (
-            item: AvailabilityResult
+            item:
+              AvailabilityResult
           ) =>
             item.billboard_id ===
             billboardId
@@ -1045,6 +1064,7 @@ export default function BillboardCampaignCTA({
                   0
               ) >
               0;
+
             break;
 
           case "shoutout":
@@ -1054,6 +1074,7 @@ export default function BillboardCampaignCTA({
                   0
               ) >
               0;
+
             break;
 
           case "standard":
@@ -1064,6 +1085,7 @@ export default function BillboardCampaignCTA({
                   0
               ) >
               0;
+
             break;
         }
       }
@@ -1094,6 +1116,151 @@ export default function BillboardCampaignCTA({
     supabase,
   ]);
 
+  /*
+    AUTOMATICALLY FIND NEXT AVAILABLE PERIOD
+  */
+  useEffect(() => {
+    let cancelled =
+      false;
+
+    async function findNextAvailability() {
+      if (
+        !selectedPackage ||
+        !selectedPackage.duration_value ||
+        !selectedPackage.duration_unit
+      ) {
+        setNextAvailability(
+          null
+        );
+
+        setNextAvailabilityError(
+          ""
+        );
+
+        return;
+      }
+
+      setCheckingNextAvailability(
+        true
+      );
+
+      setNextAvailability(
+        null
+      );
+
+      setNextAvailabilityError(
+        ""
+      );
+
+      const tomorrow =
+        addDaysToDate(
+          saintLuciaTodayString(),
+          1
+        );
+
+      const searchFrom =
+        effectiveStartDate &&
+        effectiveStartDate >
+          tomorrow
+          ? effectiveStartDate
+          : tomorrow;
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_next_public_billboard_availability",
+          {
+            p_billboard_id:
+              billboardId,
+
+            p_billboard_type:
+              billboardType,
+
+            p_package_type:
+              selectedPackage.package_type,
+
+            p_duration_value:
+              Number(
+                selectedPackage.duration_value
+              ),
+
+            p_duration_unit:
+              selectedPackage.duration_unit,
+
+            p_search_from:
+              searchFrom,
+
+            p_max_days:
+              730,
+          }
+        );
+
+      if (
+        cancelled
+      ) {
+        return;
+      }
+
+      if (
+        error
+      ) {
+        console.error(
+          error
+        );
+
+        setNextAvailabilityError(
+          "We could not calculate the next available campaign dates right now."
+        );
+
+        setCheckingNextAvailability(
+          false
+        );
+
+        return;
+      }
+
+      const result =
+        (
+          data ??
+          []
+        )[0] as
+          | NextAvailabilityResult
+          | undefined;
+
+      if (
+        result?.next_start_date &&
+        result?.next_end_date
+      ) {
+        setNextAvailability(
+          result
+        );
+      } else {
+        setNextAvailability(
+          null
+        );
+      }
+
+      setCheckingNextAvailability(
+        false
+      );
+    }
+
+    findNextAvailability();
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, [
+    billboardId,
+    billboardType,
+    effectiveStartDate,
+    selectedPackage,
+    supabase,
+  ]);
+
   const canStartCampaign =
     Boolean(
       selectedPackage &&
@@ -1106,11 +1273,177 @@ export default function BillboardCampaignCTA({
       !checkingPackageAvailability
     );
 
+  const showNextAvailability =
+    Boolean(
+      selectedPackage &&
+      (
+        !startDate ||
+        !changeoverDate ||
+        packageAvailable ===
+          false
+      )
+    );
+
+  function useNextAvailableDates() {
+    if (
+      !nextAvailability
+    ) {
+      return;
+    }
+
+    const params =
+      new URLSearchParams();
+
+    params.set(
+      "start",
+      nextAvailability.next_start_date
+    );
+
+    params.set(
+      "end",
+      nextAvailability.next_end_date
+    );
+
+    router.push(
+      `/billboards/${billboardId}?${params.toString()}`
+    );
+  }
+
   return (
     <>
-      {/* PACKAGE SELECTOR */}
-      <div className="mt-5 border-t border-slate-100 pt-5">
+      {/* NEXT AVAILABLE */}
+      {showNextAvailability && (
+        <div className="mt-5 overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm">
+          <div className="px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-700">
+                  Next Available
+                </p>
 
+                <p className="mt-1 text-sm font-black text-slate-900">
+                  Earliest open campaign period
+                </p>
+
+                {selectedPackage && (
+                  <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                    Based on the{" "}
+                    <span className="font-extrabold text-slate-700">
+                      {selectedPackage.duration_label ||
+                        packageDescription(
+                          selectedPackage
+                        )}
+                    </span>{" "}
+                    package
+                  </p>
+                )}
+              </div>
+
+              <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700 shadow-sm">
+                Live
+              </span>
+            </div>
+
+            {checkingNextAvailability ? (
+              <div className="mt-4">
+                <div className="h-4 w-40 animate-pulse rounded bg-emerald-100" />
+
+                <div className="mt-3 h-14 animate-pulse rounded-xl bg-white/70" />
+
+                <p className="mt-3 text-[11px] leading-5 text-emerald-800">
+                  Checking the booking calendar for the earliest continuous
+                  opening...
+                </p>
+              </div>
+            ) : nextAvailability ? (
+              <>
+                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+                  <div>
+                    <p className="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">
+                      Start
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-slate-900">
+                      {formatScheduleDate(
+                        nextAvailability.next_start_date
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                      9:00 AM
+                    </p>
+                  </div>
+
+                  <div className="text-lg font-black text-emerald-400">
+                    →
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">
+                      Changeover
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-slate-900">
+                      {formatScheduleDate(
+                        nextAvailability.next_end_date
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                      9:00 AM
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[11px] leading-5 text-emerald-800">
+                  This is the earliest continuous opening that fits the selected{" "}
+                  <strong>
+                    {selectedPackage?.duration_label ||
+                      (
+                        selectedPackage
+                          ? packageDescription(
+                              selectedPackage
+                            )
+                          : "campaign"
+                      )}
+                  </strong>{" "}
+                  package.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={
+                    useNextAvailableDates
+                  }
+                  className="mt-3 w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-700"
+                >
+                  Use These Dates
+                </button>
+              </>
+            ) : nextAvailabilityError ? (
+              <p className="mt-3 text-xs leading-5 text-red-700">
+                {
+                  nextAvailabilityError
+                }
+              </p>
+            ) : (
+              <div className="mt-3 rounded-xl bg-white p-3">
+                <p className="text-xs font-bold text-slate-700">
+                  No continuous opening found within the next 24 months.
+                </p>
+
+                <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                  Contact Ernest Rentals for alternative billboard options or
+                  campaign dates.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PACKAGE SELECTOR */}
+      <div className="mt-4 border-t border-slate-100 pt-5">
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
           Advertising Package
         </p>
@@ -1129,15 +1462,20 @@ export default function BillboardCampaignCTA({
         {loadingPackages ? (
           <div className="mt-4 space-y-3">
             {[1, 2, 3].map(
-              (item) => (
+              (
+                item
+              ) => (
                 <div
-                  key={item}
+                  key={
+                    item
+                  }
                   className="h-[108px] animate-pulse rounded-2xl border border-slate-200 bg-slate-50"
                 />
               )
             )}
           </div>
-        ) : packages.length > 0 ? (
+        ) : packages.length >
+          0 ? (
           <>
             {billboardType ===
             "digital" ? (
@@ -1166,42 +1504,59 @@ export default function BillboardCampaignCTA({
                         {
                           key:
                             "standard",
+
                           label:
                             "Standard",
+
                           duration:
                             "10 sec",
+
                           helper:
                             "Best value",
+
                           badgeClass:
                             "bg-sky-50 text-sky-700",
+
                           iconClass:
                             "bg-sky-100 text-sky-700",
                         },
+
                         {
                           key:
                             "premium",
+
                           label:
                             "Premium",
+
                           duration:
                             "15 sec",
+
                           helper:
                             "More exposure",
+
                           badgeClass:
                             "bg-orange-50 text-orange-700",
+
                           iconClass:
                             "bg-orange-100 text-orange-700",
                         },
+
                         {
                           key:
                             "shoutout",
+
                           label:
                             "Shoutout",
+
                           duration:
                             "15 sec",
+
                           helper:
                             "1-day feature",
+
                           badgeClass:
                             "bg-violet-50 text-violet-700",
+
                           iconClass:
                             "bg-violet-100 text-violet-700",
                         },
@@ -1315,7 +1670,10 @@ export default function BillboardCampaignCTA({
                     </div>
 
                     <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[9px] font-bold text-orange-700">
-                      {digitalPackages.length} option
+                      {
+                        digitalPackages.length
+                      }{" "}
+                      option
                       {digitalPackages.length ===
                       1
                         ? ""
@@ -1426,6 +1784,9 @@ export default function BillboardCampaignCTA({
                 </div>
               </>
             ) : (
+              /*
+                STATIC PACKAGES
+              */
               <div className="mt-4 space-y-2">
                 {packages.map(
                   (
@@ -1488,7 +1849,9 @@ export default function BillboardCampaignCTA({
                         <div className="flex items-center justify-between gap-4">
                           <div className="min-w-0">
                             <p className="font-extrabold leading-5 text-slate-900">
-                              {cleanName}
+                              {
+                                cleanName
+                              }
                             </p>
 
                             {durationText && (
@@ -1539,6 +1902,7 @@ export default function BillboardCampaignCTA({
               </div>
             )}
 
+            {/* SELECTED PACKAGE */}
             {selectedPackage && (
               <div className="mt-3 rounded-xl bg-[#071226] px-3.5 py-3 text-white shadow-sm">
                 <div className="flex items-start justify-between gap-4">
@@ -1578,108 +1942,110 @@ export default function BillboardCampaignCTA({
               </div>
             )}
 
+            {/* PACKAGE SCHEDULE */}
             {selectedPackage &&
               effectiveStartDate &&
               effectiveChangeoverDate && (
-              <div className="mt-2.5 rounded-xl border border-sky-200 bg-sky-50/70 px-3.5 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-sky-700">
-                    Package Schedule
-                  </p>
-
-                  {checkingPackageAvailability ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                      Checking availability...
-                    </span>
-                  ) : packageAvailable ===
-                    true ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                      Available
-                    </span>
-                  ) : packageAvailable ===
-                    false ? (
-                    <span className="rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-700">
-                      Unavailable
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                      Start
+                <div className="mt-2.5 rounded-xl border border-sky-200 bg-sky-50/70 px-3.5 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-sky-700">
+                      Package Schedule
                     </p>
 
-                    <p className="mt-1 text-sm font-black text-slate-900">
-                      {formatScheduleDate(
-                        effectiveStartDate
-                      )}
-                    </p>
-
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      9:00 AM
-                    </p>
+                    {checkingPackageAvailability ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                        Checking availability...
+                      </span>
+                    ) : packageAvailable ===
+                      true ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                        Available
+                      </span>
+                    ) : packageAvailable ===
+                      false ? (
+                      <span className="rounded-full bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-red-700">
+                        Unavailable
+                      </span>
+                    ) : null}
                   </div>
 
-                  <div className="text-sky-400">
-                    →
-                  </div>
+                  <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                        Start
+                      </p>
 
-                  <div className="text-right">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                      Changeover
-                    </p>
-
-                    <p className="mt-1 text-sm font-black text-slate-900">
-                      {formatScheduleDate(
-                        effectiveChangeoverDate
-                      )}
-                    </p>
-
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      9:00 AM
-                    </p>
-                  </div>
-                </div>
-
-                {billboardType ===
-                  "digital" && (
-                  <p className="mt-2.5 border-t border-sky-100 pt-2.5 text-[11px] leading-4 text-sky-800">
-                    {selectedPackage.package_type
-                      .toLowerCase()
-                      .trim() ===
-                    "shoutout"
-                      ? "Shoutout campaigns can begin from the next day at 9:00 AM."
-                      : "Standard and Premium campaigns start on Mondays at 9:00 AM."}
-                  </p>
-                )}
-
-                {startChangedByPackageRule && (
-                  <p className="mt-2 text-[11px] leading-4 text-sky-800">
-                    Your start date was adjusted automatically to{" "}
-                    <strong>
-                      {formatScheduleDate(
-                        effectiveStartDate
-                      )}
-                    </strong>
-                    .
-                  </p>
-                )}
-
-                {scheduleChangedByPackage && (
-                  <p className="mt-2 text-[11px] leading-4 text-sky-800">
-                    The changeover date was updated automatically to match the selected{" "}
-                    <strong>
-                      {selectedPackage.duration_label ||
-                        packageDescription(
-                          selectedPackage
+                      <p className="mt-1 text-sm font-black text-slate-900">
+                        {formatScheduleDate(
+                          effectiveStartDate
                         )}
-                    </strong>{" "}
-                    package.
-                  </p>
-                )}
-              </div>
-            )}
+                      </p>
+
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        9:00 AM
+                      </p>
+                    </div>
+
+                    <div className="text-sky-400">
+                      →
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                        Changeover
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-slate-900">
+                        {formatScheduleDate(
+                          effectiveChangeoverDate
+                        )}
+                      </p>
+
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        9:00 AM
+                      </p>
+                    </div>
+                  </div>
+
+                  {billboardType ===
+                    "digital" && (
+                    <p className="mt-2.5 border-t border-sky-100 pt-2.5 text-[11px] leading-4 text-sky-800">
+                      {selectedPackage.package_type
+                        .toLowerCase()
+                        .trim() ===
+                      "shoutout"
+                        ? "Shoutout campaigns can begin from the next day at 9:00 AM."
+                        : "Standard and Premium campaigns start on Mondays at 9:00 AM."}
+                    </p>
+                  )}
+
+                  {startChangedByPackageRule && (
+                    <p className="mt-2 text-[11px] leading-4 text-sky-800">
+                      Your start date was adjusted automatically to{" "}
+                      <strong>
+                        {formatScheduleDate(
+                          effectiveStartDate
+                        )}
+                      </strong>
+                      .
+                    </p>
+                  )}
+
+                  {scheduleChangedByPackage && (
+                    <p className="mt-2 text-[11px] leading-4 text-sky-800">
+                      The changeover date was updated automatically to match the
+                      selected{" "}
+                      <strong>
+                        {selectedPackage.duration_label ||
+                          packageDescription(
+                            selectedPackage
+                          )}
+                      </strong>{" "}
+                      package.
+                    </p>
+                  )}
+                </div>
+              )}
           </>
         ) : (
           <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -1688,14 +2054,17 @@ export default function BillboardCampaignCTA({
             </p>
 
             <p className="mt-1 text-[11px] leading-4 text-slate-500">
-              Submit a campaign request and Ernest Rentals will provide pricing for this billboard.
+              Submit a campaign request and Ernest Rentals will provide pricing
+              for this billboard.
             </p>
           </div>
         )}
 
         {packageError && (
           <p className="mt-3 text-xs text-slate-400">
-            {packageError}
+            {
+              packageError
+            }
           </p>
         )}
       </div>
@@ -1707,7 +2076,9 @@ export default function BillboardCampaignCTA({
           !canStartCampaign
         }
         onClick={() =>
-          setOpen(true)
+          setOpen(
+            true
+          )
         }
         className="mt-4 w-full rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300"
       >
@@ -1721,8 +2092,9 @@ export default function BillboardCampaignCTA({
 
       {!startDate ||
       !changeoverDate ? (
-        <p className="mt-3 text-center text-xs text-slate-400">
-          Choose campaign dates from the homepage first.
+        <p className="mt-3 text-center text-xs leading-5 text-slate-400">
+          The next available dates are shown above. You can also choose another
+          package to recalculate the earliest available campaign period.
         </p>
       ) : null}
 
@@ -1731,18 +2103,23 @@ export default function BillboardCampaignCTA({
           billboardId={
             billboardId
           }
+
           billboardName={
             billboardName
           }
+
           billboardType={
             billboardType
           }
+
           location={
             location
           }
+
           startDate={
             effectiveStartDate
           }
+
           changeoverDate={
             effectiveChangeoverDate
           }
@@ -1796,7 +2173,9 @@ export default function BillboardCampaignCTA({
           }
 
           onClose={() =>
-            setOpen(false)
+            setOpen(
+              false
+            )
           }
         />
       )}

@@ -1,17 +1,29 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
+
+import {
+  createClient,
+} from "@supabase/supabase-js";
 
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
+export const dynamic =
+  "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Billboard Locations in Saint Lucia",
+  title:
+    "Billboard Locations in Saint Lucia",
 
   description:
     "Explore Ernest Rentals billboard advertising locations across Saint Lucia, including Dennery, Mamiku, Mon Repos, Piaye, Praslin, Richford and Rodney Bay.",
 
   alternates: {
-    canonical: "/locations",
+    canonical:
+      "/locations",
   },
 
   openGraph: {
@@ -54,144 +66,373 @@ export const metadata: Metadata = {
   },
 };
 
-const locations = [
+type PublicBillboard = {
+  billboard_id: string;
+  billboard_code: string;
+  billboard_name: string;
+  location: string | null;
+  billboard_type: string;
+  image_url: string | null;
+};
+
+type LocationDefinition = {
+  name: string;
+  slug: string;
+  area: string;
+  description: string;
+  search: string;
+  type: string;
+  billboardType:
+    | "static"
+    | "digital";
+
+  imageMatchTerms:
+    string[];
+};
+
+type LocationWithImage =
+  LocationDefinition & {
+    imageUrl:
+      | string
+      | null;
+
+    featuredBillboard:
+      | PublicBillboard
+      | null;
+  };
+
+function createPublicServerClient() {
+  return createClient(
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL!,
+
+    process.env
+      .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+}
+
+const locations:
+  LocationDefinition[] = [
   {
-    name: "Dennery",
-    slug: "dennery",
-    area: "Anse Canot, Dennery",
+    name:
+      "Dennery",
+
+    slug:
+      "dennery",
+
+    area:
+      "Anse Canot, Dennery",
+
     description:
       "Static billboard advertising opportunities including V-Shape advertising faces.",
-    search: "Dennery",
-    type: "Static Billboard",
+
+    search:
+      "Dennery",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "dennery",
+      "anse canot",
+      "anse cannot",
+    ],
   },
+
   {
-    name: "Mamiku",
-    slug: "mamiku",
-    area: "Mamiku, Micoud",
+    name:
+      "Mamiku",
+
+    slug:
+      "mamiku",
+
+    area:
+      "Mamiku, Micoud",
+
     description:
       "Static roadside billboard advertising along the east coast corridor.",
-    search: "Mamiku",
-    type: "Static Billboard",
+
+    search:
+      "Mamiku",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "mamiku",
+    ],
   },
+
   {
-    name: "Mon Repos",
-    slug: "mon-repos",
-    area: "Mon Repos, Micoud",
+    name:
+      "Mon Repos",
+
+    slug:
+      "mon-repos",
+
+    area:
+      "Mon Repos, Micoud",
+
     description:
       "Static billboard advertising opportunities serving traffic through the Micoud area.",
-    search: "Mon Repos",
-    type: "Static Billboard",
+
+    search:
+      "Mon Repos",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "mon repos",
+      "mon-repos",
+    ],
   },
+
   {
-    name: "Piaye",
-    slug: "piaye",
-    area: "Piaye, Choiseul",
+    name:
+      "Piaye",
+
+    slug:
+      "piaye",
+
+    area:
+      "Piaye, Choiseul",
+
     description:
       "Large-format static billboard advertising in Saint Lucia's south-west corridor.",
-    search: "Piaye",
-    type: "Static Billboard",
+
+    search:
+      "Piaye",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "piaye",
+    ],
   },
+
   {
-    name: "Praslin",
-    slug: "praslin",
-    area: "Praslin, Micoud",
+    name:
+      "Praslin",
+
+    slug:
+      "praslin",
+
+    area:
+      "Praslin, Micoud",
+
     description:
       "V-Shape static billboard advertising with directional face options.",
-    search: "Praslin",
-    type: "Static Billboard",
+
+    search:
+      "Praslin",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "praslin",
+    ],
   },
+
   {
-    name: "Richford",
-    slug: "richford",
-    area: "Richford, Dennery Valley",
+    name:
+      "Richford",
+
+    slug:
+      "richford",
+
+    area:
+      "Richford, Dennery Valley",
+
     description:
       "Large-format static billboard advertising in the Dennery Valley area.",
-    search: "Richford",
-    type: "Static Billboard",
+
+    search:
+      "Richford",
+
+    type:
+      "Static Billboard",
+
+    billboardType:
+      "static",
+
+    imageMatchTerms: [
+      "richford",
+    ],
   },
+
   {
-    name: "Rodney Bay",
-    slug: "rodney-bay",
-    area: "Rodney Bay, Gros Islet",
+    name:
+      "Rodney Bay",
+
+    slug:
+      "rodney-bay",
+
+    area:
+      "Rodney Bay, Gros Islet",
+
     description:
       "Digital billboard advertising inventory in one of Saint Lucia's busiest commercial areas.",
-    search: "Rodney Bay",
-    type: "Digital Billboard",
+
+    search:
+      "Rodney Bay",
+
+    type:
+      "Digital Billboard",
+
+    billboardType:
+      "digital",
+
+    imageMatchTerms: [
+      "rodney bay",
+      "rodney",
+    ],
   },
 ];
 
-const locationsStructuredData = {
-  "@context": "https://schema.org",
+function normalizeText(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  return (
+    value ??
+    ""
+  )
+    .toLowerCase()
+    .replace(
+      /[-_/]/g,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
+    .trim();
+}
 
-  "@type": "ItemList",
+function billboardMatchesLocation(
+  billboard:
+    PublicBillboard,
 
-  "@id":
-    "https://www.ernestrentals.com/locations#billboard-locations",
+  location:
+    LocationDefinition
+) {
+  if (
+    normalizeText(
+      billboard.billboard_type
+    ) !==
+    normalizeText(
+      location.billboardType
+    )
+  ) {
+    return false;
+  }
 
-  name:
-    "Ernest Rentals Billboard Locations in Saint Lucia",
+  const searchable =
+    normalizeText(
+      [
+        billboard.location,
+        billboard.billboard_name,
+        billboard.billboard_code,
+      ]
+        .filter(
+          Boolean
+        )
+        .join(
+          " "
+        )
+    );
 
-  description:
-    "Static and digital billboard advertising locations available through Ernest Rentals across Saint Lucia.",
+  return location.imageMatchTerms.some(
+    (
+      term
+    ) =>
+      searchable.includes(
+        normalizeText(
+          term
+        )
+      )
+  );
+}
 
-  numberOfItems:
-    locations.length,
+function getFeaturedBillboard(
+  location:
+    LocationDefinition,
 
-  itemListElement:
-    locations.map((location, index) => ({
-      "@type": "ListItem",
+  billboards:
+    PublicBillboard[]
+) {
+  const matches =
+    billboards.filter(
+      (
+        billboard
+      ) =>
+        billboardMatchesLocation(
+          billboard,
+          location
+        ) &&
+        Boolean(
+          billboard.image_url
+        )
+    );
 
-      position:
-        index + 1,
+  if (
+    matches.length ===
+    0
+  ) {
+    return null;
+  }
 
-      url:
-        `https://www.ernestrentals.com/locations/${location.slug}`,
-
-      item: {
-        "@type": "Place",
-
-        name:
-          `${location.name} Billboard Advertising`,
-
-        url:
-          `https://www.ernestrentals.com/locations/${location.slug}`,
-
-        description:
-          location.description,
-
-        address: {
-          "@type": "PostalAddress",
-
-          addressLocality:
-            location.area,
-
-          addressCountry:
-            "LC",
-        },
-      },
-    })),
-};
+  return matches[0];
+}
 
 const breadcrumbStructuredData = {
-  "@context": "https://schema.org",
+  "@context":
+    "https://schema.org",
 
-  "@type": "BreadcrumbList",
+  "@type":
+    "BreadcrumbList",
 
   itemListElement: [
     {
-      "@type": "ListItem",
+      "@type":
+        "ListItem",
 
-      position: 1,
+      position:
+        1,
 
-      name: "Home",
+      name:
+        "Home",
 
       item:
         "https://www.ernestrentals.com",
     },
-    {
-      "@type": "ListItem",
 
-      position: 2,
+    {
+      "@type":
+        "ListItem",
+
+      position:
+        2,
 
       name:
         "Billboard Locations",
@@ -202,7 +443,131 @@ const breadcrumbStructuredData = {
   ],
 };
 
-export default function LocationsPage() {
+export default async function LocationsPage() {
+  const supabase =
+    createPublicServerClient();
+
+  const {
+    data:
+      billboardRows,
+
+    error:
+      billboardError,
+  } =
+    await supabase.rpc(
+      "get_public_location_billboards"
+    );
+
+  if (
+    billboardError
+  ) {
+    console.error(
+      "Unable to load location billboard images:",
+      billboardError
+    );
+  }
+
+  const publicBillboards =
+    (
+      billboardRows ??
+      []
+    ) as PublicBillboard[];
+
+  const locationsWithImages:
+    LocationWithImage[] =
+    locations.map(
+      (
+        location
+      ) => {
+        const featuredBillboard =
+          getFeaturedBillboard(
+            location,
+            publicBillboards
+          );
+
+        return {
+          ...location,
+
+          featuredBillboard,
+
+          imageUrl:
+            featuredBillboard
+              ?.image_url ??
+            null,
+        };
+      }
+    );
+
+  const locationsStructuredData = {
+    "@context":
+      "https://schema.org",
+
+    "@type":
+      "ItemList",
+
+    "@id":
+      "https://www.ernestrentals.com/locations#billboard-locations",
+
+    name:
+      "Ernest Rentals Billboard Locations in Saint Lucia",
+
+    description:
+      "Static and digital billboard advertising locations available through Ernest Rentals across Saint Lucia.",
+
+    numberOfItems:
+      locationsWithImages.length,
+
+    itemListElement:
+      locationsWithImages.map(
+        (
+          location,
+          index
+        ) => ({
+          "@type":
+            "ListItem",
+
+          position:
+            index +
+            1,
+
+          url:
+            `https://www.ernestrentals.com/locations/${location.slug}`,
+
+          item: {
+            "@type":
+              "Place",
+
+            name:
+              `${location.name} Billboard Advertising`,
+
+            url:
+              `https://www.ernestrentals.com/locations/${location.slug}`,
+
+            description:
+              location.description,
+
+            ...(location.imageUrl
+              ? {
+                  image:
+                    location.imageUrl,
+                }
+              : {}),
+
+            address: {
+              "@type":
+                "PostalAddress",
+
+              addressLocality:
+                location.area,
+
+              addressCountry:
+                "LC",
+            },
+          },
+        })
+      ),
+  };
+
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
       <script
@@ -281,62 +646,137 @@ export default function LocationsPage() {
 
       {/* LOCATION CARDS */}
       <section className="px-5 py-14 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {locations.map((location) => (
-            <article
-              key={location.name}
-              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="h-2 bg-gradient-to-r from-orange-500 to-sky-500" />
+        <div className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {locationsWithImages.map(
+            (
+              location
+            ) => (
+              <article
+                key={
+                  location.name
+                }
+                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                {/* IMAGE */}
+                <Link
+                  href={`/locations/${location.slug}`}
+                  className="relative block h-56 overflow-hidden bg-slate-200"
+                >
+                  {location.imageUrl ? (
+                    <>
+                      <img
+                        src={
+                          location.imageUrl
+                        }
+                        alt={`${location.name} billboard advertising location in Saint Lucia`}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      />
 
-              <div className="p-6">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                    Saint Lucia
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#071226]/65 via-transparent to-transparent" />
+
+                      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
+                        <div>
+                          <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-orange-300">
+                            Featured Billboard
+                          </p>
+
+                          {location.featuredBillboard && (
+                            <p className="mt-1 max-w-[220px] truncate text-xs font-bold text-white">
+                              {
+                                location
+                                  .featuredBillboard
+                                  .billboard_name
+                              }
+                            </p>
+                          )}
+                        </div>
+
+                        <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1 text-[9px] font-extrabold uppercase tracking-wide text-white backdrop-blur">
+                          {
+                            location.type
+                          }
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#071226,#12233f)] px-6 text-center">
+                      <div>
+                        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                          Ernest Rentals
+                        </p>
+
+                        <p className="mt-2 text-sm font-bold text-slate-300">
+                          Location photo coming soon
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </Link>
+
+                <div className="h-1.5 bg-gradient-to-r from-orange-500 to-sky-500" />
+
+                {/* DETAILS */}
+                <div className="p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-400">
+                      Saint Lucia
+                    </p>
+
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                      {
+                        location.type
+                      }
+                    </span>
+                  </div>
+
+                  <h2 className="mt-3 text-2xl font-black">
+                    <Link
+                      href={`/locations/${location.slug}`}
+                      className="transition hover:text-orange-500"
+                    >
+                      {
+                        location.name
+                      }
+                    </Link>
+                  </h2>
+
+                  <p className="mt-1 text-sm font-semibold text-orange-500">
+                    {
+                      location.area
+                    }
                   </p>
 
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
-                    {location.type}
-                  </span>
+                  <p className="mt-4 min-h-[48px] text-sm leading-6 text-slate-500">
+                    {
+                      location.description
+                    }
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      href={`/locations/${location.slug}`}
+                      className="inline-flex rounded-xl bg-[#071226] px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-orange-500"
+                    >
+                      View{" "}
+                      {
+                        location.name
+                      }
+                    </Link>
+
+                    <Link
+                      href={`/?location=${encodeURIComponent(
+                        location.search
+                      )}#availability`}
+                      className="inline-flex rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
+                    >
+                      Check Availability
+                    </Link>
+                  </div>
                 </div>
-
-                <h2 className="mt-3 text-2xl font-black">
-                  <Link
-                    href={`/locations/${location.slug}`}
-                    className="transition hover:text-orange-500"
-                  >
-                    {location.name}
-                  </Link>
-                </h2>
-
-                <p className="mt-1 text-sm font-semibold text-orange-500">
-                  {location.area}
-                </p>
-
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  {location.description}
-                </p>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link
-                    href={`/locations/${location.slug}`}
-                    className="inline-flex rounded-xl bg-[#071226] px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-orange-500"
-                  >
-                    View {location.name}
-                  </Link>
-
-                  <Link
-                    href={`/?location=${encodeURIComponent(
-                      location.search
-                    )}#availability`}
-                    className="inline-flex rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-extrabold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600"
-                  >
-                    Check Availability
-                  </Link>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          )}
         </div>
       </section>
 
