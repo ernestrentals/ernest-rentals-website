@@ -58,7 +58,9 @@ function formatMoney(
       }
     ).format(value);
   } catch {
-    return `${currency} ${value.toFixed(0)}`;
+    return `${currency} ${value.toFixed(
+      0
+    )}`;
   }
 }
 
@@ -157,6 +159,178 @@ function saintLuciaTodayString() {
     )?.value;
 
   return `${year}-${month}-${day}`;
+}
+
+function getFriendlySubmissionError(
+  message:
+    | string
+    | undefined
+) {
+  const value =
+    (
+      message ??
+      ""
+    ).toLowerCase();
+
+  if (
+    value.includes(
+      "campaign start date cannot be before today"
+    )
+  ) {
+    return "The selected campaign start date has passed. Please return to the billboard page and choose a current or future date.";
+  }
+
+  if (
+    value.includes(
+      "changeover date must be after the start date"
+    )
+  ) {
+    return "The campaign changeover date must be after the start date.";
+  }
+
+  if (
+    value.includes(
+      "selected billboard is not available"
+    )
+  ) {
+    return "This billboard is no longer available for public campaign requests.";
+  }
+
+  if (
+    value.includes(
+      "billboard type does not match"
+    )
+  ) {
+    return "The selected billboard information has changed. Please reopen the billboard and try again.";
+  }
+
+  if (
+    value.includes(
+      "unsupported billboard type"
+    )
+  ) {
+    return "This billboard type cannot currently accept online campaign requests.";
+  }
+
+  if (
+    value.includes(
+      "rental package is required"
+    )
+  ) {
+    return "Please select a 3, 6 or 12-month rental package before submitting your campaign.";
+  }
+
+  if (
+    value.includes(
+      "package does not belong to this billboard"
+    )
+  ) {
+    return "The selected package is not available for this billboard. Please choose another package.";
+  }
+
+  if (
+    value.includes(
+      "selected digital advertising package is not available"
+    ) ||
+    value.includes(
+      "selected advertising package is not available"
+    )
+  ) {
+    return "The selected advertising package is no longer available. Please choose another package.";
+  }
+
+  if (
+    value.includes(
+      "please select a digital advertising option"
+    )
+  ) {
+    return "Please select a digital advertising option before submitting your campaign.";
+  }
+
+  if (
+    value.includes(
+      "campaign dates do not match the selected package duration"
+    )
+  ) {
+    return "The selected dates do not match the duration of this package. Please return to the billboard page and use the package schedule provided.";
+  }
+
+  if (
+    value.includes(
+      "digital campaigns must begin"
+    )
+  ) {
+    return "Digital campaigns must begin on a future available date.";
+  }
+
+  if (
+    value.includes(
+      "standard and premium digital campaigns must begin on a monday"
+    )
+  ) {
+    return "Standard and Premium digital campaigns begin on Mondays. Please use one of the available Monday start dates.";
+  }
+
+  if (
+    value.includes(
+      "already booked"
+    ) ||
+    value.includes(
+      "not available for the requested campaign period"
+    )
+  ) {
+    return "This billboard was booked for part or all of your selected campaign period. Please return to the billboard page and use the next available dates.";
+  }
+
+  if (
+    value.includes(
+      "no static billboard face is available"
+    )
+  ) {
+    return "This billboard is fully booked for the selected campaign period. Please choose its next available dates.";
+  }
+
+  if (
+    value.includes(
+      "no standard digital advertising slot"
+    )
+  ) {
+    return "Standard advertising slots are fully booked for the selected period. Please choose another available period.";
+  }
+
+  if (
+    value.includes(
+      "no premium digital advertising slot"
+    )
+  ) {
+    return "Premium advertising slots are fully booked for the selected period. Please choose another available period.";
+  }
+
+  if (
+    value.includes(
+      "no shoutout advertising slot"
+    )
+  ) {
+    return "Shoutout advertising is fully booked for the selected period. Please choose another available date.";
+  }
+
+  if (
+    value.includes(
+      "contact person is required"
+    )
+  ) {
+    return "Please enter the name of the person Ernest Rentals should contact.";
+  }
+
+  if (
+    value.includes(
+      "email, phone or whatsapp is required"
+    )
+  ) {
+    return "Please provide at least one contact method: email, phone or WhatsApp.";
+  }
+
+  return "We could not submit your campaign request right now. Please review your campaign details and try again.";
 }
 
 function StepBadge({
@@ -390,8 +564,8 @@ export default function StartCampaignForm({
 
         const parts:
           string[] = [
-          selectedPackageName,
-        ];
+            selectedPackageName,
+          ];
 
         if (
           selectedPackageCode
@@ -601,7 +775,8 @@ export default function StartCampaignForm({
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
@@ -740,8 +915,23 @@ export default function StartCampaignForm({
         error
       );
 
+      const friendlyMessage =
+        getFriendlySubmissionError(
+          error.message
+        );
+
       setErrorMessage(
-        "We could not submit your request right now. Please try again."
+        friendlyMessage
+      );
+
+      /*
+        Most server-side booking errors are
+        related to the billboard, schedule
+        or package, so return the customer
+        to Step 1 to review the campaign.
+      */
+      setStep(
+        1
       );
 
       return;
@@ -767,7 +957,9 @@ export default function StartCampaignForm({
           </h2>
 
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
-            Thank you. Your request has been sent to Ernest Rentals with the selected billboard, package and campaign schedule. A representative will contact you shortly to confirm the next steps.
+            Thank you. Your request has been sent to Ernest Rentals with the
+            selected billboard, package and campaign schedule. A representative
+            will contact you shortly to confirm the next steps.
           </p>
 
           <div className="mx-auto mt-5 max-w-md rounded-2xl bg-slate-50 p-4">
@@ -944,7 +1136,8 @@ export default function StartCampaignForm({
                   </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Confirm the billboard, package and campaign schedule before continuing.
+                    Confirm the billboard, package and campaign schedule before
+                    continuing.
                   </p>
                 </div>
 
@@ -960,7 +1153,7 @@ export default function StartCampaignForm({
                   <p className="mt-1 text-xs text-slate-300">
                     {location ||
                       "Saint Lucia"}{" "}
-                    ·{" "}
+                    •{" "}
                     {billboardType ===
                     "digital"
                       ? "Digital Billboard"
@@ -1003,9 +1196,11 @@ export default function StartCampaignForm({
                             {titleCase(
                               selectedPackageType
                             )}
+
                             {selectedPackageSlotDuration
                               ? ` · ${selectedPackageSlotDuration}-second ad`
                               : ""}
+
                             {selectedPackageDurationLabel
                               ? ` · ${selectedPackageDurationLabel}`
                               : ""}
@@ -1093,7 +1288,8 @@ export default function StartCampaignForm({
                     </p>
 
                     <p className="mt-1 text-xs leading-5 text-amber-700">
-                      Static billboards require a 3, 6 or 12-month package before a campaign request can be submitted.
+                      Static billboards require a 3, 6 or 12-month package before
+                      a campaign request can be submitted.
                     </p>
                   </div>
                 )}
@@ -1114,7 +1310,8 @@ export default function StartCampaignForm({
                   </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    We only need enough information to contact you and confirm the campaign.
+                    We only need enough information to contact you and confirm
+                    the campaign.
                   </p>
                 </div>
 
@@ -1225,7 +1422,8 @@ export default function StartCampaignForm({
                 </div>
 
                 <div className="mt-5 rounded-xl bg-sky-50 p-4 text-xs leading-5 text-sky-800">
-                  Please provide at least one contact method: email, phone or WhatsApp.
+                  Please provide at least one contact method: email, phone or
+                  WhatsApp.
                 </div>
               </div>
             )}
@@ -1244,7 +1442,8 @@ export default function StartCampaignForm({
                   </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Tell us what you are advertising and how you want to handle the artwork.
+                    Tell us what you are advertising and how you want to handle
+                    the artwork.
                   </p>
                 </div>
 
@@ -1369,7 +1568,7 @@ export default function StartCampaignForm({
                       }`}
                     >
                       <div className="text-lg">
-                        ◷
+                        ▷
                       </div>
 
                       <p className="mt-2 text-sm font-black text-slate-900">
@@ -1423,7 +1622,8 @@ export default function StartCampaignForm({
                   </h3>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Check the details below before sending your campaign request.
+                    Check the details below before sending your campaign
+                    request.
                   </p>
                 </div>
 
@@ -1576,16 +1776,33 @@ export default function StartCampaignForm({
                 )}
 
                 <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs leading-5 text-sky-800">
-                  Submitting this form sends a campaign request to Ernest Rentals. The billboard is not reserved until the request is confirmed.
+                  Submitting this form sends a campaign request to Ernest
+                  Rentals. The billboard is not reserved until the request is
+                  confirmed.
                 </div>
               </div>
             )}
 
+            {/* ERROR */}
             {errorMessage && (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {
-                  errorMessage
-                }
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-black text-red-700">
+                    !
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-extrabold text-red-800">
+                      We need you to review something
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-red-700">
+                      {
+                        errorMessage
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
