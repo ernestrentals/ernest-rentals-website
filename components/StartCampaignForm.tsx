@@ -279,7 +279,7 @@ function getFriendlySubmissionError(
       "not available for the requested campaign period"
     )
   ) {
-    return "This billboard was booked for part or all of your selected campaign period. Please return to the billboard page and use the next available dates.";
+    return "This billboard was booked for part or all of your selected campaign period. View the next available dates for this billboard and choose another opening.";
   }
 
   if (
@@ -287,7 +287,7 @@ function getFriendlySubmissionError(
       "no static billboard face is available"
     )
   ) {
-    return "This billboard is fully booked for the selected campaign period. Please choose its next available dates.";
+    return "This billboard is fully booked for the selected campaign period. View its next available dates and choose another opening.";
   }
 
   if (
@@ -295,7 +295,7 @@ function getFriendlySubmissionError(
       "no standard digital advertising slot"
     )
   ) {
-    return "Standard advertising slots are fully booked for the selected period. Please choose another available period.";
+    return "Standard advertising slots are fully booked for the selected period. View the next available dates and choose another opening.";
   }
 
   if (
@@ -303,7 +303,7 @@ function getFriendlySubmissionError(
       "no premium digital advertising slot"
     )
   ) {
-    return "Premium advertising slots are fully booked for the selected period. Please choose another available period.";
+    return "Premium advertising slots are fully booked for the selected period. View the next available dates and choose another opening.";
   }
 
   if (
@@ -311,7 +311,7 @@ function getFriendlySubmissionError(
       "no shoutout advertising slot"
     )
   ) {
-    return "Shoutout advertising is fully booked for the selected period. Please choose another available date.";
+    return "Shoutout advertising is fully booked for the selected period. View the next available dates and choose another opening.";
   }
 
   if (
@@ -331,6 +331,39 @@ function getFriendlySubmissionError(
   }
 
   return "We could not submit your campaign request right now. Please review your campaign details and try again.";
+}
+
+function isAvailabilityRecoveryError(
+  message:
+    | string
+    | undefined
+) {
+  const value =
+    (
+      message ??
+      ""
+    ).toLowerCase();
+
+  return (
+    value.includes(
+      "already booked"
+    ) ||
+    value.includes(
+      "not available for the requested campaign period"
+    ) ||
+    value.includes(
+      "no static billboard face is available"
+    ) ||
+    value.includes(
+      "no standard digital advertising slot"
+    ) ||
+    value.includes(
+      "no premium digital advertising slot"
+    ) ||
+    value.includes(
+      "no shoutout advertising slot"
+    )
+  );
 }
 
 function StepBadge({
@@ -539,6 +572,17 @@ export default function StartCampaignForm({
   ] =
     useState(false);
 
+  /*
+    When Supabase says the requested inventory
+    has become unavailable, this controls the
+    recovery button in the error message.
+  */
+  const [
+    showAvailabilityRecovery,
+    setShowAvailabilityRecovery,
+  ] =
+    useState(false);
+
   const hasSelectedPackage =
     Boolean(
       selectedPackageId &&
@@ -639,6 +683,10 @@ export default function StartCampaignForm({
       changeoverDate <=
         startDate
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "The campaign schedule is invalid. Please return to the billboard page and choose the dates again."
       );
@@ -650,6 +698,10 @@ export default function StartCampaignForm({
       startDate <
       today
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "The advertising start date cannot be before today. Please return to the billboard page and choose today or a future start date."
       );
@@ -660,6 +712,10 @@ export default function StartCampaignForm({
     if (
       staticPackageRequired
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "Static billboards require a 3, 6 or 12-month rental package. Please choose a package from the billboard details page before continuing."
       );
@@ -673,6 +729,10 @@ export default function StartCampaignForm({
       selectedPackageType !==
         "static"
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "The selected package does not match this static billboard."
       );
@@ -687,6 +747,10 @@ export default function StartCampaignForm({
     if (
       !contactPerson.trim()
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "Please enter a contact person."
       );
@@ -699,6 +763,10 @@ export default function StartCampaignForm({
       !phone.trim() &&
       !whatsapp.trim()
     ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
       setErrorMessage(
         "Please provide an email address, phone number or WhatsApp number."
       );
@@ -712,6 +780,10 @@ export default function StartCampaignForm({
   function goNext() {
     setErrorMessage(
       ""
+    );
+
+    setShowAvailabilityRecovery(
+      false
     );
 
     if (
@@ -763,6 +835,10 @@ export default function StartCampaignForm({
       ""
     );
 
+    setShowAvailabilityRecovery(
+      false
+    );
+
     setStep(
       (
         current
@@ -774,6 +850,47 @@ export default function StartCampaignForm({
     );
   }
 
+  function viewNextAvailableDates() {
+    const params =
+      new URLSearchParams();
+
+    /*
+      Keep the customer's original dates so that
+      the billboard page can show that this period
+      is unavailable and display the Next Available
+      panel directly underneath.
+    */
+    if (
+      startDate
+    ) {
+      params.set(
+        "start",
+        startDate
+      );
+    }
+
+    if (
+      changeoverDate
+    ) {
+      params.set(
+        "end",
+        changeoverDate
+      );
+    }
+
+    const query =
+      params.toString();
+
+    const target =
+      query
+        ? `/billboards/${billboardId}?${query}`
+        : `/billboards/${billboardId}`;
+
+    window.location.assign(
+      target
+    );
+  }
+
   async function handleSubmit(
     event:
       FormEvent<HTMLFormElement>
@@ -782,6 +899,10 @@ export default function StartCampaignForm({
 
     setErrorMessage(
       ""
+    );
+
+    setShowAvailabilityRecovery(
+      false
     );
 
     if (
@@ -920,15 +1041,22 @@ export default function StartCampaignForm({
           error.message
         );
 
+      const canRecover =
+        isAvailabilityRecoveryError(
+          error.message
+        );
+
       setErrorMessage(
         friendlyMessage
       );
 
+      setShowAvailabilityRecovery(
+        canRecover
+      );
+
       /*
-        Most server-side booking errors are
-        related to the billboard, schedule
-        or package, so return the customer
-        to Step 1 to review the campaign.
+        Availability and package problems
+        are reviewed from the campaign step.
       */
       setStep(
         1
@@ -1785,13 +1913,13 @@ export default function StartCampaignForm({
 
             {/* ERROR */}
             {errorMessage && (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-4">
+              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-black text-red-700">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-black text-red-700">
                     !
                   </div>
 
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-extrabold text-red-800">
                       We need you to review something
                     </p>
@@ -1801,6 +1929,29 @@ export default function StartCampaignForm({
                         errorMessage
                       }
                     </p>
+
+                    {showAvailabilityRecovery && (
+                      <div className="mt-4 rounded-xl border border-red-100 bg-white p-3">
+                        <p className="text-xs font-bold text-slate-700">
+                          Your selected dates may no longer be available.
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          We can take you back to this billboard so you can see
+                          its next available campaign opening.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={
+                            viewNextAvailableDates
+                          }
+                          className="mt-3 inline-flex items-center rounded-xl bg-[#071226] px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-orange-600"
+                        >
+                          View Next Available Dates →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
