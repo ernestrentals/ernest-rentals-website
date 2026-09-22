@@ -13,6 +13,12 @@ const siteUrl =
     .NEXT_PUBLIC_SITE_URL ??
   "https://www.ernestrentals.com";
 
+const billboardVideoUrl =
+  "https://rblnnveizzlzcxnhjzue.supabase.co/storage/v1/object/public/website-media/ernest-rentals-billboards-web-optimized.mp4";
+
+const billboardVideoPosterUrl =
+  "https://rblnnveizzlzcxnhjzue.supabase.co/storage/v1/object/public/website-media/poster10.jpg";
+
 export const metadata:
   Metadata = {
   title:
@@ -48,16 +54,16 @@ export const metadata:
     images: [
       {
         url:
-          "/ernest-rentals-logo.png",
+          billboardVideoPosterUrl,
 
         width:
-          256,
+          1280,
 
         height:
-          256,
+          720,
 
         alt:
-          "Ernest Rentals billboard advertising in Saint Lucia",
+          "Ernest Rentals billboard advertising locations in Saint Lucia",
       },
     ],
   },
@@ -73,7 +79,7 @@ export const metadata:
       "Search static and digital billboard advertising opportunities across Saint Lucia.",
 
     images: [
-      "/ernest-rentals-logo.png",
+      billboardVideoPosterUrl,
     ],
   },
 };
@@ -112,6 +118,11 @@ const structuredData = {
       breadcrumb: {
         "@id":
           `${siteUrl}/billboards#breadcrumb`,
+      },
+
+      hasPart: {
+        "@id":
+          `${siteUrl}/billboards#video`,
       },
 
       inLanguage:
@@ -179,6 +190,46 @@ const structuredData = {
 
     {
       "@type":
+        "VideoObject",
+
+      "@id":
+        `${siteUrl}/billboards#video`,
+
+      name:
+        "Ernest Rentals Billboard Advertising in Saint Lucia",
+
+      description:
+        "A showcase of Ernest Rentals static and digital billboard advertising locations and outdoor advertising opportunities across Saint Lucia.",
+
+      thumbnailUrl: [
+        billboardVideoPosterUrl,
+      ],
+
+      contentUrl:
+        billboardVideoUrl,
+
+      uploadDate:
+        "2026-09-22",
+
+      duration:
+        "PT1M35S",
+
+      publisher: {
+        "@id":
+          `${siteUrl}/#organization`,
+      },
+
+      mainEntityOfPage: {
+        "@id":
+          `${siteUrl}/billboards#webpage`,
+      },
+
+      inLanguage:
+        "en-LC",
+    },
+
+    {
+      "@type":
         "BreadcrumbList",
 
       "@id":
@@ -220,8 +271,6 @@ const structuredData = {
 export default function BillboardsPage() {
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
-
-      {/* STRUCTURED DATA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -282,6 +331,114 @@ export default function BillboardsPage() {
       {/* LIVE AVAILABILITY */}
       <AvailabilitySearch />
 
+      {/* BILLBOARD VIDEO */}
+      <section
+        id="billboard-video"
+        className="px-5 py-16 lg:px-8 lg:py-20"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="grid items-end gap-6 lg:grid-cols-[1fr_auto]">
+            <div className="max-w-3xl">
+              <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
+                See Ernest Rentals In Action
+              </p>
+
+              <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+                Billboard advertising built for visibility.
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">
+                Take a look at Ernest Rentals billboard locations and outdoor
+                advertising opportunities across Saint Lucia.
+              </p>
+            </div>
+
+            <div className="hidden gap-2 lg:flex">
+              <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-500">
+                Static Billboards
+              </span>
+
+              <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-500">
+                Digital Screens
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-9 overflow-hidden rounded-[2rem] border border-slate-200 bg-[#071226] shadow-[0_24px_70px_rgba(7,18,38,0.18)]">
+            <div className="relative aspect-video w-full bg-black">
+              <video
+                className="h-full w-full object-contain"
+                controls
+                preload="metadata"
+                playsInline
+                poster={
+                  billboardVideoPosterUrl
+                }
+                aria-label="Ernest Rentals billboard advertising showcase in Saint Lucia"
+              >
+                <source
+                  src={
+                    billboardVideoUrl
+                  }
+                  type="video/mp4"
+                />
+
+                Your browser does not support HTML5 video.
+              </video>
+            </div>
+
+            <div className="border-t border-white/10 bg-[#071226] px-6 py-6 text-white sm:px-8">
+              <div className="flex flex-wrap items-center justify-between gap-6">
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                    Ernest Rentals
+                  </p>
+
+                  <p className="mt-2 text-xl font-black">
+                    Outdoor advertising across Saint Lucia.
+                  </p>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                    Explore our billboard network, choose a location and check
+                    live campaign availability online.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/locations"
+                    className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                  >
+                    Explore Locations
+                  </Link>
+
+                  <Link
+                    href="/#availability"
+                    className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-orange-600"
+                  >
+                    Check Availability
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2 lg:hidden">
+            <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-500">
+              Static Billboards
+            </span>
+
+            <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-500">
+              Digital Screens
+            </span>
+
+            <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold text-slate-500">
+              Saint Lucia
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* BILLBOARD TYPES */}
       <section className="px-5 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -302,7 +459,6 @@ export default function BillboardsPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-
             {/* STATIC */}
             <article className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
