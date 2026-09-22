@@ -1,18 +1,29 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
 import AvailabilitySearch from "@/components/AvailabilitySearch";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
-export const metadata: Metadata = {
-  title: "Billboard Advertising in Saint Lucia",
+const siteUrl =
+  process.env
+    .NEXT_PUBLIC_SITE_URL ??
+  "https://www.ernestrentals.com";
+
+export const metadata:
+  Metadata = {
+  title:
+    "Billboard Advertising in Saint Lucia",
 
   description:
     "Find static and digital billboard advertising in Saint Lucia with Ernest Rentals. Compare billboard locations, check live availability and start your outdoor advertising campaign online.",
 
   alternates: {
-    canonical: "/billboards",
+    canonical:
+      "/billboards",
   },
 
   openGraph: {
@@ -25,6 +36,12 @@ export const metadata: Metadata = {
     url:
       "/billboards",
 
+    siteName:
+      "Ernest Rentals",
+
+    locale:
+      "en_LC",
+
     type:
       "website",
 
@@ -32,6 +49,12 @@ export const metadata: Metadata = {
       {
         url:
           "/ernest-rentals-logo.png",
+
+        width:
+          256,
+
+        height:
+          256,
 
         alt:
           "Ernest Rentals billboard advertising in Saint Lucia",
@@ -55,100 +78,141 @@ export const metadata: Metadata = {
   },
 };
 
-const billboardServiceStructuredData = {
+const structuredData = {
   "@context":
     "https://schema.org",
 
-  "@type":
-    "Service",
-
-  "@id":
-    "https://www.ernestrentals.com/billboards#service",
-
-  name:
-    "Billboard Advertising in Saint Lucia",
-
-  serviceType:
-    "Billboard Advertising",
-
-  description:
-    "Static and digital billboard advertising opportunities across Saint Lucia provided by Ernest Rentals.",
-
-  provider: {
-    "@id":
-      "https://www.ernestrentals.com/#organization",
-  },
-
-  areaServed: {
-    "@type":
-      "Country",
-
-    name:
-      "Saint Lucia",
-  },
-
-  url:
-    "https://www.ernestrentals.com/billboards",
-
-  hasOfferCatalog: {
-    "@type":
-      "OfferCatalog",
-
-    name:
-      "Billboard Advertising Options",
-
-    itemListElement: [
-      {
-        "@type":
-          "OfferCatalog",
-
-        name:
-          "Static Billboard Advertising",
-      },
-      {
-        "@type":
-          "OfferCatalog",
-
-        name:
-          "Digital Billboard Advertising",
-      },
-    ],
-  },
-};
-
-const breadcrumbStructuredData = {
-  "@context":
-    "https://schema.org",
-
-  "@type":
-    "BreadcrumbList",
-
-  itemListElement: [
+  "@graph": [
     {
       "@type":
-        "ListItem",
+        "WebPage",
 
-      position:
-        1,
+      "@id":
+        `${siteUrl}/billboards#webpage`,
+
+      url:
+        `${siteUrl}/billboards`,
 
       name:
-        "Home",
+        "Billboard Advertising in Saint Lucia",
 
-      item:
-        "https://www.ernestrentals.com",
+      description:
+        "Find static and digital billboard advertising in Saint Lucia with Ernest Rentals. Compare locations, check availability and start your campaign online.",
+
+      isPartOf: {
+        "@id":
+          `${siteUrl}/#website`,
+      },
+
+      about: {
+        "@id":
+          `${siteUrl}/billboards#service`,
+      },
+
+      breadcrumb: {
+        "@id":
+          `${siteUrl}/billboards#breadcrumb`,
+      },
+
+      inLanguage:
+        "en-LC",
     },
+
     {
       "@type":
-        "ListItem",
+        "Service",
 
-      position:
-        2,
+      "@id":
+        `${siteUrl}/billboards#service`,
 
       name:
-        "Billboards",
+        "Billboard Advertising in Saint Lucia",
 
-      item:
-        "https://www.ernestrentals.com/billboards",
+      serviceType:
+        "Billboard Advertising",
+
+      description:
+        "Static and digital billboard advertising opportunities across Saint Lucia provided by Ernest Rentals.",
+
+      provider: {
+        "@id":
+          `${siteUrl}/#organization`,
+      },
+
+      areaServed: {
+        "@type":
+          "Country",
+
+        name:
+          "Saint Lucia",
+      },
+
+      url:
+        `${siteUrl}/billboards`,
+
+      hasOfferCatalog: {
+        "@type":
+          "OfferCatalog",
+
+        name:
+          "Billboard Advertising Options",
+
+        itemListElement: [
+          {
+            "@type":
+              "OfferCatalog",
+
+            name:
+              "Static Billboard Advertising",
+          },
+
+          {
+            "@type":
+              "OfferCatalog",
+
+            name:
+              "Digital Billboard Advertising",
+          },
+        ],
+      },
+    },
+
+    {
+      "@type":
+        "BreadcrumbList",
+
+      "@id":
+        `${siteUrl}/billboards#breadcrumb`,
+
+      itemListElement: [
+        {
+          "@type":
+            "ListItem",
+
+          position:
+            1,
+
+          name:
+            "Home",
+
+          item:
+            siteUrl,
+        },
+
+        {
+          "@type":
+            "ListItem",
+
+          position:
+            2,
+
+          name:
+            "Billboards",
+
+          item:
+            `${siteUrl}/billboards`,
+        },
+      ],
     },
   ],
 };
@@ -156,22 +220,14 @@ const breadcrumbStructuredData = {
 export default function BillboardsPage() {
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html:
-            JSON.stringify(
-              billboardServiceStructuredData
-            ),
-        }}
-      />
 
+      {/* STRUCTURED DATA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html:
             JSON.stringify(
-              breadcrumbStructuredData
+              structuredData
             ),
         }}
       />
@@ -182,6 +238,7 @@ export default function BillboardsPage() {
       <section className="relative overflow-hidden bg-[#071226] px-5 pb-20 pt-16 text-white lg:px-8 lg:pb-24 lg:pt-20">
         <div className="absolute inset-0 opacity-30">
           <div className="absolute -left-16 top-0 h-72 w-72 rounded-full bg-orange-500 blur-3xl" />
+
           <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-sky-500 blur-3xl" />
         </div>
 
@@ -192,6 +249,7 @@ export default function BillboardsPage() {
 
           <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
             Billboard Advertising
+
             <span className="block bg-gradient-to-r from-orange-400 to-sky-400 bg-clip-text text-transparent">
               in Saint Lucia.
             </span>
@@ -244,8 +302,9 @@ export default function BillboardsPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
+
             {/* STATIC */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <article className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
                 Static Billboard Advertising
               </p>
@@ -267,12 +326,18 @@ export default function BillboardsPage() {
                   "6 Months",
                   "12 Months",
                 ].map(
-                  (label) => (
+                  (
+                    label
+                  ) => (
                     <div
-                      key={label}
+                      key={
+                        label
+                      }
                       className="rounded-2xl bg-slate-50 px-3 py-4 text-center text-sm font-black text-slate-700"
                     >
-                      {label}
+                      {
+                        label
+                      }
                     </div>
                   )
                 )}
@@ -293,10 +358,10 @@ export default function BillboardsPage() {
                   View Locations
                 </Link>
               </div>
-            </div>
+            </article>
 
             {/* DIGITAL */}
-            <div className="rounded-3xl bg-[#071226] p-8 text-white shadow-sm">
+            <article className="rounded-3xl bg-[#071226] p-8 text-white shadow-sm">
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-400">
                 Digital Billboard Advertising
               </p>
@@ -326,7 +391,7 @@ export default function BillboardsPage() {
                 </span>
 
                 <span className="rounded-full bg-white/10 px-4 py-2">
-                  10s & 15s Slots
+                  10s &amp; 15s Slots
                 </span>
               </div>
 
@@ -345,12 +410,12 @@ export default function BillboardsPage() {
                   Digital Billboard Details
                 </Link>
               </div>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* SEO / INFORMATION SECTION */}
+      {/* INFORMATION */}
       <section className="bg-white px-5 py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_.8fr]">
           <div>
@@ -378,19 +443,15 @@ export default function BillboardsPage() {
             </p>
           </div>
 
-          <div className="rounded-3xl bg-[#f5f8fc] p-7">
+          <aside className="rounded-3xl bg-[#f5f8fc] p-7">
             <p className="text-sm font-black uppercase tracking-[0.14em] text-orange-500">
-              Explore More
+              Explore Ernest Rentals
             </p>
 
-            <div className="mt-5 space-y-3">
-              <Link
-                href="/locations"
-                className="block rounded-2xl border border-slate-200 bg-white p-4 font-extrabold transition hover:border-orange-300 hover:text-orange-600"
-              >
-                Billboard Locations in Saint Lucia →
-              </Link>
-
+            <nav
+              aria-label="Explore Ernest Rentals"
+              className="mt-5 space-y-3"
+            >
               <Link
                 href="/digital-screens"
                 className="block rounded-2xl border border-slate-200 bg-white p-4 font-extrabold transition hover:border-orange-300 hover:text-orange-600"
@@ -399,13 +460,27 @@ export default function BillboardsPage() {
               </Link>
 
               <Link
+                href="/locations"
+                className="block rounded-2xl border border-slate-200 bg-white p-4 font-extrabold transition hover:border-orange-300 hover:text-orange-600"
+              >
+                Billboard Locations in Saint Lucia →
+              </Link>
+
+              <Link
                 href="/how-it-works"
                 className="block rounded-2xl border border-slate-200 bg-white p-4 font-extrabold transition hover:border-orange-300 hover:text-orange-600"
               >
-                How Billboard Booking Works →
+                How Billboard Advertising Works →
               </Link>
-            </div>
-          </div>
+
+              <Link
+                href="/contact"
+                className="block rounded-2xl border border-slate-200 bg-white p-4 font-extrabold transition hover:border-orange-300 hover:text-orange-600"
+              >
+                Contact Ernest Rentals →
+              </Link>
+            </nav>
+          </aside>
         </div>
       </section>
 
@@ -426,12 +501,21 @@ export default function BillboardsPage() {
             and campaign date.
           </p>
 
-          <Link
-            href="/#availability"
-            className="mt-7 inline-flex rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
-          >
-            Search Billboard Availability
-          </Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              href="/#availability"
+              className="inline-flex rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+            >
+              Search Billboard Availability
+            </Link>
+
+            <Link
+              href="/contact"
+              className="inline-flex rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+            >
+              Contact Ernest Rentals
+            </Link>
+          </div>
         </div>
       </section>
 

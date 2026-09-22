@@ -1,17 +1,28 @@
-import type { Metadata } from "next";
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 
-export const metadata: Metadata = {
-  title: "Digital Billboard Advertising in Saint Lucia",
+const siteUrl =
+  process.env
+    .NEXT_PUBLIC_SITE_URL ??
+  "https://www.ernestrentals.com";
+
+export const metadata:
+  Metadata = {
+  title:
+    "Digital Billboard Advertising in Saint Lucia",
 
   description:
     "Advertise on digital billboards in Saint Lucia with Ernest Rentals. Explore Standard 10-second, Premium 15-second and Shoutout advertising options, check live availability and start your campaign online.",
 
   alternates: {
-    canonical: "/digital-screens",
+    canonical:
+      "/digital-screens",
   },
 
   openGraph: {
@@ -24,6 +35,12 @@ export const metadata: Metadata = {
     url:
       "/digital-screens",
 
+    siteName:
+      "Ernest Rentals",
+
+    locale:
+      "en_LC",
+
     type:
       "website",
 
@@ -31,6 +48,12 @@ export const metadata: Metadata = {
       {
         url:
           "/ernest-rentals-logo.png",
+
+        width:
+          256,
+
+        height:
+          256,
 
         alt:
           "Ernest Rentals digital billboard advertising in Saint Lucia",
@@ -56,150 +79,206 @@ export const metadata: Metadata = {
 
 const packages = [
   {
-    label: "Standard",
-    duration: "10 seconds",
+    label:
+      "Standard",
+
+    duration:
+      "10 seconds",
+
     description:
       "A strong everyday option for brand awareness, promotions and recurring messages.",
   },
+
   {
-    label: "Premium",
-    duration: "15 seconds",
+    label:
+      "Premium",
+
+    duration:
+      "15 seconds",
+
     description:
       "More screen time for campaigns that need additional visual or message space.",
   },
+
   {
-    label: "Shoutout",
-    duration: "15 seconds",
+    label:
+      "Shoutout",
+
+    duration:
+      "15 seconds",
+
     description:
       "Designed for celebratory, community and short-form special-message advertising.",
   },
 ];
 
-const digitalServiceStructuredData = {
+const structuredData = {
   "@context":
     "https://schema.org",
 
-  "@type":
-    "Service",
-
-  "@id":
-    "https://www.ernestrentals.com/digital-screens#service",
-
-  name:
-    "Digital Billboard Advertising in Saint Lucia",
-
-  serviceType:
-    "Digital Billboard Advertising",
-
-  description:
-    "Digital billboard advertising in Saint Lucia with 10-second and 15-second advertising options from Ernest Rentals.",
-
-  provider: {
-    "@id":
-      "https://www.ernestrentals.com/#organization",
-  },
-
-  areaServed: {
-    "@type":
-      "Country",
-
-    name:
-      "Saint Lucia",
-  },
-
-  url:
-    "https://www.ernestrentals.com/digital-screens",
-
-  hasOfferCatalog: {
-    "@type":
-      "OfferCatalog",
-
-    name:
-      "Digital Billboard Advertising Packages",
-
-    itemListElement: [
-      {
-        "@type":
-          "Offer",
-
-        name:
-          "Standard Digital Advertising",
-
-        itemOffered: {
-          "@type":
-            "Service",
-
-          name:
-            "Standard 10-Second Digital Billboard Advertising",
-        },
-      },
-      {
-        "@type":
-          "Offer",
-
-        name:
-          "Premium Digital Advertising",
-
-        itemOffered: {
-          "@type":
-            "Service",
-
-          name:
-            "Premium 15-Second Digital Billboard Advertising",
-        },
-      },
-      {
-        "@type":
-          "Offer",
-
-        name:
-          "Shoutout Digital Advertising",
-
-        itemOffered: {
-          "@type":
-            "Service",
-
-          name:
-            "Shoutout 15-Second Digital Billboard Advertising",
-        },
-      },
-    ],
-  },
-};
-
-const breadcrumbStructuredData = {
-  "@context":
-    "https://schema.org",
-
-  "@type":
-    "BreadcrumbList",
-
-  itemListElement: [
+  "@graph": [
     {
       "@type":
-        "ListItem",
+        "WebPage",
 
-      position:
-        1,
+      "@id":
+        `${siteUrl}/digital-screens#webpage`,
+
+      url:
+        `${siteUrl}/digital-screens`,
 
       name:
-        "Home",
+        "Digital Billboard Advertising in Saint Lucia",
 
-      item:
-        "https://www.ernestrentals.com",
+      description:
+        "Explore digital billboard advertising in Saint Lucia with Standard, Premium and Shoutout advertising options from Ernest Rentals.",
+
+      isPartOf: {
+        "@id":
+          `${siteUrl}/#website`,
+      },
+
+      about: {
+        "@id":
+          `${siteUrl}/digital-screens#service`,
+      },
+
+      breadcrumb: {
+        "@id":
+          `${siteUrl}/digital-screens#breadcrumb`,
+      },
+
+      inLanguage:
+        "en-LC",
     },
+
     {
       "@type":
-        "ListItem",
+        "Service",
 
-      position:
-        2,
+      "@id":
+        `${siteUrl}/digital-screens#service`,
 
       name:
-        "Digital Billboards",
+        "Digital Billboard Advertising in Saint Lucia",
 
-      item:
-        "https://www.ernestrentals.com/digital-screens",
+      serviceType:
+        "Digital Billboard Advertising",
+
+      description:
+        "Digital billboard advertising in Saint Lucia with 10-second and 15-second advertising options from Ernest Rentals.",
+
+      provider: {
+        "@id":
+          `${siteUrl}/#organization`,
+      },
+
+      areaServed: {
+        "@type":
+          "Country",
+
+        name:
+          "Saint Lucia",
+      },
+
+      url:
+        `${siteUrl}/digital-screens`,
+
+      hasOfferCatalog: {
+        "@type":
+          "OfferCatalog",
+
+        name:
+          "Digital Billboard Advertising Packages",
+
+        itemListElement: [
+          {
+            "@type":
+              "Offer",
+
+            name:
+              "Standard Digital Advertising",
+
+            itemOffered: {
+              "@type":
+                "Service",
+
+              name:
+                "Standard 10-Second Digital Billboard Advertising",
+            },
+          },
+
+          {
+            "@type":
+              "Offer",
+
+            name:
+              "Premium Digital Advertising",
+
+            itemOffered: {
+              "@type":
+                "Service",
+
+              name:
+                "Premium 15-Second Digital Billboard Advertising",
+            },
+          },
+
+          {
+            "@type":
+              "Offer",
+
+            name:
+              "Shoutout Digital Advertising",
+
+            itemOffered: {
+              "@type":
+                "Service",
+
+              name:
+                "Shoutout 15-Second Digital Billboard Advertising",
+            },
+          },
+        ],
+      },
+    },
+
+    {
+      "@type":
+        "BreadcrumbList",
+
+      "@id":
+        `${siteUrl}/digital-screens#breadcrumb`,
+
+      itemListElement: [
+        {
+          "@type":
+            "ListItem",
+
+          position:
+            1,
+
+          name:
+            "Home",
+
+          item:
+            siteUrl,
+        },
+
+        {
+          "@type":
+            "ListItem",
+
+          position:
+            2,
+
+          name:
+            "Digital Screens",
+
+          item:
+            `${siteUrl}/digital-screens`,
+        },
+      ],
     },
   ],
 };
@@ -207,22 +286,14 @@ const breadcrumbStructuredData = {
 export default function DigitalScreensPage() {
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html:
-            JSON.stringify(
-              digitalServiceStructuredData
-            ),
-        }}
-      />
 
+      {/* STRUCTURED DATA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html:
             JSON.stringify(
-              breadcrumbStructuredData
+              structuredData
             ),
         }}
       />
@@ -233,6 +304,7 @@ export default function DigitalScreensPage() {
       <section className="relative overflow-hidden bg-[#071226] px-5 py-20 text-white lg:px-8 lg:py-24">
         <div className="absolute inset-0 opacity-30">
           <div className="absolute -left-16 bottom-0 h-80 w-80 rounded-full bg-orange-500 blur-3xl" />
+
           <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-sky-500 blur-3xl" />
         </div>
 
@@ -244,6 +316,7 @@ export default function DigitalScreensPage() {
 
             <h1 className="mt-4 text-5xl font-black tracking-tight sm:text-6xl">
               Digital Billboard Advertising
+
               <span className="block bg-gradient-to-r from-orange-400 to-sky-400 bg-clip-text text-transparent">
                 in Saint Lucia.
               </span>
@@ -312,28 +385,45 @@ export default function DigitalScreensPage() {
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {packages.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#071226] text-sm font-black text-white">
-                  {item.duration.split(" ")[0]}s
-                </div>
+            {packages.map(
+              (
+                item
+              ) => (
+                <article
+                  key={
+                    item.label
+                  }
+                  className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#071226] text-sm font-black text-white">
+                    {
+                      item.duration.split(
+                        " "
+                      )[0]
+                    }
+                    s
+                  </div>
 
-                <p className="mt-5 text-2xl font-black">
-                  {item.label}
-                </p>
+                  <h2 className="mt-5 text-2xl font-black">
+                    {
+                      item.label
+                    }
+                  </h2>
 
-                <p className="mt-1 font-bold text-orange-500">
-                  {item.duration}
-                </p>
+                  <p className="mt-1 font-bold text-orange-500">
+                    {
+                      item.duration
+                    }
+                  </p>
 
-                <p className="mt-4 text-sm leading-6 text-slate-500">
-                  {item.description}
-                </p>
-              </div>
-            ))}
+                  <p className="mt-4 text-sm leading-6 text-slate-500">
+                    {
+                      item.description
+                    }
+                  </p>
+                </article>
+              )
+            )}
           </div>
         </div>
       </section>
@@ -380,7 +470,7 @@ export default function DigitalScreensPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl bg-[#071226] p-7 text-white">
+          <aside className="rounded-3xl bg-[#071226] p-7 text-white">
             <p className="text-sm font-black uppercase tracking-[0.14em] text-orange-400">
               Digital Advertising Options
             </p>
@@ -419,7 +509,7 @@ export default function DigitalScreensPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       </section>
 
@@ -442,61 +532,90 @@ export default function DigitalScreensPage() {
                 "Live Availability",
                 "Search your campaign dates and see which digital advertising categories have open slots.",
               ],
+
               [
                 "Simple Campaign Request",
                 "Choose a screen and package, then send your company and campaign information online.",
               ],
+
               [
                 "Managed Placement",
                 "Ernest Rentals confirms the campaign details and coordinates the advertising content before your campaign goes live.",
               ],
-            ].map(([title, body]) => (
-              <div
-                key={title}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <p className="text-xl font-black">
-                  {title}
-                </p>
+            ].map(
+              (
+                [
+                  title,
+                  body,
+                ]
+              ) => (
+                <div
+                  key={
+                    title
+                  }
+                  className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <p className="text-xl font-black">
+                    {
+                      title
+                    }
+                  </p>
 
-                <p className="mt-3 text-sm leading-6 text-slate-500">
-                  {body}
-                </p>
-              </div>
-            ))}
+                  <p className="mt-3 text-sm leading-6 text-slate-500">
+                    {
+                      body
+                    }
+                  </p>
+                </div>
+              )
+            )}
           </div>
         </div>
       </section>
 
-      {/* INTERNAL LINKS */}
+      {/* PRIMARY INTERNAL LINKS */}
       <section className="bg-white px-5 py-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-sky-600">
             Explore Ernest Rentals
           </p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <h2 className="mt-2 max-w-3xl text-3xl font-black tracking-tight">
+            Explore more billboard advertising resources.
+          </h2>
+
+          <nav
+            aria-label="Explore Ernest Rentals"
+            className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+          >
             <Link
               href="/billboards"
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
-              Billboard Advertising in Saint Lucia →
+              Billboard Advertising →
             </Link>
 
             <Link
               href="/locations"
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
-              Explore Billboard Locations →
+              Billboard Locations →
             </Link>
 
             <Link
               href="/how-it-works"
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
-              How Billboard Advertising Works →
+              How It Works →
             </Link>
-          </div>
+
+            <Link
+              href="/contact"
+              className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
+            >
+              Contact Ernest Rentals →
+            </Link>
+          </nav>
         </div>
       </section>
 
@@ -518,12 +637,21 @@ export default function DigitalScreensPage() {
             </p>
           </div>
 
-          <Link
-            href="/?type=digital#availability"
-            className="rounded-xl bg-[#071226] px-6 py-3.5 font-extrabold text-white transition hover:bg-[#0b1a36]"
-          >
-            Search Digital Screens
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/?type=digital#availability"
+              className="rounded-xl bg-[#071226] px-6 py-3.5 font-extrabold text-white transition hover:bg-[#0b1a36]"
+            >
+              Search Digital Screens
+            </Link>
+
+            <Link
+              href="/contact"
+              className="rounded-xl border border-[#071226]/20 bg-white/25 px-6 py-3.5 font-extrabold text-[#071226] transition hover:bg-white/40"
+            >
+              Contact Ernest Rentals
+            </Link>
+          </div>
         </div>
       </section>
 

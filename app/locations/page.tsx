@@ -14,7 +14,13 @@ import SiteHeader from "@/components/SiteHeader";
 export const dynamic =
   "force-dynamic";
 
-export const metadata: Metadata = {
+const siteUrl =
+  process.env
+    .NEXT_PUBLIC_SITE_URL ??
+  "https://www.ernestrentals.com";
+
+export const metadata:
+  Metadata = {
   title:
     "Billboard Locations in Saint Lucia",
 
@@ -36,6 +42,12 @@ export const metadata: Metadata = {
     url:
       "/locations",
 
+    siteName:
+      "Ernest Rentals",
+
+    locale:
+      "en_LC",
+
     type:
       "website",
 
@@ -43,6 +55,12 @@ export const metadata: Metadata = {
       {
         url:
           "/ernest-rentals-logo.png",
+
+        width:
+          256,
+
+        height:
+          256,
 
         alt:
           "Ernest Rentals billboard locations across Saint Lucia",
@@ -82,6 +100,7 @@ type LocationDefinition = {
   description: string;
   search: string;
   type: string;
+
   billboardType:
     | "static"
     | "digital";
@@ -100,16 +119,6 @@ type LocationWithImage =
       | PublicBillboard
       | null;
   };
-
-function createPublicServerClient() {
-  return createClient(
-    process.env
-      .NEXT_PUBLIC_SUPABASE_URL!,
-
-    process.env
-      .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
-}
 
 const locations:
   LocationDefinition[] = [
@@ -307,6 +316,30 @@ const locations:
   },
 ];
 
+function createPublicServerClient() {
+  const supabaseUrl =
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL;
+
+  const supabaseKey =
+    process.env
+      .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env
+      .NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (
+    !supabaseUrl ||
+    !supabaseKey
+  ) {
+    return null;
+  }
+
+  return createClient(
+    supabaseUrl,
+    supabaseKey
+  );
+}
+
 function normalizeText(
   value:
     | string
@@ -381,8 +414,8 @@ function getFeaturedBillboard(
   billboards:
     PublicBillboard[]
 ) {
-  const matches =
-    billboards.filter(
+  return (
+    billboards.find(
       (
         billboard
       ) =>
@@ -393,85 +426,51 @@ function getFeaturedBillboard(
         Boolean(
           billboard.image_url
         )
-    );
-
-  if (
-    matches.length ===
-    0
-  ) {
-    return null;
-  }
-
-  return matches[0];
+    ) ??
+    null
+  );
 }
-
-const breadcrumbStructuredData = {
-  "@context":
-    "https://schema.org",
-
-  "@type":
-    "BreadcrumbList",
-
-  itemListElement: [
-    {
-      "@type":
-        "ListItem",
-
-      position:
-        1,
-
-      name:
-        "Home",
-
-      item:
-        "https://www.ernestrentals.com",
-    },
-
-    {
-      "@type":
-        "ListItem",
-
-      position:
-        2,
-
-      name:
-        "Billboard Locations",
-
-      item:
-        "https://www.ernestrentals.com/locations",
-    },
-  ],
-};
 
 export default async function LocationsPage() {
   const supabase =
     createPublicServerClient();
 
-  const {
-    data:
-      billboardRows,
-
-    error:
-      billboardError,
-  } =
-    await supabase.rpc(
-      "get_public_location_billboards"
-    );
+  let publicBillboards:
+    PublicBillboard[] = [];
 
   if (
-    billboardError
+    supabase
   ) {
-    console.error(
-      "Unable to load location billboard images:",
+    const {
+      data:
+        billboardRows,
+
+      error:
+        billboardError,
+    } =
+      await supabase.rpc(
+        "get_public_location_billboards"
+      );
+
+    if (
       billboardError
+    ) {
+      console.error(
+        "Unable to load location billboard images:",
+        billboardError
+      );
+    } else {
+      publicBillboards =
+        (
+          billboardRows ??
+          []
+        ) as PublicBillboard[];
+    }
+  } else {
+    console.error(
+      "Locations page: Supabase public configuration is missing."
     );
   }
-
-  const publicBillboards =
-    (
-      billboardRows ??
-      []
-    ) as PublicBillboard[];
 
   const locationsWithImages:
     LocationWithImage[] =
@@ -498,94 +497,168 @@ export default async function LocationsPage() {
       }
     );
 
-  const locationsStructuredData = {
+  const structuredData = {
     "@context":
       "https://schema.org",
 
-    "@type":
-      "ItemList",
+    "@graph": [
+      {
+        "@type":
+          "CollectionPage",
 
-    "@id":
-      "https://www.ernestrentals.com/locations#billboard-locations",
+        "@id":
+          `${siteUrl}/locations#webpage`,
 
-    name:
-      "Ernest Rentals Billboard Locations in Saint Lucia",
+        url:
+          `${siteUrl}/locations`,
 
-    description:
-      "Static and digital billboard advertising locations available through Ernest Rentals across Saint Lucia.",
+        name:
+          "Billboard Locations in Saint Lucia",
 
-    numberOfItems:
-      locationsWithImages.length,
+        description:
+          "Explore static and digital billboard advertising locations available through Ernest Rentals across Saint Lucia.",
 
-    itemListElement:
-      locationsWithImages.map(
-        (
-          location,
-          index
-        ) => ({
-          "@type":
-            "ListItem",
+        isPartOf: {
+          "@id":
+            `${siteUrl}/#website`,
+        },
 
-          position:
-            index +
-            1,
+        about: {
+          "@id":
+            `${siteUrl}/#organization`,
+        },
 
-          url:
-            `https://www.ernestrentals.com/locations/${location.slug}`,
+        mainEntity: {
+          "@id":
+            `${siteUrl}/locations#billboard-locations`,
+        },
 
-          item: {
+        breadcrumb: {
+          "@id":
+            `${siteUrl}/locations#breadcrumb`,
+        },
+
+        inLanguage:
+          "en-LC",
+      },
+
+      {
+        "@type":
+          "ItemList",
+
+        "@id":
+          `${siteUrl}/locations#billboard-locations`,
+
+        name:
+          "Ernest Rentals Billboard Locations in Saint Lucia",
+
+        description:
+          "Static and digital billboard advertising locations available through Ernest Rentals across Saint Lucia.",
+
+        numberOfItems:
+          locationsWithImages.length,
+
+        itemListElement:
+          locationsWithImages.map(
+            (
+              location,
+              index
+            ) => ({
+              "@type":
+                "ListItem",
+
+              position:
+                index +
+                1,
+
+              url:
+                `${siteUrl}/locations/${location.slug}`,
+
+              item: {
+                "@type":
+                  "Place",
+
+                name:
+                  `${location.name} Billboard Advertising`,
+
+                url:
+                  `${siteUrl}/locations/${location.slug}`,
+
+                description:
+                  location.description,
+
+                ...(location.imageUrl
+                  ? {
+                      image:
+                        location.imageUrl,
+                    }
+                  : {}),
+
+                address: {
+                  "@type":
+                    "PostalAddress",
+
+                  addressLocality:
+                    location.area,
+
+                  addressCountry:
+                    "LC",
+                },
+              },
+            })
+          ),
+      },
+
+      {
+        "@type":
+          "BreadcrumbList",
+
+        "@id":
+          `${siteUrl}/locations#breadcrumb`,
+
+        itemListElement: [
+          {
             "@type":
-              "Place",
+              "ListItem",
+
+            position:
+              1,
 
             name:
-              `${location.name} Billboard Advertising`,
+              "Home",
 
-            url:
-              `https://www.ernestrentals.com/locations/${location.slug}`,
-
-            description:
-              location.description,
-
-            ...(location.imageUrl
-              ? {
-                  image:
-                    location.imageUrl,
-                }
-              : {}),
-
-            address: {
-              "@type":
-                "PostalAddress",
-
-              addressLocality:
-                location.area,
-
-              addressCountry:
-                "LC",
-            },
+            item:
+              siteUrl,
           },
-        })
-      ),
+
+          {
+            "@type":
+              "ListItem",
+
+            position:
+              2,
+
+            name:
+              "Locations",
+
+            item:
+              `${siteUrl}/locations`,
+          },
+        ],
+      },
+    ],
   };
 
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html:
-            JSON.stringify(
-              locationsStructuredData
-            ),
-        }}
-      />
 
+      {/* STRUCTURED DATA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html:
             JSON.stringify(
-              breadcrumbStructuredData
+              structuredData
             ),
         }}
       />
@@ -780,23 +853,26 @@ export default async function LocationsPage() {
         </div>
       </section>
 
-      {/* INTERNAL LINKS */}
+      {/* PRIMARY SITE LINKS */}
       <section className="bg-white px-5 py-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
-            Explore Advertising Options
+            Explore Ernest Rentals
           </p>
 
           <h2 className="mt-2 max-w-3xl text-3xl font-black tracking-tight">
-            Choose the billboard format that fits your campaign.
+            Explore more billboard advertising options.
           </h2>
 
-          <div className="mt-7 grid gap-4 md:grid-cols-3">
+          <nav
+            aria-label="Explore Ernest Rentals"
+            className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+          >
             <Link
               href="/billboards"
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
-              Billboard Advertising in Saint Lucia →
+              Billboard Advertising →
             </Link>
 
             <Link
@@ -810,9 +886,16 @@ export default async function LocationsPage() {
               href="/how-it-works"
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
-              How Billboard Booking Works →
+              How It Works →
             </Link>
-          </div>
+
+            <Link
+              href="/contact"
+              className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
+            >
+              Contact Ernest Rentals →
+            </Link>
+          </nav>
         </div>
       </section>
 
@@ -835,12 +918,21 @@ export default async function LocationsPage() {
               </p>
             </div>
 
-            <Link
-              href="/#availability"
-              className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
-            >
-              Search Billboard Availability
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/#availability"
+                className="rounded-xl bg-orange-500 px-6 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+              >
+                Search Billboard Availability
+              </Link>
+
+              <Link
+                href="/contact"
+                className="rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                Contact Ernest Rentals
+              </Link>
+            </div>
           </div>
         </div>
       </section>

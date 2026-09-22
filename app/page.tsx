@@ -1,3 +1,7 @@
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
 import {
@@ -10,6 +14,46 @@ import SiteHeader from "@/components/SiteHeader";
 
 export const revalidate =
   300;
+
+export const metadata:
+  Metadata = {
+  title: {
+    absolute:
+      "Ernest Rentals | Billboard Advertising in Saint Lucia",
+  },
+
+  description:
+    "Explore static and digital billboard advertising across Saint Lucia with Ernest Rentals. Search billboard locations, check live availability and start your campaign online.",
+
+  alternates: {
+    canonical:
+      "/",
+  },
+
+  openGraph: {
+    title:
+      "Ernest Rentals | Billboard Advertising in Saint Lucia",
+
+    description:
+      "Explore static and digital billboard advertising across Saint Lucia. Search locations, check availability and start your campaign with Ernest Rentals.",
+
+    url:
+      "/",
+
+    type:
+      "website",
+
+    images: [
+      {
+        url:
+          "/ernest-rentals-logo.png",
+
+        alt:
+          "Ernest Rentals billboard advertising in Saint Lucia",
+      },
+    ],
+  },
+};
 
 type PublicBillboard = {
   billboard_id: string;
@@ -149,6 +193,108 @@ const locationCards:
     imageMatchTerms: [
       "richford",
     ],
+  },
+];
+
+const explorePages = [
+  {
+    number:
+      "01",
+
+    title:
+      "Billboards",
+
+    href:
+      "/billboards",
+
+    eyebrow:
+      "Static Advertising",
+
+    description:
+      "Explore static billboard advertising opportunities, rental packages and billboard inventory across Saint Lucia.",
+
+    linkLabel:
+      "Explore Billboards",
+  },
+
+  {
+    number:
+      "02",
+
+    title:
+      "Digital Screens",
+
+    href:
+      "/digital-screens",
+
+    eyebrow:
+      "Digital Advertising",
+
+    description:
+      "View digital billboard advertising options including Standard, Premium and Shoutout campaigns.",
+
+    linkLabel:
+      "Explore Digital Screens",
+  },
+
+  {
+    number:
+      "03",
+
+    title:
+      "Locations",
+
+    href:
+      "/locations",
+
+    eyebrow:
+      "Across Saint Lucia",
+
+    description:
+      "Browse billboard advertising locations in communities across Saint Lucia and explore available sites.",
+
+    linkLabel:
+      "View Billboard Locations",
+  },
+
+  {
+    number:
+      "04",
+
+    title:
+      "How It Works",
+
+    href:
+      "/how-it-works",
+
+    eyebrow:
+      "Campaign Process",
+
+    description:
+      "Learn how to search billboard availability, choose an advertising package and submit your campaign request.",
+
+    linkLabel:
+      "See How It Works",
+  },
+
+  {
+    number:
+      "05",
+
+    title:
+      "Contact",
+
+    href:
+      "/contact",
+
+    eyebrow:
+      "Talk With Us",
+
+    description:
+      "Contact Ernest Rentals for help choosing a billboard, planning a campaign or discussing advertising options.",
+
+    linkLabel:
+      "Contact Ernest Rentals",
   },
 ];
 
@@ -540,6 +686,97 @@ export default async function Home() {
               </div>
             )
           )}
+        </div>
+      </section>
+
+      {/* EXPLORE ERNEST RENTALS */}
+      <section
+        aria-labelledby="explore-ernest-rentals"
+        className="px-5 py-16 lg:px-8"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-500">
+              Explore Ernest Rentals
+            </p>
+
+            <h2
+              id="explore-ernest-rentals"
+              className="mt-3 text-4xl font-black tracking-tight sm:text-5xl"
+            >
+              Everything you need to plan your billboard campaign.
+            </h2>
+
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">
+              Explore billboard advertising options, digital screens, locations
+              and the campaign process, or contact Ernest Rentals directly for
+              assistance.
+            </p>
+          </div>
+
+          <nav
+            aria-label="Explore Ernest Rentals"
+            className="mt-9 grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+          >
+            {explorePages.map(
+              (
+                item
+              ) => (
+                <Link
+                  key={
+                    item.href
+                  }
+                  href={
+                    item.href
+                  }
+                  className="group relative flex min-h-[260px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl"
+                >
+                  <div className="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-orange-50 transition duration-300 group-hover:scale-125" />
+
+                  <div className="relative">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-black text-orange-500">
+                        {
+                          item.number
+                        }
+                      </span>
+
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-lg font-black text-slate-400 transition group-hover:bg-orange-500 group-hover:text-white">
+                        →
+                      </span>
+                    </div>
+
+                    <p className="mt-7 text-[10px] font-extrabold uppercase tracking-[0.15em] text-slate-400">
+                      {
+                        item.eyebrow
+                      }
+                    </p>
+
+                    <h3 className="mt-2 text-xl font-black text-[#071226] transition group-hover:text-orange-600">
+                      {
+                        item.title
+                      }
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                      {
+                        item.description
+                      }
+                    </p>
+                  </div>
+
+                  <div className="relative mt-auto pt-6">
+                    <span className="text-xs font-extrabold text-sky-600 transition group-hover:text-orange-600">
+                      {
+                        item.linkLabel
+                      }{" "}
+                      →
+                    </span>
+                  </div>
+                </Link>
+              )
+            )}
+          </nav>
         </div>
       </section>
 
