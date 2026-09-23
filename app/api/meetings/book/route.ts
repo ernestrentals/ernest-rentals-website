@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import {
   NextRequest,
   NextResponse,
@@ -13,6 +15,9 @@ import {
 
 export const runtime =
   "nodejs";
+
+export const dynamic =
+  "force-dynamic";
 
 const TIME_ZONE =
   "America/St_Lucia";
@@ -33,6 +38,24 @@ const MIN_NOTICE_HOURS =
   2;
 
 const MAX_BOOKING_DAYS =
+  30;
+
+const IP_RATE_LIMIT_MAX =
+  12;
+
+const IP_RATE_LIMIT_WINDOW_SECONDS =
+  30 * 60;
+
+const EMAIL_RATE_LIMIT_MAX =
+  4;
+
+const EMAIL_RATE_LIMIT_WINDOW_SECONDS =
+  6 * 60 * 60;
+
+const SLOT_LOCK_MAX =
+  1;
+
+const SLOT_LOCK_WINDOW_SECONDS =
   30;
 
 const MEETING_TYPES = {
@@ -64,18 +87,128 @@ const MEETING_TYPES = {
 type MeetingType =
   keyof typeof MEETING_TYPES;
 
-type BookingRequest = {
-  type?: string;
-  start?: string;
-
-  customerName?: string;
-  companyName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  notes?: string;
-
-  website?: string;
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  retry_after_seconds: number;
 };
+
+function jsonResponse(
+  body: Record<
+    string,
+    unknown
+  >,
+  status = 200,
+  additionalHeaders: Record<
+    string,
+    string
+  > = {}
+) {
+  return NextResponse.json(
+    body,
+    {
+      status,
+
+      headers: {
+        "Cache-Control":
+          "no-store",
+
+        ...additionalHeaders,
+      },
+    }
+  );
+}
+
+function createServerSupabaseClient(
+  supabaseUrl: string,
+  serviceRoleKey: string
+) {
+  return createSupabaseClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession:
+          false,
+
+        autoRefreshToken:
+          false,
+      },
+    }
+  );
+}
+
+function cleanText(
+  value: unknown
+) {
+  if (
+    typeof value !==
+    "string"
+  ) {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function cleanSingleLine(
+  value: unknown
+) {
+  return cleanText(
+    value
+  ).replace(
+    /\s+/g,
+    " "
+  );
+}
+
+function hashValue(
+  value: string
+) {
+  return crypto
+    .createHash(
+      "sha256"
+    )
+    .update(
+      value
+    )
+    .digest(
+      "hex"
+    );
+}
+
+function getClientFingerprint(
+  request: NextRequest
+) {
+  const forwardedFor =
+    request.headers.get(
+      "x-forwarded-for"
+    );
+
+  const realIp =
+    request.headers.get(
+      "x-real-ip"
+    );
+
+  const clientAddress =
+    forwardedFor
+      ?.split(",")[0]
+      ?.trim() ||
+    realIp?.trim() ||
+    "unknown";
+
+  return hashValue(
+    clientAddress
+  );
+}
+
+function isValidEmail(
+  value: string
+) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    value
+  );
+}
 
 function addMinutes(
   date: Date,
@@ -113,15 +246,10 @@ function addDaysToDateKey(
 
   return date
     .toISOString()
-    .slice(0, 10);
-}
-
-function isValidEmail(
-  value: string
-) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    value
-  );
+    .slice(
+      0,
+      10
+    );
 }
 
 function overlaps(
@@ -131,8 +259,10 @@ function overlaps(
   endB: Date
 ) {
   return (
-    startA < endB &&
-    endA > startB
+    startA <
+      endB &&
+    endA >
+      startB
   );
 }
 
@@ -167,30 +297,42 @@ function getSaintLuciaParts(
         hourCycle:
           "h23",
       }
-    ).formatToParts(date);
+    ).formatToParts(
+      date
+    );
 
   const value = (
     type: string
   ) =>
     parts.find(
-      (part) =>
-        part.type === type
-    )?.value ?? "";
+      (
+        part
+      ) =>
+        part.type ===
+        type
+    )?.value ??
+    "";
 
   return {
     year:
       Number(
-        value("year")
+        value(
+          "year"
+        )
       ),
 
     month:
       Number(
-        value("month")
+        value(
+          "month"
+        )
       ),
 
     day:
       Number(
-        value("day")
+        value(
+          "day"
+        )
       ),
 
     weekday:
@@ -200,12 +342,16 @@ function getSaintLuciaParts(
 
     hour:
       Number(
-        value("hour")
+        value(
+          "hour"
+        )
       ),
 
     minute:
       Number(
-        value("minute")
+        value(
+          "minute"
+        )
       ),
   };
 }
@@ -266,7 +412,9 @@ function formatSaintLuciaDateTime(
       hour12:
         true,
     }
-  ).format(date);
+  ).format(
+    date
+  );
 }
 
 function sameSaintLuciaDate(
@@ -293,41 +441,161 @@ function sameSaintLuciaDate(
   );
 }
 
+async function consumeRateLimit(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  rateKey: string,
+  maxRequests: number,
+  windowSeconds: number
+) {
+  const supabase =
+    createServerSupabaseClient(
+      supabaseUrl,
+      serviceRoleKey
+    );
+
+  const {
+    data,
+    error,
+  } =
+    await supabase.rpc(
+      "check_api_rate_limit",
+      {
+        p_rate_key:
+          rateKey,
+
+        p_max_requests:
+          maxRequests,
+
+        p_window_seconds:
+          windowSeconds,
+      }
+    );
+
+  if (
+    error
+  ) {
+    console.error(
+      "Meeting booking rate-limit error:",
+      error
+    );
+
+    return null;
+  }
+
+  const result =
+    (
+      Array.isArray(
+        data
+      )
+        ? data[0]
+        : data
+    ) as
+      | RateLimitResult
+      | null;
+
+  return result;
+}
+
+function rateLimitedResponse(
+  retryAfterSeconds: number
+) {
+  const retryAfter =
+    Math.max(
+      Number(
+        retryAfterSeconds ||
+          60
+      ),
+      1
+    );
+
+  return jsonResponse(
+    {
+      success:
+        false,
+
+      code:
+        "RATE_LIMITED",
+
+      error:
+        "Too many meeting booking attempts. Please wait and try again.",
+    },
+    429,
+    {
+      "Retry-After":
+        String(
+          retryAfter
+        ),
+    }
+  );
+}
+
 export async function POST(
   request: NextRequest
 ) {
   let body:
-    BookingRequest;
+    Record<
+      string,
+      unknown
+    >;
 
   try {
-    body =
+    const parsedBody =
       await request.json();
+
+    if (
+      !parsedBody ||
+      typeof parsedBody !==
+        "object" ||
+      Array.isArray(
+        parsedBody
+      )
+    ) {
+      throw new Error(
+        "Invalid JSON object."
+      );
+    }
+
+    body =
+      parsedBody as Record<
+        string,
+        unknown
+      >;
   } catch {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Invalid booking request.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
+  const honeypot =
+    cleanText(
+      body.website
+    );
+
   if (
-    body.website
-      ?.trim()
+    honeypot
   ) {
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
     });
   }
 
+  const meetingTypeValue =
+    cleanSingleLine(
+      body.type
+    );
+
   const meetingType =
-    body.type as
-      | MeetingType
-      | undefined;
+    meetingTypeValue as
+      MeetingType;
 
   if (
     !meetingType ||
@@ -335,139 +603,166 @@ export async function POST(
       meetingType
     ]
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Please select a valid meeting type.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   const customerName =
-    body.customerName
-      ?.trim();
+    cleanSingleLine(
+      body.customerName
+    );
+
+  const companyText =
+    cleanSingleLine(
+      body.companyName
+    );
 
   const companyName =
-    body.companyName
-      ?.trim() || null;
+    companyText ||
+    null;
 
   const customerEmail =
-    body.customerEmail
-      ?.trim()
-      .toLowerCase();
+    cleanSingleLine(
+      body.customerEmail
+    ).toLowerCase();
+
+  const phoneText =
+    cleanSingleLine(
+      body.customerPhone
+    );
 
   const customerPhone =
-    body.customerPhone
-      ?.trim() || null;
+    phoneText ||
+    null;
+
+  const notesText =
+    cleanText(
+      body.notes
+    );
 
   const notes =
-    body.notes
-      ?.trim() || null;
+    notesText ||
+    null;
+
+  const startText =
+    cleanText(
+      body.start
+    );
 
   if (
     !customerName ||
-    customerName.length > 150
+    customerName.length >
+      150
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Please enter your name.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   if (
     !customerEmail ||
+    customerEmail.length >
+      254 ||
     !isValidEmail(
       customerEmail
     )
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Please enter a valid email address.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   if (
     companyName &&
-    companyName.length > 200
+    companyName.length >
+      200
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Company name is too long.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   if (
     customerPhone &&
-    customerPhone.length > 50
+    customerPhone.length >
+      50
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Phone number is too long.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   if (
     notes &&
-    notes.length > 2000
+    notes.length >
+      2000
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Meeting notes must be 2,000 characters or fewer.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   if (
-    !body.start
+    !startText
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Please select a meeting time.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
   const start =
     new Date(
-      body.start
+      startText
     );
 
   if (
@@ -475,15 +770,15 @@ export async function POST(
       start.getTime()
     )
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "The selected meeting time is invalid.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -495,7 +790,8 @@ export async function POST(
   const end =
     addMinutes(
       start,
-      meeting.durationMinutes
+      meeting
+        .durationMinutes
     );
 
   const startParts =
@@ -513,18 +809,19 @@ export async function POST(
       "Sat",
       "Sun",
     ].includes(
-      startParts.weekday
+      startParts
+        .weekday
     )
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Meetings are available Monday through Friday only.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -533,15 +830,15 @@ export async function POST(
       SLOT_INTERVAL_MINUTES !==
     0
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Please select one of the available meeting times.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -565,15 +862,15 @@ export async function POST(
     endMinutes >
       BUSINESS_END_MINUTES
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Meetings may only be scheduled between 10:00 AM and 3:00 PM.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -606,15 +903,15 @@ export async function POST(
     startDateKey <
     minimumBookingDate
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Appointments must be booked at least one day in advance.",
       },
-      {
-        status: 409,
-      }
+      409
     );
   }
 
@@ -622,15 +919,15 @@ export async function POST(
     startDateKey >
     maximumBookingDate
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           `Meetings may only be booked up to ${MAX_BOOKING_DAYS} days in advance.`,
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -647,15 +944,15 @@ export async function POST(
     start <
     minimumStart
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           `Meetings require at least ${MIN_NOTICE_HOURS} hours' notice.`,
       },
-      {
-        status: 409,
-      }
+      409
     );
   }
 
@@ -691,15 +988,19 @@ export async function POST(
     !googleRefreshToken ||
     !googleCalendarId
   ) {
-    return NextResponse.json(
+    console.error(
+      "Meeting booking Google Calendar configuration is incomplete."
+    );
+
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
-          "Google Calendar configuration is incomplete.",
+          "Meeting scheduling is temporarily unavailable.",
       },
-      {
-        status: 500,
-      }
+      503
     );
   }
 
@@ -707,17 +1008,161 @@ export async function POST(
     !supabaseUrl ||
     !supabaseServiceRoleKey
   ) {
-    return NextResponse.json(
+    console.error(
+      "Meeting booking Supabase server configuration is incomplete."
+    );
+
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
-          "Server database configuration is incomplete.",
+          "Meeting scheduling is temporarily unavailable.",
       },
+      503
+    );
+  }
+
+  const clientFingerprint =
+    getClientFingerprint(
+      request
+    );
+
+  const ipLimit =
+    await consumeRateLimit(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      `meetings:book:ip:${clientFingerprint}`,
+      IP_RATE_LIMIT_MAX,
+      IP_RATE_LIMIT_WINDOW_SECONDS
+    );
+
+  if (
+    !ipLimit
+  ) {
+    return jsonResponse(
       {
-        status: 500,
+        success:
+          false,
+
+        error:
+          "Meeting scheduling is temporarily unavailable.",
+      },
+      503
+    );
+  }
+
+  if (
+    !ipLimit.allowed
+  ) {
+    return rateLimitedResponse(
+      ipLimit
+        .retry_after_seconds
+    );
+  }
+
+  const emailFingerprint =
+    hashValue(
+      customerEmail
+    );
+
+  const emailLimit =
+    await consumeRateLimit(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      `meetings:book:email:${emailFingerprint}`,
+      EMAIL_RATE_LIMIT_MAX,
+      EMAIL_RATE_LIMIT_WINDOW_SECONDS
+    );
+
+  if (
+    !emailLimit
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Meeting scheduling is temporarily unavailable.",
+      },
+      503
+    );
+  }
+
+  if (
+    !emailLimit.allowed
+  ) {
+    return rateLimitedResponse(
+      emailLimit
+        .retry_after_seconds
+    );
+  }
+
+  const slotFingerprint =
+    hashValue(
+      start.toISOString()
+    );
+
+  const slotLock =
+    await consumeRateLimit(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      `meetings:book:slot:${slotFingerprint}`,
+      SLOT_LOCK_MAX,
+      SLOT_LOCK_WINDOW_SECONDS
+    );
+
+  if (
+    !slotLock
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Meeting scheduling is temporarily unavailable.",
+      },
+      503
+    );
+  }
+
+  if (
+    !slotLock.allowed
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        code:
+          "SLOT_BUSY",
+
+        error:
+          "That meeting time is currently being processed. Please wait a moment and try again.",
+      },
+      409,
+      {
+        "Retry-After":
+          String(
+            Math.max(
+              slotLock
+                .retry_after_seconds ||
+                SLOT_LOCK_WINDOW_SECONDS,
+              1
+            )
+          ),
       }
     );
   }
+
+  const supabase =
+    createServerSupabaseClient(
+      supabaseUrl,
+      supabaseServiceRoleKey
+    );
 
   try {
     const auth =
@@ -733,7 +1178,9 @@ export async function POST(
 
     const calendar =
       google.calendar({
-        version: "v3",
+        version:
+          "v3",
+
         auth,
       });
 
@@ -750,32 +1197,36 @@ export async function POST(
       );
 
     const freeBusyResult =
-      await calendar.freebusy.query({
-        requestBody: {
-          timeMin:
-            freeBusyStart.toISOString(),
+      await calendar
+        .freebusy
+        .query({
+          requestBody: {
+            timeMin:
+              freeBusyStart
+                .toISOString(),
 
-          timeMax:
-            proposedBlockedUntil.toISOString(),
+            timeMax:
+              proposedBlockedUntil
+                .toISOString(),
 
-          timeZone:
-            TIME_ZONE,
+            timeZone:
+              TIME_ZONE,
 
-          items: [
-            {
-              id:
-                googleCalendarId,
-            },
-          ],
-        },
-      });
+            items: [
+              {
+                id:
+                  googleCalendarId,
+              },
+            ],
+          },
+        });
 
     const calendarData =
       freeBusyResult
         .data
         .calendars?.[
-          googleCalendarId
-        ];
+        googleCalendarId
+      ];
 
     if (
       calendarData
@@ -784,25 +1235,27 @@ export async function POST(
     ) {
       console.error(
         "Google FreeBusy errors:",
-        calendarData.errors
+        calendarData
+          .errors
       );
 
-      return NextResponse.json(
+      return jsonResponse(
         {
-          success: false,
+          success:
+            false,
+
           error:
             "Unable to confirm calendar availability.",
         },
-        {
-          status: 500,
-        }
+        503
       );
     }
 
     const busyPeriods =
       (
         calendarData
-          ?.busy ?? []
+          ?.busy ??
+        []
       )
         .filter(
           (
@@ -846,9 +1299,10 @@ export async function POST(
     if (
       hasConflict
     ) {
-      return NextResponse.json(
+      return jsonResponse(
         {
-          success: false,
+          success:
+            false,
 
           code:
             "SLOT_UNAVAILABLE",
@@ -856,9 +1310,7 @@ export async function POST(
           error:
             "That time is no longer available. Please choose another meeting time.",
         },
-        {
-          status: 409,
-        }
+        409
       );
     }
 
@@ -870,8 +1322,11 @@ export async function POST(
     const descriptionLines =
       [
         "Meeting booked through ernestrentals.com",
+
         "",
+
         `Meeting type: ${meeting.label}`,
+
         `Customer: ${customerName}`,
 
         companyName
@@ -893,74 +1348,78 @@ export async function POST(
         (
           value
         ): value is string =>
-          Boolean(value)
+          Boolean(
+            value
+          )
       );
 
     const googleEvent =
-      await calendar.events.insert({
-        calendarId:
-          googleCalendarId,
+      await calendar
+        .events
+        .insert({
+          calendarId:
+            googleCalendarId,
 
-        sendUpdates:
-          "all",
+          sendUpdates:
+            "all",
 
-        requestBody: {
-          summary:
-            eventTitle,
+          requestBody: {
+            summary:
+              eventTitle,
 
-          description:
-            descriptionLines.join(
-              "\n"
-            ),
+            description:
+              descriptionLines.join(
+                "\n"
+              ),
 
-          start: {
-            dateTime:
-              start.toISOString(),
+            start: {
+              dateTime:
+                start.toISOString(),
 
-            timeZone:
-              TIME_ZONE,
-          },
-
-          end: {
-            dateTime:
-              end.toISOString(),
-
-            timeZone:
-              TIME_ZONE,
-          },
-
-          attendees: [
-            {
-              email:
-                customerEmail,
-
-              displayName:
-                customerName,
+              timeZone:
+                TIME_ZONE,
             },
-          ],
 
-          transparency:
-            "opaque",
+            end: {
+              dateTime:
+                end.toISOString(),
 
-          guestsCanInviteOthers:
-            false,
+              timeZone:
+                TIME_ZONE,
+            },
 
-          guestsCanModify:
-            false,
+            attendees: [
+              {
+                email:
+                  customerEmail,
 
-          guestsCanSeeOtherGuests:
-            false,
+                displayName:
+                  customerName,
+              },
+            ],
 
-          extendedProperties: {
-            private: {
-              source:
-                "ernestrentals.com",
+            transparency:
+              "opaque",
 
-              meetingType,
+            guestsCanInviteOthers:
+              false,
+
+            guestsCanModify:
+              false,
+
+            guestsCanSeeOtherGuests:
+              false,
+
+            extendedProperties: {
+              private: {
+                source:
+                  "ernestrentals.com",
+
+                meetingType,
+              },
             },
           },
-        },
-      });
+        });
 
     const googleEventId =
       googleEvent
@@ -971,24 +1430,9 @@ export async function POST(
       !googleEventId
     ) {
       throw new Error(
-        "Google created the request but did not return an event ID."
+        "Google Calendar did not return an event ID."
       );
     }
-
-    const supabase =
-      createSupabaseClient(
-        supabaseUrl,
-        supabaseServiceRoleKey,
-        {
-          auth: {
-            persistSession:
-              false,
-
-            autoRefreshToken:
-              false,
-          },
-        }
-      );
 
     const {
       data:
@@ -1043,7 +1487,8 @@ export async function POST(
           google_event_link:
             googleEvent
               .data
-              .htmlLink ?? null,
+              .htmlLink ??
+            null,
 
           google_meet_link:
             null,
@@ -1072,16 +1517,18 @@ export async function POST(
       );
 
       try {
-        await calendar.events.delete({
-          calendarId:
-            googleCalendarId,
+        await calendar
+          .events
+          .delete({
+            calendarId:
+              googleCalendarId,
 
-          eventId:
-            googleEventId,
+            eventId:
+              googleEventId,
 
-          sendUpdates:
-            "all",
-        });
+            sendUpdates:
+              "all",
+          });
       } catch (
         cleanupError
       ) {
@@ -1091,20 +1538,21 @@ export async function POST(
         );
       }
 
-      return NextResponse.json(
+      return jsonResponse(
         {
-          success: false,
+          success:
+            false,
+
           error:
             "The meeting could not be saved. Please try again.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
 
       message:
         "Your meeting has been scheduled.",
@@ -1119,17 +1567,17 @@ export async function POST(
         title:
           meeting.label,
 
-        customerName:
-          customerName,
+        customerName,
 
-        companyName:
-          companyName,
+        companyName,
 
         start:
-          meetingRecord.start_time,
+          meetingRecord
+            .start_time,
 
         end:
-          meetingRecord.end_time,
+          meetingRecord
+            .end_time,
 
         displayTime:
           formatSaintLuciaDateTime(
@@ -1140,7 +1588,8 @@ export async function POST(
           TIME_ZONE,
 
         googleEventLink:
-          meetingRecord.google_event_link,
+          meetingRecord
+            .google_event_link,
       },
     });
   } catch (
@@ -1151,18 +1600,15 @@ export async function POST(
       error
     );
 
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
 
         error:
-          error instanceof Error
-            ? error.message
-            : "Unable to schedule the meeting.",
+          "Unable to schedule the meeting. Please try again.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 }
