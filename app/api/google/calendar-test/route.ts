@@ -1,4 +1,5 @@
 import {
+  NextRequest,
   NextResponse,
 } from "next/server";
 
@@ -9,7 +10,66 @@ import {
 export const runtime =
   "nodejs";
 
-export async function GET() {
+export const dynamic =
+  "force-dynamic";
+
+function isLocalRequest(
+  request: NextRequest
+) {
+  return [
+    "localhost",
+    "127.0.0.1",
+  ].includes(
+    request.nextUrl.hostname
+  );
+}
+
+function noStoreJson(
+  body: Record<
+    string,
+    unknown
+  >,
+  status = 200
+) {
+  return NextResponse.json(
+    body,
+    {
+      status,
+
+      headers: {
+        "Cache-Control":
+          "no-store",
+      },
+    }
+  );
+}
+
+export async function GET(
+  request: NextRequest
+) {
+  /*
+    This endpoint is only a development/setup diagnostic.
+
+    It must never expose Google Calendar diagnostic
+    information from the production website.
+  */
+
+  if (
+    process.env.NODE_ENV ===
+      "production" ||
+    !isLocalRequest(
+      request
+    )
+  ) {
+    return noStoreJson(
+      {
+        error:
+          "Not found.",
+      },
+      404
+    );
+  }
+
   const clientId =
     process.env
       .GOOGLE_CLIENT_ID;
@@ -32,15 +92,14 @@ export async function GET() {
     !refreshToken ||
     !calendarId
   ) {
-    return NextResponse.json(
+    return noStoreJson(
       {
         success: false,
+
         error:
           "One or more Google Calendar environment variables are missing.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 
@@ -49,15 +108,14 @@ export async function GET() {
       "http"
     )
   ) {
-    return NextResponse.json(
+    return noStoreJson(
       {
         success: false,
+
         error:
-          "GOOGLE_CALENDAR_ID contains a URL. Copy the Calendar ID from Google Calendar → Settings → Ernest Rentals Meetings → Integrate calendar.",
+          "GOOGLE_CALENDAR_ID contains a URL. Copy the Calendar ID from Google Calendar settings.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 
@@ -116,21 +174,20 @@ export async function GET() {
     const calendarAvailability =
       result.data
         .calendars?.[
-          calendarId
-        ];
+        calendarId
+      ];
 
     if (
       !calendarAvailability
     ) {
-      return NextResponse.json(
+      return noStoreJson(
         {
           success: false,
+
           error:
             "Google did not return availability for the configured calendar.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
@@ -138,25 +195,28 @@ export async function GET() {
       calendarAvailability
         .errors?.length
     ) {
-      return NextResponse.json(
+      console.error(
+        "Google Calendar diagnostic errors:",
+        calendarAvailability.errors
+      );
+
+      return noStoreJson(
         {
           success: false,
+
           error:
-            "Google returned an error for this Calendar ID.",
-          googleErrors:
-            calendarAvailability.errors,
+            "Google returned an error for the configured Calendar ID.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
     const busy =
-      calendarAvailability.busy ??
+      calendarAvailability
+        .busy ??
       [];
 
-    return NextResponse.json({
+    return noStoreJson({
       success: true,
 
       message:
@@ -184,22 +244,18 @@ export async function GET() {
     error
   ) {
     console.error(
-      "Google Calendar test error:",
+      "Google Calendar diagnostic error:",
       error
     );
 
-    return NextResponse.json(
+    return noStoreJson(
       {
         success: false,
 
         error:
-          error instanceof Error
-            ? error.message
-            : "Unable to access Google Calendar.",
+          "Unable to access Google Calendar.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 }
