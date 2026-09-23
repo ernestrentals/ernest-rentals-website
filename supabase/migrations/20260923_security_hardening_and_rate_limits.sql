@@ -89,12 +89,17 @@ using (
 -- 2. SECURITY DEFINER EXECUTION PERMISSIONS
 --
 -- Default:
---   PUBLIC        no
---   anon          no
+--   PUBLIC         no
+--   anon           no
 --   authenticated yes
---   service_role  yes
+--   service_role   yes
 --
--- Public website RPCs are explicitly granted anon access.
+-- Only the RPCs in public_rpc_names receive anonymous
+-- EXECUTE permission.
+--
+-- submit_public_campaign_inquiry is intentionally NOT
+-- included. Website campaign submissions must pass through
+-- the protected Next.js API route, which uses service_role.
 -- =========================================================
 
 do $$
@@ -111,8 +116,7 @@ declare
     'get_public_location_billboards',
     'get_public_static_billboard_packages',
     'search_public_billboard_availability',
-    'submit_public_billboard_review',
-    'submit_public_campaign_inquiry'
+    'submit_public_billboard_review'
   ];
 begin
 
@@ -242,7 +246,62 @@ to service_role;
 
 
 -- =========================================================
--- 4. API RATE-LIMIT STORAGE
+-- 4. PROTECTED CAMPAIGN-INQUIRY RPC
+--
+-- Public customers submit through:
+--
+--   /api/campaign-inquiries
+--
+-- That server route performs validation + rate limiting and
+-- then calls this function using SUPABASE_SERVICE_ROLE_KEY.
+--
+-- Direct browser execution is deliberately blocked.
+-- =========================================================
+
+revoke execute
+on function public.submit_public_campaign_inquiry(
+  text,
+  text,
+  text,
+  text,
+  text,
+  uuid,
+  date,
+  date,
+  text,
+  text,
+  text,
+  text,
+  boolean,
+  text,
+  uuid
+)
+from public, anon, authenticated;
+
+
+grant execute
+on function public.submit_public_campaign_inquiry(
+  text,
+  text,
+  text,
+  text,
+  text,
+  uuid,
+  date,
+  date,
+  text,
+  text,
+  text,
+  text,
+  boolean,
+  text,
+  uuid
+)
+to service_role;
+
+
+-- =========================================================
+-- 5. API RATE-LIMIT STORAGE
 -- =========================================================
 
 create table if not exists public.api_rate_limits (
@@ -285,7 +344,7 @@ from anon, authenticated;
 
 
 -- =========================================================
--- 5. ATOMIC SERVER-SIDE RATE LIMIT FUNCTION
+-- 6. ATOMIC SERVER-SIDE RATE LIMIT FUNCTION
 -- =========================================================
 
 create or replace function public.check_api_rate_limit(
@@ -474,7 +533,7 @@ $$;
 
 
 -- =========================================================
--- 6. RATE-LIMIT FUNCTION PERMISSIONS
+-- 7. RATE-LIMIT FUNCTION PERMISSIONS
 -- =========================================================
 
 revoke execute

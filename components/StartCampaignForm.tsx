@@ -6,10 +6,6 @@ import {
   useState,
 } from "react";
 
-import {
-  createBrowserClient,
-} from "@/lib/supabase/client";
-
 type StartCampaignFormProps = {
   billboardId: string;
   billboardName: string;
@@ -42,6 +38,13 @@ type ArtworkChoice =
   | "ready"
   | "need_creation"
   | "later";
+
+type CampaignInquiryResponse = {
+  success?: boolean;
+  leadId?: string | null;
+  code?: string;
+  error?: string;
+};
 
 function formatMoney(
   value: number,
@@ -474,13 +477,6 @@ export default function StartCampaignForm({
 
   onClose,
 }: StartCampaignFormProps) {
-  const supabase =
-    useMemo(
-      () =>
-        createBrowserClient(),
-      []
-    );
-
   const today =
     saintLuciaTodayString();
 
@@ -963,91 +959,162 @@ export default function StartCampaignForm({
       ) ||
       null;
 
-    const {
-      error,
-    } =
-      await supabase.rpc(
-        "submit_public_campaign_inquiry",
-        {
-          p_company_name:
-            companyName.trim() ||
-            null,
-
-          p_contact_person:
-            contactPerson.trim(),
-
-          p_email:
-            email.trim() ||
-            null,
-
-          p_phone:
-            phone.trim() ||
-            null,
-
-          p_whatsapp:
-            whatsapp.trim() ||
-            null,
-
-          p_billboard_id:
-            billboardId,
-
-          p_start_date:
-            startDate,
-
-          p_changeover_date:
-            changeoverDate,
-
-          p_billboard_type:
-            billboardType,
-
-          p_ad_option:
-            advertisingOption,
-
-          p_campaign_name:
-            campaignName.trim() ||
-            null,
-
-          p_campaign_objective:
-            campaignObjective.trim() ||
-            null,
-
-          p_artwork_ready:
-            artworkChoice ===
-              ""
-              ? null
-              : artworkReady,
-
-          p_message:
-            combinedMessage,
-
-          p_requested_package_id:
-            selectedPackageId,
-        }
+    const formData =
+      new FormData(
+        event.currentTarget
       );
+
+    const website =
+      String(
+        formData.get(
+          "website"
+        ) ??
+        ""
+      );
+
+    let response:
+      Response;
+
+    try {
+      response =
+        await fetch(
+          "/api/campaign-inquiries",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                companyName:
+                  companyName.trim() ||
+                  null,
+
+                contactPerson:
+                  contactPerson.trim(),
+
+                email:
+                  email.trim() ||
+                  null,
+
+                phone:
+                  phone.trim() ||
+                  null,
+
+                whatsapp:
+                  whatsapp.trim() ||
+                  null,
+
+                billboardId,
+
+                startDate,
+
+                changeoverDate,
+
+                billboardType,
+
+                adOption:
+                  advertisingOption,
+
+                campaignName:
+                  campaignName.trim() ||
+                  null,
+
+                campaignObjective:
+                  campaignObjective.trim() ||
+                  null,
+
+                artworkReady:
+                  artworkChoice ===
+                    ""
+                    ? null
+                    : artworkReady,
+
+                message:
+                  combinedMessage,
+
+                requestedPackageId:
+                  selectedPackageId,
+
+                website,
+              }),
+          }
+        );
+    } catch (
+      error
+    ) {
+      console.error(
+        "Campaign inquiry request error:",
+        error
+      );
+
+      setLoading(
+        false
+      );
+
+      setShowAvailabilityRecovery(
+        false
+      );
+
+      setErrorMessage(
+        "We could not submit your campaign request right now. Please try again."
+      );
+
+      return;
+    }
+
+    let result:
+      CampaignInquiryResponse =
+      {};
+
+    try {
+      result =
+        await response.json() as CampaignInquiryResponse;
+    } catch {
+      result =
+        {};
+    }
 
     setLoading(
       false
     );
 
     if (
-      error
+      !response.ok ||
+      !result.success
     ) {
-      console.error(
-        error
-      );
-
-      const friendlyMessage =
-        getFriendlySubmissionError(
-          error.message
-        );
+      const serverMessage =
+        result.error ??
+        "";
 
       const canRecover =
         isAvailabilityRecoveryError(
-          error.message
+          serverMessage
         );
 
+      if (
+        result.code ===
+        "RATE_LIMITED"
+      ) {
+        setErrorMessage(
+          "Too many campaign requests have been submitted from this connection or contact information. Please wait and try again later."
+        );
+
+        setShowAvailabilityRecovery(
+          false
+        );
+
+        return;
+      }
+
       setErrorMessage(
-        friendlyMessage
+        getFriendlySubmissionError(
+          serverMessage
+        )
       );
 
       setShowAvailabilityRecovery(
@@ -1058,9 +1125,15 @@ export default function StartCampaignForm({
         Availability and package problems
         are reviewed from the campaign step.
       */
-      setStep(
-        1
-      );
+      if (
+        canRecover ||
+        result.code ===
+          "CAMPAIGN_VALIDATION"
+      ) {
+        setStep(
+          1
+        );
+      }
 
       return;
     }
@@ -1248,6 +1321,15 @@ export default function StartCampaignForm({
           }
           className="min-h-0 flex-1 overflow-y-auto"
         >
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-[10000px] h-px w-px opacity-0"
+          />
+
           <div className="p-6">
 
             {/* STEP 1 */}
