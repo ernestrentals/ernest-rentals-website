@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import {
   NextRequest,
   NextResponse,
@@ -7,8 +9,15 @@ import {
   google,
 } from "googleapis";
 
+import {
+  createClient as createSupabaseClient,
+} from "@supabase/supabase-js";
+
 export const runtime =
   "nodejs";
+
+export const dynamic =
+  "force-dynamic";
 
 const TIME_ZONE =
   "America/St_Lucia";
@@ -31,10 +40,17 @@ const MIN_NOTICE_HOURS =
 const MAX_BOOKING_DAYS =
   30;
 
+const RATE_LIMIT_MAX_REQUESTS =
+  120;
+
+const RATE_LIMIT_WINDOW_SECONDS =
+  10 * 60;
+
 const MEETING_TYPES = {
   quick_consultation: {
     label:
       "Quick Advertising Consultation",
+
     durationMinutes:
       15,
   },
@@ -42,6 +58,7 @@ const MEETING_TYPES = {
   campaign_planning: {
     label:
       "Campaign Planning Meeting",
+
     durationMinutes:
       30,
   },
@@ -49,6 +66,7 @@ const MEETING_TYPES = {
   account_meeting: {
     label:
       "Existing Client / Account Meeting",
+
     durationMinutes:
       30,
   },
@@ -56,6 +74,38 @@ const MEETING_TYPES = {
 
 type MeetingType =
   keyof typeof MEETING_TYPES;
+
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  retry_after_seconds: number;
+};
+
+function jsonResponse(
+  body: Record<
+    string,
+    unknown
+  >,
+  status = 200,
+  additionalHeaders: Record<
+    string,
+    string
+  > = {}
+) {
+  return NextResponse.json(
+    body,
+    {
+      status,
+
+      headers: {
+        "Cache-Control":
+          "no-store",
+
+        ...additionalHeaders,
+      },
+    }
+  );
+}
 
 function isValidDate(
   value: string
@@ -152,7 +202,10 @@ function addDaysToDateKey(
 
   return date
     .toISOString()
-    .slice(0, 10);
+    .slice(
+      0,
+      10
+    );
 }
 
 function overlaps(
@@ -162,8 +215,10 @@ function overlaps(
   endB: Date
 ) {
   return (
-    startA < endB &&
-    endA > startB
+    startA <
+      endB &&
+    endA >
+      startB
   );
 }
 
@@ -185,7 +240,9 @@ function formatTime(
       hour12:
         true,
     }
-  ).format(date);
+  ).format(
+    date
+  );
 }
 
 function getSaintLuciaDateKey(
@@ -207,25 +264,33 @@ function getSaintLuciaDateKey(
         day:
           "2-digit",
       }
-    ).formatToParts(date);
+    ).formatToParts(
+      date
+    );
 
   const year =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "year"
     )?.value;
 
   const month =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "month"
     )?.value;
 
   const day =
     parts.find(
-      (part) =>
+      (
+        part
+      ) =>
         part.type ===
         "day"
     )?.value;
@@ -243,34 +308,245 @@ function getDayOfWeek(
   ).getUTCDay();
 }
 
+function getClientFingerprint(
+  request: NextRequest
+) {
+  const forwardedFor =
+    request.headers.get(
+      "x-forwarded-for"
+    );
+
+  const realIp =
+    request.headers.get(
+      "x-real-ip"
+    );
+
+  const clientAddress =
+    forwardedFor
+      ?.split(",")[0]
+      ?.trim() ||
+    realIp?.trim() ||
+    "unknown";
+
+  return crypto
+    .createHash(
+      "sha256"
+    )
+    .update(
+      clientAddress
+    )
+    .digest(
+      "hex"
+    );
+}
+
+async function checkRateLimit(
+  request: NextRequest
+) {
+  const supabaseUrl =
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL ||
+    process.env
+      .SUPABASE_URL;
+
+  const serviceRoleKey =
+    process.env
+      .SUPABASE_SERVICE_ROLE_KEY;
+
+  if (
+    !supabaseUrl ||
+    !serviceRoleKey
+  ) {
+    console.error(
+      "Meeting availability rate limiter is missing Supabase server configuration."
+    );
+
+    return {
+      error:
+        jsonResponse(
+          {
+            success:
+              false,
+
+            error:
+              "Meeting availability is temporarily unavailable.",
+          },
+          503
+        ),
+    };
+  }
+
+  const supabase =
+    createSupabaseClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          persistSession:
+            false,
+
+          autoRefreshToken:
+            false,
+        },
+      }
+    );
+
+  const fingerprint =
+    getClientFingerprint(
+      request
+    );
+
+  const {
+    data,
+    error,
+  } =
+    await supabase.rpc(
+      "check_api_rate_limit",
+      {
+        p_rate_key:
+          `meetings:availability:${fingerprint}`,
+
+        p_max_requests:
+          RATE_LIMIT_MAX_REQUESTS,
+
+        p_window_seconds:
+          RATE_LIMIT_WINDOW_SECONDS,
+      }
+    );
+
+  if (
+    error
+  ) {
+    console.error(
+      "Meeting availability rate-limit error:",
+      error
+    );
+
+    return {
+      error:
+        jsonResponse(
+          {
+            success:
+              false,
+
+            error:
+              "Meeting availability is temporarily unavailable.",
+          },
+          503
+        ),
+    };
+  }
+
+  const result =
+    (
+      Array.isArray(
+        data
+      )
+        ? data[0]
+        : data
+    ) as
+      | RateLimitResult
+      | null;
+
+  if (
+    !result
+  ) {
+    console.error(
+      "Meeting availability rate limiter returned no result."
+    );
+
+    return {
+      error:
+        jsonResponse(
+          {
+            success:
+              false,
+
+            error:
+              "Meeting availability is temporarily unavailable.",
+          },
+          503
+        ),
+    };
+  }
+
+  if (
+    !result.allowed
+  ) {
+    const retryAfter =
+      Math.max(
+        Number(
+          result
+            .retry_after_seconds ||
+            RATE_LIMIT_WINDOW_SECONDS
+        ),
+        1
+      );
+
+    return {
+      error:
+        jsonResponse(
+          {
+            success:
+              false,
+
+            code:
+              "RATE_LIMITED",
+
+            error:
+              "Too many availability checks. Please wait a few minutes and try again.",
+          },
+          429,
+          {
+            "Retry-After":
+              String(
+                retryAfter
+              ),
+          }
+        ),
+    };
+  }
+
+  return {
+    error:
+      null,
+  };
+}
+
 export async function GET(
   request: NextRequest
 ) {
   const date =
     request.nextUrl
       .searchParams
-      .get("date");
+      .get(
+        "date"
+      );
 
   const meetingType =
     request.nextUrl
       .searchParams
-      .get("type") as
+      .get(
+        "type"
+      ) as
       | MeetingType
       | null;
 
   if (
     !date ||
-    !isValidDate(date)
+    !isValidDate(
+      date
+    )
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "A valid date is required.",
       },
-      {
-        status: 400,
-      }
+      400
     );
   }
 
@@ -280,16 +556,27 @@ export async function GET(
       meetingType
     ]
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "A valid meeting type is required.",
       },
-      {
-        status: 400,
-      }
+      400
     );
+  }
+
+  const rateLimit =
+    await checkRateLimit(
+      request
+    );
+
+  if (
+    rateLimit.error
+  ) {
+    return rateLimit.error;
   }
 
   const clientId =
@@ -314,32 +601,43 @@ export async function GET(
     !refreshToken ||
     !calendarId
   ) {
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
+
         error:
           "Google Calendar configuration is incomplete.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 
   const dayOfWeek =
-    getDayOfWeek(date);
+    getDayOfWeek(
+      date
+    );
 
   if (
-    dayOfWeek === 0 ||
-    dayOfWeek === 6
+    dayOfWeek ===
+      0 ||
+    dayOfWeek ===
+      6
   ) {
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
+
       date,
+
       meetingType,
-      available: false,
+
+      available:
+        false,
+
       reason:
         "Meetings are available Monday through Friday only.",
+
       slots: [],
     });
   }
@@ -368,13 +666,20 @@ export async function GET(
     date <
     minimumDateKey
   ) {
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
+
       date,
+
       meetingType,
-      available: false,
+
+      available:
+        false,
+
       reason:
         "Appointments must be booked at least one day in advance.",
+
       slots: [],
     });
   }
@@ -383,13 +688,20 @@ export async function GET(
     date >
     maxDateKey
   ) {
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
+
       date,
+
       meetingType,
-      available: false,
+
+      available:
+        false,
+
       reason:
         `Meetings may be booked up to ${MAX_BOOKING_DAYS} days in advance.`,
+
       slots: [],
     });
   }
@@ -436,37 +748,43 @@ export async function GET(
 
     const calendar =
       google.calendar({
-        version: "v3",
+        version:
+          "v3",
+
         auth,
       });
 
     const freeBusyResult =
-      await calendar.freebusy.query({
-        requestBody: {
-          timeMin:
-            businessStart.toISOString(),
+      await calendar
+        .freebusy
+        .query({
+          requestBody: {
+            timeMin:
+              businessStart
+                .toISOString(),
 
-          timeMax:
-            businessEnd.toISOString(),
+            timeMax:
+              businessEnd
+                .toISOString(),
 
-          timeZone:
-            TIME_ZONE,
+            timeZone:
+              TIME_ZONE,
 
-          items: [
-            {
-              id:
-                calendarId,
-            },
-          ],
-        },
-      });
+            items: [
+              {
+                id:
+                  calendarId,
+              },
+            ],
+          },
+        });
 
     const calendarData =
       freeBusyResult
         .data
         .calendars?.[
-          calendarId
-        ];
+        calendarId
+      ];
 
     if (
       calendarData
@@ -478,22 +796,23 @@ export async function GET(
         calendarData.errors
       );
 
-      return NextResponse.json(
+      return jsonResponse(
         {
-          success: false,
+          success:
+            false,
+
           error:
             "Unable to retrieve meeting availability.",
         },
-        {
-          status: 500,
-        }
+        500
       );
     }
 
     const busyPeriods =
       (
         calendarData
-          ?.busy ?? []
+          ?.busy ??
+        []
       )
         .filter(
           (
@@ -540,7 +859,8 @@ export async function GET(
       const appointmentEnd =
         addMinutes(
           slotStart,
-          meeting.durationMinutes
+          meeting
+            .durationMinutes
         );
 
       const proposedBlockedUntil =
@@ -577,10 +897,12 @@ export async function GET(
       ) {
         slots.push({
           start:
-            slotStart.toISOString(),
+            slotStart
+              .toISOString(),
 
           end:
-            appointmentEnd.toISOString(),
+            appointmentEnd
+              .toISOString(),
 
           display:
             formatTime(
@@ -603,8 +925,9 @@ export async function GET(
         );
     }
 
-    return NextResponse.json({
-      success: true,
+    return jsonResponse({
+      success:
+        true,
 
       date,
 
@@ -647,14 +970,16 @@ export async function GET(
           meeting.label,
 
         durationMinutes:
-          meeting.durationMinutes,
+          meeting
+            .durationMinutes,
 
         bufferMinutes:
           BUFFER_MINUTES,
       },
 
       available:
-        slots.length > 0,
+        slots.length >
+        0,
 
       slots,
     });
@@ -666,18 +991,15 @@ export async function GET(
       error
     );
 
-    return NextResponse.json(
+    return jsonResponse(
       {
-        success: false,
+        success:
+          false,
 
         error:
-          error instanceof Error
-            ? error.message
-            : "Unable to retrieve meeting availability.",
+          "Unable to retrieve meeting availability.",
       },
-      {
-        status: 500,
-      }
+      500
     );
   }
 }
