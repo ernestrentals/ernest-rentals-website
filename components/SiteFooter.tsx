@@ -243,6 +243,13 @@ export default function SiteFooter() {
             >
               Contact Ernest Rentals
             </Link>
+
+            <Link
+              href="/privacy"
+              className="transition hover:text-orange-600"
+            >
+              Privacy Policy
+            </Link>
           </nav>
         </div>
 
@@ -252,9 +259,16 @@ export default function SiteFooter() {
             © 2026 Ernest Rentals. All rights reserved.
           </p>
 
-          <p className="text-xs font-semibold text-slate-400">
-            Own the Visibility. Own the Location.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-400">
+            <Link
+              href="/privacy"
+              className="transition hover:text-orange-600"
+            >
+              Privacy Policy
+            </Link>
+
+            <span>Own the Visibility. Own the Location.</span>
+          </div>
         </div>
       </div>
     </footer>
