@@ -7,6 +7,8 @@ import {
   Montserrat,
 } from "next/font/google";
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import "./globals.css";
 
 const montserrat =
@@ -369,6 +371,7 @@ export default function RootLayout({
         />
 
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
