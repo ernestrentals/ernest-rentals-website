@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 import SiteFooter from "@/components/SiteFooter";
@@ -328,10 +328,6 @@ export async function generateMetadata({
   const {
     location,
   } = await params;
-
-  if (location === "richford") {
-    permanentRedirect("/locations/richfond");
-  }
 
   const data =
     locations[location];

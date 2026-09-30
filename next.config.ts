@@ -29,6 +29,16 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/locations/richford",
+        destination: "/locations/richfond",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {
