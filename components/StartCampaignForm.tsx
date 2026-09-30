@@ -387,7 +387,7 @@ function StepBadge({
     number;
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-2">
+    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:items-center sm:gap-2 sm:text-left">
       <div
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition ${
           completed
@@ -402,9 +402,9 @@ function StepBadge({
           : number}
       </div>
 
-      <div className="hidden min-w-0 sm:block">
+      <div className="min-w-0">
         <p
-          className={`truncate text-[10px] font-extrabold uppercase tracking-wide ${
+          className={`text-[9px] font-extrabold uppercase tracking-wide sm:text-[10px] ${
             active
               ? "text-orange-600"
               : completed
@@ -416,7 +416,7 @@ function StepBadge({
         </p>
 
         <p
-          className={`truncate text-xs font-bold ${
+          className={`text-[10px] font-bold leading-tight sm:text-xs ${
             active
               ? "text-slate-900"
               : "text-slate-500"
@@ -1265,7 +1265,7 @@ export default function StartCampaignForm({
 
           {/* STEPS */}
           <div className="border-t border-slate-100 px-6 py-4">
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4">
               <StepBadge
                 number={
                   1
@@ -1275,8 +1275,6 @@ export default function StartCampaignForm({
                   step
                 }
               />
-
-              <div className="h-px flex-1 bg-slate-200" />
 
               <StepBadge
                 number={
@@ -1288,8 +1286,6 @@ export default function StartCampaignForm({
                 }
               />
 
-              <div className="h-px flex-1 bg-slate-200" />
-
               <StepBadge
                 number={
                   3
@@ -1299,8 +1295,6 @@ export default function StartCampaignForm({
                   step
                 }
               />
-
-              <div className="h-px flex-1 bg-slate-200" />
 
               <StepBadge
                 number={
