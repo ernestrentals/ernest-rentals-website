@@ -109,9 +109,10 @@ function getLocationSeoSlug(
   }
 
   if (
+    value.includes("richfond") ||
     value.includes("richford")
   ) {
-    return "richford";
+    return "richfond";
   }
 
   if (

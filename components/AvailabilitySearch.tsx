@@ -1337,8 +1337,8 @@ export default function AvailabilitySearch() {
                   Praslin
                 </option>
 
-                <option value="Richford">
-                  Richford
+                <option value="Richfond">
+                  Richfond
                 </option>
 
                 <option value="Rodney Bay">

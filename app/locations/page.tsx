@@ -25,7 +25,7 @@ export const metadata:
     "Billboard Locations in Saint Lucia",
 
   description:
-    "Explore Ernest Rentals billboard advertising locations across Saint Lucia, including Dennery, Mamiku, Mon Repos, Piaye, Praslin, Richford and Rodney Bay.",
+    "Explore Ernest Rentals billboard advertising locations across Saint Lucia, including Dennery, Mamiku, Mon Repos, Piaye, Praslin, Richfond and Rodney Bay.",
 
   alternates: {
     canonical:
@@ -262,19 +262,19 @@ const locations:
 
   {
     name:
-      "Richford",
+      "Richfond",
 
     slug:
-      "richford",
+      "richfond",
 
     area:
-      "Richford, Dennery Valley",
+      "Richfond, Dennery Valley",
 
     description:
       "Large-format static billboard advertising in the Dennery Valley area.",
 
     search:
-      "Richford",
+      "Richfond",
 
     type:
       "Static Billboard",
@@ -283,7 +283,7 @@ const locations:
       "static",
 
     imageMatchTerms: [
-      "richford",
+      "richfond",
     ],
   },
 

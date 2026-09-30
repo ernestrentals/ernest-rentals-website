@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 import SiteFooter from "@/components/SiteFooter";
@@ -123,21 +123,21 @@ const locations: Record<string, LocationData> = {
     ],
   },
 
-  richford: {
-    name: "Richford",
-    area: "Richford, Dennery Valley",
+  richfond: {
+    name: "Richfond",
+    area: "Richfond, Dennery Valley",
     region: "Dennery",
     type: "Static",
-    search: "Richford",
+    search: "Richfond",
 
     description:
-      "Explore large-format static billboard advertising opportunities in Richford, Dennery Valley, Saint Lucia.",
+      "Explore large-format static billboard advertising opportunities in Richfond, Dennery Valley, Saint Lucia.",
 
     detail:
-      "Richford provides large-format roadside billboard opportunities within the Dennery Valley area. Ernest Rentals offers longer-term static advertising options for businesses looking to maintain consistent local visibility.",
+      "Richfond provides large-format roadside billboard opportunities within the Dennery Valley area. Ernest Rentals offers longer-term static advertising options for businesses looking to maintain consistent local visibility.",
 
     matchTerms: [
-      "Richford",
+      "Richfond",
     ],
   },
 
@@ -328,6 +328,10 @@ export async function generateMetadata({
   const {
     location,
   } = await params;
+
+  if (location === "richford") {
+    permanentRedirect("/locations/richfond");
+  }
 
   const data =
     locations[location];

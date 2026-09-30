@@ -13,7 +13,7 @@ const locationSlugs = [
   "mon-repos",
   "piaye",
   "praslin",
-  "richford",
+  "richfond",
   "rodney-bay",
 ];
 

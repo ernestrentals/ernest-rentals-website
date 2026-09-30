@@ -179,19 +179,19 @@ const locationCards:
 
   {
     name:
-      "Richford",
+      "Richfond",
 
     subtitle:
       "Dennery Valley",
 
     href:
-      "/?location=Richford#availability",
+      "/?location=Richfond#availability",
 
     detailsHref:
-      "/locations/richford",
+      "/locations/richfond",
 
     imageMatchTerms: [
-      "richford",
+      "richfond",
     ],
   },
 ];
