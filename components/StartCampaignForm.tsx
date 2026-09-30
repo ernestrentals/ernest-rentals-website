@@ -327,10 +327,18 @@ function getFriendlySubmissionError(
 
   if (
     value.includes(
-      "email, phone or whatsapp is required"
+      "email is required"
     )
   ) {
-    return "Please provide at least one contact method: email, phone or WhatsApp.";
+    return "Please enter your email address.";
+  }
+
+  if (
+    value.includes(
+      "phone number is required"
+    )
+  ) {
+    return "Please enter your phone number.";
   }
 
   return "We could not submit your campaign request right now. Please review your campaign details and try again.";
@@ -755,16 +763,28 @@ export default function StartCampaignForm({
     }
 
     if (
-      !email.trim() &&
-      !phone.trim() &&
-      !whatsapp.trim()
+      !email.trim()
     ) {
       setShowAvailabilityRecovery(
         false
       );
 
       setErrorMessage(
-        "Please provide an email address, phone number or WhatsApp number."
+        "Please enter your email address."
+      );
+
+      return false;
+    }
+
+    if (
+      !phone.trim()
+    ) {
+      setShowAvailabilityRecovery(
+        false
+      );
+
+      setErrorMessage(
+        "Please enter your phone number."
       );
 
       return false;
@@ -1564,7 +1584,7 @@ export default function StartCampaignForm({
 
                   <label>
                     <span className="text-sm font-semibold text-slate-700">
-                      Email
+                      Email *
                     </span>
 
                     <input
@@ -1579,16 +1599,18 @@ export default function StartCampaignForm({
                           event.target.value
                         )
                       }
+                      required
                       className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                     />
                   </label>
 
                   <label>
                     <span className="text-sm font-semibold text-slate-700">
-                      Phone
+                      Phone *
                     </span>
 
                     <input
+                      type="tel"
                       value={
                         phone
                       }
@@ -1599,6 +1621,7 @@ export default function StartCampaignForm({
                           event.target.value
                         )
                       }
+                      required
                       className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                     />
                   </label>
@@ -1626,8 +1649,8 @@ export default function StartCampaignForm({
                 </div>
 
                 <div className="mt-5 rounded-xl bg-sky-50 p-4 text-xs leading-5 text-sky-800">
-                  Please provide at least one contact method: email, phone or
-                  WhatsApp.
+                  Email and phone number are required. WhatsApp is recommended
+                  if you would also like us to contact you there.
                 </div>
               </div>
             )}

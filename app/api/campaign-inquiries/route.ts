@@ -385,9 +385,7 @@ export async function POST(
   }
 
   if (
-    !email &&
-    !phone &&
-    !whatsapp
+    !email
   ) {
     return jsonResponse(
       {
@@ -395,7 +393,22 @@ export async function POST(
           false,
 
         error:
-          "Email, phone or WhatsApp is required.",
+          "Email is required.",
+      },
+      400
+    );
+  }
+
+  if (
+    !phone
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Phone number is required.",
       },
       400
     );
