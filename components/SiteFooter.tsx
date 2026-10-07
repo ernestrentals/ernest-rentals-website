@@ -1,7 +1,11 @@
 import Link from "next/link";
 
-const whatsappUrl =
-  "https://wa.me/17587133701?text=Hi%20Ernest%20Rentals%2C%20I%27m%20interested%20in%20billboard%20advertising%20in%20Saint%20Lucia.";
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_E164,
+  CONTACT_WHATSAPP_URL,
+} from "@/lib/contact-details";
 
 const mainPages = [
   {
@@ -145,10 +149,10 @@ export default function SiteFooter() {
                 </p>
 
                 <a
-                  href="tel:+17587133701"
+                  href={`tel:${CONTACT_PHONE_E164}`}
                   className="mt-1 block font-semibold text-slate-600 transition hover:text-orange-600"
                 >
-                  +1 758-713-3701
+                  {CONTACT_PHONE_DISPLAY}
                 </a>
               </div>
 
@@ -158,7 +162,7 @@ export default function SiteFooter() {
                 </p>
 
                 <a
-                  href={whatsappUrl}
+                  href={CONTACT_WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chat with Ernest Rentals on WhatsApp"
@@ -182,10 +186,10 @@ export default function SiteFooter() {
                 </p>
 
                 <a
-                  href="mailto:rentalsernest@gmail.com"
+                  href={`mailto:${CONTACT_EMAIL}`}
                   className="mt-1 block font-semibold text-slate-600 transition hover:text-orange-600"
                 >
-                  rentalsernest@gmail.com
+                  {CONTACT_EMAIL}
                 </a>
               </div>
 

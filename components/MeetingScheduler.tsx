@@ -3,6 +3,7 @@
 import {
   FormEvent,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -229,17 +230,32 @@ export default function MeetingScheduler() {
       null
     >(null);
 
-  const [
+  const {
     minimumDateKey,
-    setMinimumDateKey,
-  ] =
-    useState("");
-
-  const [
     maxDateKey,
-    setMaxDateKey,
-  ] =
-    useState("");
+  } = useMemo(
+    () => {
+      const today =
+        getSaintLuciaDateKey(
+          new Date()
+        );
+
+      return {
+        minimumDateKey:
+          addDaysToDateKey(
+            today,
+            1
+          ),
+
+        maxDateKey:
+          addDaysToDateKey(
+            today,
+            30
+          ),
+      };
+    },
+    []
+  );
 
   const [
     customerName,
@@ -277,54 +293,26 @@ export default function MeetingScheduler() {
   ] =
     useState("");
 
-  useEffect(
-    () => {
-      const today =
-        getSaintLuciaDateKey(
-          new Date()
-        );
+  function resetAvailability() {
+    setSelectedSlot(
+      null
+    );
 
-      const tomorrow =
-        addDaysToDateKey(
-          today,
-          1
-        );
+    setSlots(
+      []
+    );
 
-      const maximumDate =
-        addDaysToDateKey(
-          today,
-          30
-        );
+    setAvailabilityMessage(
+      ""
+    );
 
-      setMinimumDateKey(
-        tomorrow
-      );
-
-      setMaxDateKey(
-        maximumDate
-      );
-    },
-    []
-  );
+    setBookingError(
+      ""
+    );
+  }
 
   useEffect(
     () => {
-      setSelectedSlot(
-        null
-      );
-
-      setSlots(
-        []
-      );
-
-      setAvailabilityMessage(
-        ""
-      );
-
-      setBookingError(
-        ""
-      );
-
       if (
         !selectedDate
       ) {
@@ -336,10 +324,6 @@ export default function MeetingScheduler() {
           selectedDate
         )
       ) {
-        setAvailabilityMessage(
-          "Meetings are available Monday through Friday only."
-        );
-
         return;
       }
 
@@ -734,12 +718,10 @@ export default function MeetingScheduler() {
                     }
                     type="button"
                     onClick={() => {
+                      resetAvailability();
+
                       setMeetingType(
                         meeting.value
-                      );
-
-                      setSelectedSlot(
-                        null
                       );
                     }}
                     className={`w-full rounded-2xl border p-5 text-left transition ${
@@ -805,11 +787,13 @@ export default function MeetingScheduler() {
               }
               onChange={(
                 event
-              ) =>
+              ) => {
+                resetAvailability();
+
                 setSelectedDate(
                   event.target.value
-                )
-              }
+                );
+              }}
               className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 font-semibold outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
             />
 
@@ -884,10 +868,14 @@ export default function MeetingScheduler() {
 
             {selectedDate &&
               !loadingAvailability &&
-              availabilityMessage && (
+              (availabilityMessage ||
+                isWeekend(
+                  selectedDate
+                )) && (
                 <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                   {
-                    availabilityMessage
+                    availabilityMessage ||
+                      "Meetings are available Monday through Friday only."
                   }
                 </div>
               )}

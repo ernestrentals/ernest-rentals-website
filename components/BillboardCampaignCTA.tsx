@@ -838,38 +838,22 @@ export default function BillboardCampaignCTA({
         )
       : [];
 
-  /*
-    KEEP DIGITAL PACKAGE SELECTION
-    WITHIN THE CHOSEN DIGITAL TYPE
-  */
-  useEffect(() => {
+  function selectDigitalType(
+    nextType:
+      | "standard"
+      | "premium"
+      | "shoutout"
+  ) {
     if (
-      billboardType !==
-        "digital" ||
-      packages.length ===
-        0
+      nextType ===
+      selectedDigitalType
     ) {
       return;
     }
 
-    const current =
-      packages.find(
-        (
-          item
-        ) =>
-          item.package_id ===
-          selectedPackageId
-      );
-
-    if (
-      current &&
-      current.package_type
-        .toLowerCase()
-        .trim() ===
-        selectedDigitalType
-    ) {
-      return;
-    }
+    setSelectedDigitalType(
+      nextType
+    );
 
     const firstForType =
       packages.find(
@@ -879,7 +863,7 @@ export default function BillboardCampaignCTA({
           item.package_type
             .toLowerCase()
             .trim() ===
-          selectedDigitalType
+          nextType
       );
 
     if (
@@ -889,12 +873,7 @@ export default function BillboardCampaignCTA({
         firstForType.package_id
       );
     }
-  }, [
-    billboardType,
-    packages,
-    selectedDigitalType,
-    selectedPackageId,
-  ]);
+  }
 
   const selectedPackage =
     packages.find(
@@ -1590,7 +1569,7 @@ export default function BillboardCampaignCTA({
                               !hasPackages
                             }
                             onClick={() =>
-                              setSelectedDigitalType(
+                              selectDigitalType(
                                 option.key
                               )
                             }

@@ -6,6 +6,9 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 type CompactAvailabilitySearchProps = {
   initialLocation?: string | null;
   initialBillboardType?: string;
@@ -71,6 +74,9 @@ export default function CompactAvailabilitySearch({
   initialStartDate = "",
   initialChangeoverDate = "",
 }: CompactAvailabilitySearchProps) {
+  const router =
+    useRouter();
+
   const normalizedInitialLocation =
     useMemo(
       () =>
@@ -191,8 +197,9 @@ export default function CompactAvailabilitySearch({
       changeoverDate
     );
 
-    window.location.href =
-      `/?${params.toString()}#availability`;
+    router.push(
+      `/?${params.toString()}#availability`
+    );
   }
 
   return (
@@ -208,12 +215,12 @@ export default function CompactAvailabilitySearch({
           </p>
         </div>
 
-        <a
+        <Link
           href="/#availability"
           className="text-xs font-bold text-sky-600 hover:text-sky-700"
         >
           Clear search
-        </a>
+        </Link>
       </div>
 
       <form

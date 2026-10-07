@@ -4,6 +4,11 @@ import Link from "next/link";
 
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_E164,
+} from "@/lib/contact-details";
 
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.ernestrentals.com"
@@ -157,17 +162,17 @@ export default function PrivacyPage() {
                 </p>
 
                 <a
-                  href="mailto:rentalsernest@gmail.com?subject=Privacy%20Request"
+                  href={`mailto:${CONTACT_EMAIL}?subject=Privacy%20Request`}
                   className="mt-3 block break-words text-sm font-extrabold transition hover:text-orange-300"
                 >
-                  rentalsernest@gmail.com
+                  {CONTACT_EMAIL}
                 </a>
 
                 <a
-                  href="tel:+17587133701"
+                  href={`tel:${CONTACT_PHONE_E164}`}
                   className="mt-2 block text-sm font-bold text-slate-300 transition hover:text-white"
                 >
-                  +1 758-713-3701
+                  {CONTACT_PHONE_DISPLAY}
                 </a>
               </div>
             </div>
@@ -491,26 +496,26 @@ export default function PrivacyPage() {
 
               <div className="grid gap-4 pt-2 sm:grid-cols-2">
                 <a
-                  href="mailto:rentalsernest@gmail.com?subject=Privacy%20Request"
+                  href={`mailto:${CONTACT_EMAIL}?subject=Privacy%20Request`}
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-orange-300 hover:bg-orange-50"
                 >
                   <span className="block text-xs font-extrabold uppercase tracking-[0.14em] text-slate-400">
                     Email
                   </span>
                   <span className="mt-2 block break-words font-black text-[#071226]">
-                    rentalsernest@gmail.com
+                    {CONTACT_EMAIL}
                   </span>
                 </a>
 
                 <a
-                  href="tel:+17587133701"
+                  href={`tel:${CONTACT_PHONE_E164}`}
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:border-orange-300 hover:bg-orange-50"
                 >
                   <span className="block text-xs font-extrabold uppercase tracking-[0.14em] text-slate-400">
                     Telephone
                   </span>
                   <span className="mt-2 block font-black text-[#071226]">
-                    +1 758-713-3701
+                    {CONTACT_PHONE_DISPLAY}
                   </span>
                 </a>
               </div>

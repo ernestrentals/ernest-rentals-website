@@ -7,23 +7,17 @@ import Link from "next/link";
 import MeetingScheduler from "@/components/MeetingScheduler";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_E164,
+  CONTACT_WHATSAPP_URL,
+} from "@/lib/contact-details";
 
 const siteUrl =
   process.env
     .NEXT_PUBLIC_SITE_URL ??
   "https://www.ernestrentals.com";
-
-const phoneNumber =
-  "+17587133701";
-
-const displayPhone =
-  "+1 758-713-3701";
-
-const emailAddress =
-  "rentalsernest@gmail.com";
-
-const whatsappUrl =
-  "https://wa.me/17587133701?text=Hi%20Ernest%20Rentals%2C%20I%27m%20interested%20in%20billboard%20advertising%20in%20Saint%20Lucia.";
 
 export const metadata:
   Metadata = {
@@ -232,7 +226,7 @@ export default function ContactPage() {
             </Link>
 
             <a
-              href={whatsappUrl}
+              href={CONTACT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-3.5 font-extrabold text-emerald-700 transition hover:bg-emerald-100"
@@ -249,7 +243,7 @@ export default function ContactPage() {
 
           <div className="space-y-4">
             <a
-              href={`tel:${phoneNumber}`}
+              href={`tel:${CONTACT_PHONE_E164}`}
               className="group block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg"
             >
               <div className="flex items-start justify-between gap-4">
@@ -259,7 +253,7 @@ export default function ContactPage() {
                   </p>
 
                   <p className="mt-2 text-2xl font-black transition group-hover:text-orange-500">
-                    {displayPhone}
+                    {CONTACT_PHONE_DISPLAY}
                   </p>
 
                   <p className="mt-2 text-sm text-slate-500">
@@ -274,7 +268,7 @@ export default function ContactPage() {
             </a>
 
             <a
-              href={whatsappUrl}
+              href={CONTACT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group block rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg"
@@ -286,7 +280,7 @@ export default function ContactPage() {
                   </p>
 
                   <p className="mt-2 text-2xl font-black text-[#071226]">
-                    {displayPhone}
+                    {CONTACT_PHONE_DISPLAY}
                   </p>
 
                   <p className="mt-2 text-sm text-slate-500">
@@ -302,7 +296,7 @@ export default function ContactPage() {
             </a>
 
             <a
-              href={`mailto:${emailAddress}`}
+              href={`mailto:${CONTACT_EMAIL}`}
               className="group block rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg"
             >
               <div className="flex items-start justify-between gap-4">
@@ -312,7 +306,7 @@ export default function ContactPage() {
                   </p>
 
                   <p className="mt-2 break-all text-2xl font-black transition group-hover:text-orange-500">
-                    {emailAddress}
+                    {CONTACT_EMAIL}
                   </p>
 
                   <p className="mt-2 text-sm text-slate-500">
@@ -383,7 +377,7 @@ export default function ContactPage() {
                 </a>
 
                 <a
-                  href={whatsappUrl}
+                  href={CONTACT_WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-xl bg-emerald-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-emerald-700"
@@ -503,7 +497,7 @@ export default function ContactPage() {
             </Link>
 
             <a
-              href={whatsappUrl}
+              href={CONTACT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 font-extrabold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"

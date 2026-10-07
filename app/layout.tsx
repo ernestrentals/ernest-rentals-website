@@ -7,6 +7,11 @@ import {
   Montserrat,
 } from "next/font/google";
 
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_SCHEMA,
+} from "@/lib/contact-details";
+
 import "./globals.css";
 
 const montserrat =
@@ -264,7 +269,10 @@ const structuredData = {
         "Ernest Rentals provides static and digital billboard advertising and outdoor advertising opportunities across Saint Lucia.",
 
       telephone:
-        "+1-758-713-3701",
+        CONTACT_PHONE_SCHEMA,
+
+      email:
+        CONTACT_EMAIL,
 
       contactPoint: [
         {
@@ -272,7 +280,10 @@ const structuredData = {
             "ContactPoint",
 
           telephone:
-            "+1-758-713-3701",
+            CONTACT_PHONE_SCHEMA,
+
+          email:
+            CONTACT_EMAIL,
 
           contactType:
             "sales",
