@@ -10,6 +10,10 @@ const primaryNavigation = [
     label: "Digital Screens",
   },
   {
+    href: "/pricing",
+    label: "Pricing",
+  },
+  {
     href: "/locations",
     label: "Locations",
   },

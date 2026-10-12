@@ -21,6 +21,12 @@ const mainPages = [
       "Digital billboard advertising and campaign packages.",
   },
   {
+    href: "/pricing",
+    label: "Pricing",
+    description:
+      "Compare static, digital and Shoutout advertising rates.",
+  },
+  {
     href: "/locations",
     label: "Locations",
     description:
@@ -225,6 +231,13 @@ export default function SiteFooter() {
               className="transition hover:text-orange-600"
             >
               Digital Billboard Advertising
+            </Link>
+
+            <Link
+              href="/pricing"
+              className="transition hover:text-orange-600"
+            >
+              Billboard Advertising Rates
             </Link>
 
             <Link

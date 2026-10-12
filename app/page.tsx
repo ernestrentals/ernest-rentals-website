@@ -545,6 +545,13 @@ export default async function Home() {
               >
                 Explore Billboard Locations
               </Link>
+
+              <Link
+                href="/pricing"
+                className="rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                View Pricing
+              </Link>
             </div>
 
             <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3 border-t border-white/10 pt-6">

@@ -5,8 +5,13 @@ import type {
 import Image from "next/image";
 import Link from "next/link";
 
+import DigitalPackageComparison from "@/components/DigitalPackageComparison";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import { getPublicPricing } from "@/lib/public-pricing";
+
+export const revalidate =
+  300;
 
 const siteUrl =
   process.env
@@ -284,7 +289,12 @@ const structuredData = {
   ],
 };
 
-export default function DigitalScreensPage() {
+export default async function DigitalScreensPage() {
+  const {
+    digitalPackages,
+  } =
+    await getPublicPricing();
+
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
 
@@ -342,6 +352,13 @@ export default function DigitalScreensPage() {
                 className="inline-flex rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
               >
                 Explore Billboard Locations
+              </Link>
+
+              <Link
+                href="/pricing"
+                className="inline-flex rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                Compare Pricing
               </Link>
             </div>
           </div>
@@ -428,6 +445,12 @@ export default function DigitalScreensPage() {
           </div>
         </div>
       </section>
+
+      <DigitalPackageComparison
+        packages={
+          digitalPackages
+        }
+      />
 
       {/* DOWNLOADABLE RATE CARD */}
       <section className="bg-white px-5 py-16 lg:px-8">
@@ -668,6 +691,13 @@ export default function DigitalScreensPage() {
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
               Billboard Advertising →
+            </Link>
+
+            <Link
+              href="/pricing"
+              className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
+            >
+              Advertising Rates →
             </Link>
 
             <Link
