@@ -2,6 +2,7 @@ import type {
   Metadata,
 } from "next";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import AvailabilitySearch from "@/components/AvailabilitySearch";
@@ -568,6 +569,88 @@ export default function BillboardsPage() {
               </div>
             </article>
           </div>
+        </div>
+      </section>
+
+      {/* DOWNLOADABLE STATIC RATE CARD */}
+      <section className="bg-white px-5 py-16 lg:px-8">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-[#071226] p-6 shadow-xl sm:p-8 lg:grid-cols-[.85fr_1.15fr] lg:p-10">
+          <div className="text-white">
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-400">
+              2026 Static Billboard Rate Card
+            </p>
+
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              Compare locations, sizes and package prices.
+            </h2>
+
+            <p className="mt-5 max-w-xl leading-7 text-slate-300">
+              Review all 13 static advertising faces across Dennery, Mamiku,
+              Mon Repos, Piaye, Praslin and Richfond. The guide includes 3, 6
+              and 12-month package totals plus equivalent monthly amounts.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href="/downloads/ernest-rentals-static-billboard-rate-card-2026.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+              >
+                View Rate Card
+              </a>
+
+              <a
+                href="/downloads/ernest-rentals-static-billboard-rate-card-2026.pdf"
+                download
+                className="inline-flex rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                Download PDF
+              </a>
+
+              <a
+                href="/downloads/ernest-rentals-static-billboard-rate-card-2026-page-1.png"
+                download
+                className="inline-flex rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                Download Price Guide
+              </a>
+
+              <a
+                href="/downloads/ernest-rentals-static-billboard-rate-card-2026-page-2.png"
+                download
+                className="inline-flex rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+              >
+                Download Inventory
+              </a>
+            </div>
+
+            <p className="mt-5 text-xs leading-5 text-slate-400">
+              Prices are shown in Eastern Caribbean dollars (XCD) and remain
+              subject to availability and campaign confirmation.
+            </p>
+          </div>
+
+          <a
+            href="/downloads/ernest-rentals-static-billboard-rate-card-2026.pdf"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open the Ernest Rentals Static Billboard Rate Card PDF"
+            className="group relative mx-auto block w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-white p-3 shadow-2xl"
+          >
+            <Image
+              src="/downloads/ernest-rentals-static-billboard-rate-card-2026-page-1.png"
+              alt="Ernest Rentals 2026 static billboard advertising rate card"
+              width={2480}
+              height={3508}
+              sizes="(max-width: 1024px) 90vw, 52vw"
+              className="h-auto w-full rounded-xl transition duration-300 group-hover:scale-[1.01]"
+            />
+
+            <span className="absolute bottom-6 right-6 rounded-full bg-[#071226] px-4 py-2 text-xs font-extrabold text-white shadow-lg">
+              Open 2-page PDF →
+            </span>
+          </a>
         </div>
       </section>
 
