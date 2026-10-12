@@ -82,6 +82,39 @@ function formatMoney(
   }
 }
 
+function monthlyPackagePrice(
+  adPackage: Pick<
+    PublicAdPackage,
+    | "duration_value"
+    | "duration_unit"
+    | "price"
+  >
+) {
+  const months =
+    Number(
+      adPackage.duration_value
+    );
+
+  if (
+    adPackage.duration_unit
+      ?.toLowerCase()
+      .trim() !== "month" ||
+    ![
+      3,
+      6,
+      12,
+    ].includes(months)
+  ) {
+    return null;
+  }
+
+  return (
+    Number(
+      adPackage.price
+    ) / months
+  );
+}
+
 function packageDescription(
   adPackage: PublicAdPackage
 ) {
@@ -885,6 +918,13 @@ export default function BillboardCampaignCTA({
     ) ??
     null;
 
+  const selectedPackageMonthlyPrice =
+    selectedPackage
+      ? monthlyPackagePrice(
+          selectedPackage
+        )
+      : null;
+
   const effectiveStartDate =
     billboardType ===
     "digital"
@@ -1683,6 +1723,11 @@ export default function BillboardCampaignCTA({
                               : "Campaign"
                           );
 
+                        const monthlyPrice =
+                          monthlyPackagePrice(
+                            adPackage
+                          );
+
                         return (
                           <button
                             key={
@@ -1727,14 +1772,27 @@ export default function BillboardCampaignCTA({
                             </div>
 
                             <div className="flex shrink-0 items-center gap-3">
-                              <p className="text-base font-black text-orange-500">
-                                {formatMoney(
-                                  Number(
-                                    adPackage.price
-                                  ),
-                                  adPackage.currency_code
+                              <div className="text-right">
+                                <p className="text-base font-black text-orange-500">
+                                  {formatMoney(
+                                    Number(
+                                      adPackage.price
+                                    ),
+                                    adPackage.currency_code
+                                  )}
+                                </p>
+
+                                {monthlyPrice !==
+                                  null && (
+                                  <p className="mt-0.5 text-[10px] font-bold text-slate-500">
+                                    {formatMoney(
+                                      monthlyPrice,
+                                      adPackage.currency_code
+                                    )}{" "}
+                                    per month
+                                  </p>
                                 )}
-                              </p>
+                              </div>
 
                               <div
                                 className={`flex h-6 w-6 items-center justify-center rounded-full border transition ${
@@ -1805,6 +1863,11 @@ export default function BillboardCampaignCTA({
                             )
                         : adPackage.package_name;
 
+                    const monthlyPrice =
+                      monthlyPackagePrice(
+                        adPackage
+                      );
+
                     return (
                       <button
                         key={
@@ -1872,6 +1935,17 @@ export default function BillboardCampaignCTA({
                                 </svg>
                               </div>
                             </div>
+
+                            {monthlyPrice !==
+                              null && (
+                              <p className="mt-1 text-[10px] font-bold text-slate-500">
+                                {formatMoney(
+                                  monthlyPrice,
+                                  adPackage.currency_code
+                                )}{" "}
+                                per month
+                              </p>
+                            )}
                           </div>
                         </div>
                       </button>
@@ -1916,6 +1990,17 @@ export default function BillboardCampaignCTA({
                         selectedPackage.currency_code
                       )}
                     </p>
+
+                    {selectedPackageMonthlyPrice !==
+                      null && (
+                      <p className="mt-1 text-[10px] font-bold text-slate-300">
+                        {formatMoney(
+                          selectedPackageMonthlyPrice,
+                          selectedPackage.currency_code
+                        )}{" "}
+                        per month
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2134,6 +2219,10 @@ export default function BillboardCampaignCTA({
           selectedPackageCurrency={
             selectedPackage?.currency_code ??
             null
+          }
+
+          selectedPackageMonthlyPrice={
+            selectedPackageMonthlyPrice
           }
 
           selectedPackageDurationLabel={

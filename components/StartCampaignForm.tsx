@@ -20,6 +20,7 @@ type StartCampaignFormProps = {
   selectedPackageType?: string | null;
   selectedPackagePrice?: number | null;
   selectedPackageCurrency?: string | null;
+  selectedPackageMonthlyPrice?: number | null;
   selectedPackageDurationLabel?: string | null;
   selectedPackageSlotDuration?: number | null;
   selectedPackageIncludesAdCreation?: boolean;
@@ -479,6 +480,7 @@ export default function StartCampaignForm({
   selectedPackageType = null,
   selectedPackagePrice = null,
   selectedPackageCurrency = null,
+  selectedPackageMonthlyPrice = null,
   selectedPackageDurationLabel = null,
   selectedPackageSlotDuration = null,
   selectedPackageIncludesAdCreation = false,
@@ -1226,6 +1228,17 @@ export default function StartCampaignForm({
                     )}
                     accent
                   />
+
+                  {selectedPackageMonthlyPrice !==
+                    null && (
+                    <div className="mt-2 text-xs font-bold text-slate-500">
+                      {formatMoney(
+                        selectedPackageMonthlyPrice,
+                        selectedPackageCurrency
+                      )}{" "}
+                      per month
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1446,6 +1459,17 @@ export default function StartCampaignForm({
                               selectedPackageCurrency
                             )}
                           </p>
+
+                          {selectedPackageMonthlyPrice !==
+                            null && (
+                            <p className="mt-1 text-xs font-bold text-slate-500">
+                              {formatMoney(
+                                selectedPackageMonthlyPrice,
+                                selectedPackageCurrency
+                              )}{" "}
+                              per month
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1908,6 +1932,18 @@ export default function StartCampaignForm({
                             selectedPackageCurrency
                           )}
                           accent
+                        />
+                      )}
+
+                      {selectedPackageMonthlyPrice !==
+                        null &&
+                        selectedPackageCurrency && (
+                        <SummaryItem
+                          label="Monthly Amount"
+                          value={`${formatMoney(
+                            selectedPackageMonthlyPrice,
+                            selectedPackageCurrency
+                          )} per month`}
                         />
                       )}
                     </div>
