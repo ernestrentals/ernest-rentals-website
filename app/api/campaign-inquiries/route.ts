@@ -9,6 +9,12 @@ import {
   createClient as createSupabaseClient,
 } from "@supabase/supabase-js";
 
+import {
+  calculateCombo,
+  formatDiscount,
+  isComboTerm,
+} from "@/lib/combo-packages";
+
 export const runtime =
   "nodejs";
 
@@ -31,6 +37,26 @@ type RateLimitResult = {
   allowed: boolean;
   remaining: number;
   retry_after_seconds: number;
+};
+
+type ComboDigitalPackageRow = {
+  package_id: string;
+  package_name: string;
+  package_type: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  price: number;
+  currency_code: string;
+};
+
+type ComboStaticPackageRow = {
+  package_id: string;
+  billboard_id: string;
+  package_name: string;
+  duration_value: number | null;
+  duration_unit: string | null;
+  price: number;
+  currency_code: string;
 };
 
 function jsonResponse(
@@ -126,6 +152,28 @@ function isValidEmail(
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
     value
   );
+}
+
+function isUuid(
+  value: string
+) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
+function formatXcd(
+  amount: number
+) {
+  return `EC$${new Intl.NumberFormat(
+    "en-LC",
+    {
+      minimumFractionDigits:
+        2,
+      maximumFractionDigits:
+        2,
+    }
+  ).format(amount)}`;
 }
 
 function createServerClient(
@@ -360,6 +408,32 @@ export async function POST(
       body.requestedPackageId
     );
 
+  const comboTermValue =
+    Number(
+      body.comboTerm ??
+        Number.NaN
+    );
+
+  const comboDigitalPackageId =
+    cleanSingleLine(
+      body.comboDigitalPackageId
+    );
+
+  const comboStaticPackageId =
+    cleanSingleLine(
+      body.comboStaticPackageId
+    );
+
+  const hasComboRequest =
+    body.comboTerm !==
+      undefined ||
+    Boolean(
+      comboDigitalPackageId
+    ) ||
+    Boolean(
+      comboStaticPackageId
+    );
+
   const artworkReady =
     typeof body.artworkReady ===
     "boolean"
@@ -501,6 +575,36 @@ export async function POST(
     );
   }
 
+  if (
+    hasComboRequest &&
+    (
+      !isComboTerm(
+        comboTermValue
+      ) ||
+      !isUuid(
+        comboDigitalPackageId
+      ) ||
+      !isUuid(
+        comboStaticPackageId
+      ) ||
+      billboardType !==
+        "static" ||
+      requestedPackageId !==
+        comboStaticPackageId
+    )
+  ) {
+    return jsonResponse(
+      {
+        success:
+          false,
+
+        error:
+          "Please rebuild the Digital + Static combo and try again.",
+      },
+      400
+    );
+  }
+
   const supabaseUrl =
     process.env
       .NEXT_PUBLIC_SUPABASE_URL ||
@@ -624,6 +728,170 @@ export async function POST(
       serviceRoleKey
     );
 
+  let messageForSubmission =
+    message ||
+    null;
+
+  if (
+    hasComboRequest &&
+    isComboTerm(
+      comboTermValue
+    )
+  ) {
+    const [
+      digitalResult,
+      staticResult,
+    ] = await Promise.all([
+      supabase.rpc(
+        "get_public_ad_packages",
+        {
+          p_billboard_type:
+            "digital",
+        }
+      ),
+      supabase.rpc(
+        "get_public_static_billboard_packages"
+      ),
+    ]);
+
+    if (
+      digitalResult.error ||
+      staticResult.error
+    ) {
+      console.error(
+        "Unable to verify combo pricing:",
+        digitalResult.error ??
+          staticResult.error
+      );
+
+      return jsonResponse(
+        {
+          success:
+            false,
+
+          error:
+            "Combo pricing is temporarily unavailable. Please try again.",
+        },
+        503
+      );
+    }
+
+    const digitalPackages =
+      (digitalResult.data ??
+        []) as ComboDigitalPackageRow[];
+
+    const staticPackages =
+      (staticResult.data ??
+        []) as ComboStaticPackageRow[];
+
+    const digitalPackage =
+      digitalPackages.find(
+        (item) =>
+          item.package_id ===
+            comboDigitalPackageId &&
+          item.package_type
+            .trim()
+            .toLowerCase() ===
+            "premium" &&
+          item.duration_unit
+            ?.trim()
+            .toLowerCase() ===
+            "month" &&
+          Number(
+            item.duration_value
+          ) ===
+            comboTermValue
+      );
+
+    const staticPackage =
+      staticPackages.find(
+        (item) =>
+          item.package_id ===
+            comboStaticPackageId &&
+          item.billboard_id ===
+            billboardId &&
+          item.duration_unit
+            ?.trim()
+            .toLowerCase() ===
+            "month" &&
+          Number(
+            item.duration_value
+          ) ===
+            comboTermValue
+      );
+
+    const digitalPrice =
+      Number(
+        digitalPackage?.price
+      );
+
+    const staticPrice =
+      Number(
+        staticPackage?.price
+      );
+
+    if (
+      !digitalPackage ||
+      !staticPackage ||
+      !Number.isFinite(
+        digitalPrice
+      ) ||
+      !Number.isFinite(
+        staticPrice
+      ) ||
+      digitalPrice <= 0 ||
+      staticPrice <= 0 ||
+      digitalPackage.currency_code !==
+        staticPackage.currency_code
+    ) {
+      return jsonResponse(
+        {
+          success:
+            false,
+
+          error:
+            "The selected combo pricing has changed. Please rebuild your combo.",
+        },
+        409
+      );
+    }
+
+    const combo =
+      calculateCombo({
+        term:
+          comboTermValue,
+        premiumDigitalTotal:
+          digitalPrice,
+        staticRentalTotal:
+          staticPrice,
+      });
+
+    const comboSummary = [
+      "Digital + Static Combo Inquiry",
+      `Term: ${combo.term} months`,
+      `Premium Digital: ${digitalPackage.package_name} — ${formatXcd(combo.premiumDigitalTotal)}`,
+      `Static package: ${staticPackage.package_name} — ${formatXcd(combo.staticRentalTotal)}`,
+      `Static discount: ${formatDiscount(combo.discountRate)}`,
+      `Static savings: ${formatXcd(combo.staticSavings)}`,
+      `Discounted static rental: ${formatXcd(combo.discountedStaticRental)}`,
+      `Estimated combo total: ${formatXcd(combo.comboTotal)}`,
+      "Estimate subject to availability and final confirmation. Discount applies only to eligible static rental.",
+    ].join(
+      "\n"
+    );
+
+    messageForSubmission = [
+      message,
+      comboSummary,
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        "\n\n"
+      );
+  }
+
   const {
     data,
     error,
@@ -678,7 +946,7 @@ export async function POST(
           artworkReady,
 
         p_message:
-          message ||
+          messageForSubmission ||
           null,
 
         p_requested_package_id:

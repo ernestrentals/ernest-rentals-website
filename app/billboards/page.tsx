@@ -514,6 +514,13 @@ export default function BillboardsPage() {
                 >
                   View Locations
                 </Link>
+
+                <Link
+                  href="/artwork-guidelines"
+                  className="rounded-xl border border-slate-200 px-5 py-3 font-extrabold text-slate-700 transition hover:border-orange-300 hover:text-orange-600"
+                >
+                  Artwork Guidelines
+                </Link>
               </div>
             </article>
 

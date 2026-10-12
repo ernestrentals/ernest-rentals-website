@@ -415,6 +415,13 @@ export default function HowItWorksPage() {
                 changeover date from your selected start date.
               </p>
 
+              <Link
+                href="/artwork-guidelines"
+                className="mt-5 inline-flex font-extrabold text-orange-600 transition hover:text-orange-700"
+              >
+                View Billboard Artwork Guidelines →
+              </Link>
+
               <div className="mt-6 flex flex-wrap gap-2">
                 <span className="rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-600">
                   3 Months

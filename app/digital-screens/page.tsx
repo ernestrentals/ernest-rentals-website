@@ -5,6 +5,7 @@ import type {
 import Image from "next/image";
 import Link from "next/link";
 
+import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -24,7 +25,7 @@ export const metadata:
     "Digital Billboard Advertising in Saint Lucia",
 
   description:
-    "Advertise on digital billboards in Saint Lucia with Ernest Rentals. Explore Standard 10-second, Premium 15-second and Shoutout advertising options, check live availability and start your campaign online.",
+    "Advertise on digital billboards in Saint Lucia with Ernest Rentals. Explore Standard, Premium, Shoutout and Digital + Static combo packages, check live availability and start your campaign online.",
 
   alternates: {
     canonical:
@@ -292,6 +293,8 @@ const structuredData = {
 export default async function DigitalScreensPage() {
   const {
     digitalPackages,
+    staticPackages,
+    billboards,
   } =
     await getPublicPricing();
 
@@ -449,6 +452,18 @@ export default async function DigitalScreensPage() {
       <DigitalPackageComparison
         packages={
           digitalPackages
+        }
+      />
+
+      <ComboPackageBuilder
+        digitalPackages={
+          digitalPackages
+        }
+        staticPackages={
+          staticPackages
+        }
+        billboards={
+          billboards
         }
       />
 
@@ -698,6 +713,13 @@ export default async function DigitalScreensPage() {
               className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
             >
               Advertising Rates →
+            </Link>
+
+            <Link
+              href="/artwork-guidelines"
+              className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 font-extrabold transition hover:border-orange-300 hover:bg-white hover:text-orange-600"
+            >
+              Artwork Guidelines →
             </Link>
 
             <Link

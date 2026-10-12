@@ -4,6 +4,7 @@ import type {
 
 import Link from "next/link";
 
+import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
 import DigitalPricingCards from "@/components/DigitalPricingCards";
 import SiteFooter from "@/components/SiteFooter";
@@ -28,7 +29,7 @@ export const metadata:
     "Billboard Advertising Rates in Saint Lucia",
 
   description:
-    "Compare Ernest Rentals static and digital billboard advertising rates in Saint Lucia, including Standard, Premium and Shoutout digital packages.",
+    "Compare Ernest Rentals static and digital billboard advertising rates in Saint Lucia, including Standard, Premium, Shoutout and Digital + Static combo packages.",
 
   alternates: {
     canonical:
@@ -40,7 +41,7 @@ export const metadata:
       "Billboard Advertising Rates in Saint Lucia | Ernest Rentals",
 
     description:
-      "Compare static billboard rentals, Standard and Premium digital advertising, and Shoutout packages from Ernest Rentals.",
+      "Compare static billboard rentals, digital advertising and Digital + Static combo packages from Ernest Rentals.",
 
     url:
       "/pricing",
@@ -240,6 +241,7 @@ export default async function PricingPage() {
   const {
     digitalPackages,
     staticPackages,
+    billboards,
   } =
     await getPublicPricing();
 
@@ -349,6 +351,18 @@ export default async function PricingPage() {
         }
       />
 
+      <ComboPackageBuilder
+        digitalPackages={
+          digitalPackages
+        }
+        staticPackages={
+          staticPackages
+        }
+        billboards={
+          billboards
+        }
+      />
+
       <section className="bg-white px-5 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[.85fr_1.15fr] lg:items-start">
@@ -447,6 +461,13 @@ export default async function PricingPage() {
               Choose a billboard and package through the existing Ernest
               Rentals campaign request flow.
             </p>
+
+            <Link
+              href="/artwork-guidelines"
+              className="mt-4 inline-flex text-sm font-extrabold text-[#071226] underline decoration-[#071226]/30 underline-offset-4"
+            >
+              Review Billboard Artwork Guidelines →
+            </Link>
           </div>
 
           <Link

@@ -9,6 +9,10 @@ import BillboardReviews from "@/components/BillboardReviews";
 import CompactAvailabilitySearch from "@/components/CompactAvailabilitySearch";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import {
+  isComboTerm,
+  type ComboInquirySelection,
+} from "@/lib/combo-packages";
 
 type BillboardPageProps = {
   params: Promise<{
@@ -18,6 +22,9 @@ type BillboardPageProps = {
   searchParams: Promise<{
     start?: string;
     end?: string;
+    comboTerm?: string;
+    comboDigitalPackageId?: string;
+    comboStaticPackageId?: string;
   }>;
 };
 
@@ -223,6 +230,14 @@ function isDateString(
   );
 }
 
+function isUuid(
+  value: string
+) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 export async function generateMetadata({
   params,
 }: Pick<
@@ -394,6 +409,36 @@ export default async function BillboardPage({
   const rawEnd =
     filters.end ?? "";
 
+  const comboTermNumber =
+    Number(
+      filters.comboTerm ??
+        ""
+    );
+
+  const comboSelection:
+    ComboInquirySelection |
+    null =
+    isComboTerm(
+      comboTermNumber
+    ) &&
+    isUuid(
+      filters.comboDigitalPackageId ??
+        ""
+    ) &&
+    isUuid(
+      filters.comboStaticPackageId ??
+        ""
+    )
+      ? {
+          term:
+            comboTermNumber,
+          digitalPackageId:
+            filters.comboDigitalPackageId!,
+          staticPackageId:
+            filters.comboStaticPackageId!,
+        }
+      : null;
+
   const validStart =
     rawStart &&
     isDateString(
@@ -451,6 +496,25 @@ export default async function BillboardPage({
       nextParams.set(
         "end",
         normalizedEnd
+      );
+    }
+
+    if (
+      comboSelection
+    ) {
+      nextParams.set(
+        "comboTerm",
+        String(
+          comboSelection.term
+        )
+      );
+      nextParams.set(
+        "comboDigitalPackageId",
+        comboSelection.digitalPackageId
+      );
+      nextParams.set(
+        "comboStaticPackageId",
+        comboSelection.staticPackageId
       );
     }
 
@@ -1390,6 +1454,9 @@ export default async function BillboardPage({
                   }
                   available={
                     isAvailable
+                  }
+                  comboSelection={
+                    comboSelection
                   }
                 />
 

@@ -6,6 +6,10 @@ import {
   useState,
 } from "react";
 
+import Link from "next/link";
+
+import type { ComboInquirySelection } from "@/lib/combo-packages";
+
 type StartCampaignFormProps = {
   billboardId: string;
   billboardName: string;
@@ -24,6 +28,8 @@ type StartCampaignFormProps = {
   selectedPackageDurationLabel?: string | null;
   selectedPackageSlotDuration?: number | null;
   selectedPackageIncludesAdCreation?: boolean;
+
+  comboSelection?: ComboInquirySelection | null;
 
   onClose: () => void;
 };
@@ -484,6 +490,8 @@ export default function StartCampaignForm({
   selectedPackageDurationLabel = null,
   selectedPackageSlotDuration = null,
   selectedPackageIncludesAdCreation = false,
+
+  comboSelection = null,
 
   onClose,
 }: StartCampaignFormProps) {
@@ -1061,6 +1069,18 @@ export default function StartCampaignForm({
 
                 requestedPackageId:
                   selectedPackageId,
+
+                comboTerm:
+                  comboSelection?.term ??
+                  null,
+
+                comboDigitalPackageId:
+                  comboSelection?.digitalPackageId ??
+                  null,
+
+                comboStaticPackageId:
+                  comboSelection?.staticPackageId ??
+                  null,
 
                 website,
               }),
@@ -1747,6 +1767,14 @@ export default function StartCampaignForm({
                     What about your artwork?
                   </p>
 
+                  <Link
+                    href="/artwork-guidelines"
+                    target="_blank"
+                    className="mt-2 inline-flex text-sm font-extrabold text-sky-700 underline decoration-sky-300 underline-offset-4"
+                  >
+                    View Artwork Guidelines
+                  </Link>
+
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
                     <button
                       type="button"
@@ -1947,6 +1975,22 @@ export default function StartCampaignForm({
                         />
                       )}
                     </div>
+                  </div>
+                )}
+
+                {comboSelection && (
+                  <div className="mt-4 rounded-2xl border border-violet-200 bg-violet-50 p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-violet-700">
+                      Digital + Static Combo
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-slate-900">
+                      {comboSelection.term}-month Premium Digital and Static package
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
+                      Current package prices and the eligible static-rental discount will be verified when you submit.
+                    </p>
                   </div>
                 )}
 

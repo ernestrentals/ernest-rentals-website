@@ -28,9 +28,19 @@ export type PublicStaticPackage = {
   currency_code: string;
 };
 
+export type PublicBillboard = {
+  billboard_id: string;
+  billboard_code: string;
+  billboard_name: string;
+  location: string | null;
+  billboard_type: string;
+  image_url: string | null;
+};
+
 export type PublicPricingCatalog = {
   digitalPackages: PublicDigitalPackage[];
   staticPackages: PublicStaticPackage[];
+  billboards: PublicBillboard[];
 };
 
 function createPublicServerClient() {
@@ -53,6 +63,7 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
   const [
     digitalResult,
     staticResult,
+    billboardResult,
   ] = await Promise.all([
     supabase.rpc(
       "get_public_ad_packages",
@@ -63,6 +74,9 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
     ),
     supabase.rpc(
       "get_public_static_billboard_packages"
+    ),
+    supabase.rpc(
+      "get_public_location_billboards"
     ),
   ]);
 
@@ -85,6 +99,15 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
   }
 
   if (
+    billboardResult.error
+  ) {
+    console.error(
+      "Unable to load public billboard inventory:",
+      billboardResult.error
+    );
+  }
+
+  if (
     digitalResult.error &&
     staticResult.error
   ) {
@@ -100,6 +123,9 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
     staticPackages:
       (staticResult.data ??
         []) as PublicStaticPackage[],
+    billboards:
+      (billboardResult.data ??
+        []) as PublicBillboard[],
   };
 }
 
@@ -133,6 +159,8 @@ export async function getPublicPricing(): Promise<PublicPricingCatalog> {
       digitalPackages:
         [],
       staticPackages:
+        [],
+      billboards:
         [],
     };
   }

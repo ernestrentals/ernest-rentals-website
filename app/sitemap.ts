@@ -85,6 +85,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     {
       url:
+        `${siteUrl}/artwork-guidelines`,
+      lastModified:
+        now,
+      changeFrequency:
+        "monthly",
+      priority:
+        0.7,
+    },
+
+    {
+      url:
         `${siteUrl}/locations`,
       lastModified:
         now,

@@ -11,6 +11,9 @@ import {
 } from "next/navigation";
 
 import StartCampaignForm from "@/components/StartCampaignForm";
+import type {
+  ComboInquirySelection,
+} from "@/lib/combo-packages";
 import { createBrowserClient } from "@/lib/supabase/client";
 
 type BillboardCampaignCTAProps = {
@@ -21,6 +24,9 @@ type BillboardCampaignCTAProps = {
   startDate: string;
   changeoverDate: string;
   available: boolean;
+  comboSelection?:
+    ComboInquirySelection |
+    null;
 };
 
 type PublicAdPackage = {
@@ -513,6 +519,7 @@ export default function BillboardCampaignCTA({
   location,
   startDate,
   changeoverDate,
+  comboSelection = null,
 }: BillboardCampaignCTAProps) {
   const router =
     useRouter();
@@ -735,8 +742,18 @@ export default function BillboardCampaignCTA({
           matchingPackages.length >
           0
         ) {
+          const comboPackage =
+            comboSelection
+              ? matchingPackages.find(
+                  (item) =>
+                    item.package_id ===
+                    comboSelection.staticPackageId
+                )
+              : null;
+
           setSelectedPackageId(
-            matchingPackages[0]
+            (comboPackage ??
+              matchingPackages[0])
               .package_id
           );
         }
@@ -854,6 +871,7 @@ export default function BillboardCampaignCTA({
   }, [
     billboardId,
     billboardType,
+    comboSelection,
     supabase,
   ]);
 
@@ -1323,6 +1341,25 @@ export default function BillboardCampaignCTA({
       nextAvailability.next_end_date
     );
 
+    if (
+      comboSelection
+    ) {
+      params.set(
+        "comboTerm",
+        String(
+          comboSelection.term
+        )
+      );
+      params.set(
+        "comboDigitalPackageId",
+        comboSelection.digitalPackageId
+      );
+      params.set(
+        "comboStaticPackageId",
+        comboSelection.staticPackageId
+      );
+    }
+
     router.push(
       `/billboards/${billboardId}?${params.toString()}`
     );
@@ -1330,6 +1367,19 @@ export default function BillboardCampaignCTA({
 
   return (
     <>
+      {comboSelection ? (
+        <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4">
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-orange-600">
+            {comboSelection.term}-Month Digital + Static Combo
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Choose the matching static package and campaign dates below. Your
+            Premium Digital package and combo estimate will be included with
+            the campaign inquiry for Sales to confirm.
+          </p>
+        </div>
+      ) : null}
+
       {/* NEXT AVAILABLE */}
       {showNextAvailability && (
         <div className="mt-5 overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm">
@@ -2238,6 +2288,10 @@ export default function BillboardCampaignCTA({
           selectedPackageIncludesAdCreation={
             selectedPackage?.includes_ad_creation ??
             false
+          }
+
+          comboSelection={
+            comboSelection
           }
 
           onClose={() =>

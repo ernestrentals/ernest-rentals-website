@@ -27,6 +27,12 @@ const mainPages = [
       "Compare static, digital and Shoutout advertising rates.",
   },
   {
+    href: "/artwork-guidelines",
+    label: "Artwork Guidelines",
+    description:
+      "Prepare effective static and digital billboard creative.",
+  },
+  {
     href: "/locations",
     label: "Locations",
     description:
@@ -238,6 +244,13 @@ export default function SiteFooter() {
               className="transition hover:text-orange-600"
             >
               Billboard Advertising Rates
+            </Link>
+
+            <Link
+              href="/artwork-guidelines"
+              className="transition hover:text-orange-600"
+            >
+              Billboard Artwork Guidelines
             </Link>
 
             <Link

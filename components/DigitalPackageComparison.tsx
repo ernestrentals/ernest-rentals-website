@@ -195,25 +195,25 @@ export default function DigitalPackageComparison({
         <div className="mt-8 grid gap-5 rounded-[2rem] bg-[#071226] p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
-              Combine Premium Digital With Static
+              Digital + Static Combos
             </p>
 
             <h3 className="mt-2 text-2xl font-black">
-              Ask about preferred static billboard rates.
+              Build an exact combo using live package prices.
             </h3>
 
             <p className="mt-3 max-w-3xl leading-7 text-slate-300">
-              Eligible longer-term Premium Digital campaigns may qualify for
-              preferred static billboard combo pricing. Sales will confirm the
-              available billboard and applicable offer.
+              Choose an actual static billboard below to compare a Premium
+              Digital campaign with eligible 3, 6 or 12-month static-rental
+              savings.
             </p>
           </div>
 
           <Link
-            href="/contact"
+            href="#combo-packages"
             className="inline-flex w-fit rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
           >
-            Ask About a Combo
+            Build a Combo ↓
           </Link>
         </div>
       </div>
