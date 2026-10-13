@@ -9,7 +9,10 @@ import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
-import { getPublicPricing } from "@/lib/public-pricing";
+import {
+  formatXcd,
+  getPublicPricing,
+} from "@/lib/public-pricing";
 
 export const revalidate =
   300;
@@ -295,8 +298,16 @@ export default async function DigitalScreensPage() {
     digitalPackages,
     staticPackages,
     billboards,
+    creativeServices,
   } =
     await getPublicPricing();
+
+  const basicArtwork =
+    creativeServices.find(
+      (service) =>
+        service.service_code ===
+        "artwork_digital_basic"
+    );
 
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226]">
@@ -454,6 +465,45 @@ export default async function DigitalScreensPage() {
           digitalPackages
         }
       />
+
+      <section className="px-5 py-12 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 rounded-[2rem] border border-violet-200 bg-violet-50 px-7 py-9 sm:px-10">
+          <div className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-violet-600">
+              Optional Artwork Design
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black text-[#071226]">
+              Need help creating your digital ad?
+            </h2>
+
+            <p className="mt-3 leading-7 text-slate-600">
+              Digital artwork design is available
+              {basicArtwork
+                ? ` from ${formatXcd(basicArtwork.price)}`
+                : " as a separate service"}
+              . You may also supply your own compliant final artwork. Design
+              is not automatically included with Shoutout advertising.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/pricing#artwork-design"
+              className="rounded-xl bg-[#071226] px-5 py-3.5 font-extrabold text-white transition hover:bg-violet-700"
+            >
+              View Design Prices
+            </Link>
+
+            <Link
+              href="/artwork-guidelines"
+              className="rounded-xl border border-violet-200 bg-white px-5 py-3.5 font-extrabold text-violet-700 transition hover:border-violet-400"
+            >
+              Artwork Guidelines
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <ComboPackageBuilder
         digitalPackages={
@@ -618,7 +668,8 @@ export default async function DigitalScreensPage() {
 
                 <p className="mt-1 text-sm leading-6 text-slate-300">
                   15-second option for birthdays, celebrations, community
-                  messages and other special announcements.
+                  messages and other special announcements. Supply your own
+                  artwork or add an optional Artwork Design service.
                 </p>
               </div>
             </div>

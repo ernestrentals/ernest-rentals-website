@@ -7,6 +7,10 @@ import Link from "next/link";
 import PrintArtworkGuideButton from "@/components/PrintArtworkGuideButton";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import {
+  formatXcd,
+  getPublicPricing,
+} from "@/lib/public-pricing";
 
 const siteUrl =
   process.env
@@ -195,7 +199,7 @@ const faqs = [
     question:
       "Can Ernest Rentals create the advertisement?",
     answer:
-      "Creative support may be available depending on the selected package. Choose the creative-help option in the campaign request or contact Sales for confirmation.",
+      "Yes. Artwork Design is an optional paid service quoted separately from advertising. You may choose Basic Digital Artwork, Professional Artwork Design or the Static + Digital Design Bundle, or ask Sales to recommend the right option.",
   },
   {
     question:
@@ -207,7 +211,7 @@ const faqs = [
     question:
       "Can artwork be changed after submission?",
     answer:
-      "A corrected version can be supplied before final approval. Creative changes during a campaign depend on the selected package and must be confirmed by Ernest Rentals.",
+      "A corrected version can be supplied before final approval. Design services include a stated revision allowance; additional revisions may be added separately with staff confirmation. Creative changes to an already approved advertisement during a live campaign are different from initial Artwork Design and depend on the selected advertising package.",
   },
   {
     question:
@@ -217,7 +221,11 @@ const faqs = [
   },
 ];
 
-export default function ArtworkGuidelinesPage() {
+export default async function ArtworkGuidelinesPage() {
+  const {
+    creativeServices,
+  } = await getPublicPricing();
+
   return (
     <main className="min-h-screen bg-[#f5f8fc] text-[#071226] print:bg-white">
       <script
@@ -349,6 +357,65 @@ export default function ArtworkGuidelinesPage() {
               latest confirmed specifications. Do not resize or export final
               artwork based on assumptions.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-16 lg:px-8 print:px-0 print:py-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-violet-600">
+            Optional Artwork Design
+          </p>
+
+          <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-4xl">
+            Supply finished artwork or ask Ernest Rentals to design it.
+          </h2>
+
+          <p className="mt-4 max-w-4xl leading-7 text-slate-600">
+            Artwork Design is optional and priced separately. Design fees do
+            not include printing, installation or billboard rental. Every
+            design remains subject to Ernest Rentals review and approval
+            before publication.
+          </p>
+
+          {creativeServices.length > 0 && (
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {creativeServices.map(
+                (service) => (
+                  <article
+                    key={service.service_id}
+                    className="rounded-3xl border border-slate-200 bg-[#f8fafc] p-6"
+                  >
+                    <h3 className="text-xl font-black">
+                      {service.service_name}
+                    </h3>
+
+                    <p className="mt-2 text-2xl font-black text-violet-700">
+                      {service.service_code === "artwork_rush" ? "+" : ""}
+                      {formatXcd(service.price)}
+                    </p>
+
+                    {service.service_description && (
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        {service.service_description}
+                      </p>
+                    )}
+
+                    {service.subject_to_availability && (
+                      <p className="mt-3 text-xs font-extrabold text-amber-700">
+                        Subject to availability.
+                      </p>
+                    )}
+                  </article>
+                )
+              )}
+            </div>
+          )}
+
+          <div className="mt-8 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm leading-6 text-slate-700">
+            Rush Design is subject to availability. No same-day, 24-hour or
+            48-hour turnaround is promised unless Sales confirms a separate
+            service arrangement in writing.
           </div>
         </div>
       </section>

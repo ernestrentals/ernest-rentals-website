@@ -242,6 +242,7 @@ export default async function PricingPage() {
     digitalPackages,
     staticPackages,
     billboards,
+    creativeServices,
   } =
     await getPublicPricing();
 
@@ -350,6 +351,95 @@ export default async function PricingPage() {
           digitalPackages
         }
       />
+
+      <section
+        id="artwork-design"
+        className="bg-[#071226] px-5 py-16 text-white lg:px-8"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-400">
+              Artwork Design Services
+            </p>
+
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              Need help preparing your billboard artwork?
+            </h2>
+
+            <p className="mt-4 leading-7 text-slate-300">
+              Don&apos;t have billboard artwork ready? Ernest Rentals can
+              prepare professional creative for your campaign. Artwork design
+              is optional and is quoted separately from advertising, printing,
+              installation and billboard rental.
+            </p>
+          </div>
+
+          {creativeServices.length > 0 ? (
+            <div className="mt-9 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {creativeServices.map(
+                (service) => (
+                  <article
+                    key={service.service_id}
+                    className="rounded-3xl border border-white/10 bg-white/5 p-6"
+                  >
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-sky-300">
+                      {service.service_category}
+                    </p>
+
+                    <h3 className="mt-3 text-xl font-black">
+                      {service.service_name}
+                    </h3>
+
+                    <p className="mt-3 text-3xl font-black text-orange-400">
+                      {service.service_code === "artwork_rush" ? "+" : ""}
+                      {formatXcd(service.price)}
+                    </p>
+
+                    {service.service_description && (
+                      <p className="mt-4 text-sm leading-6 text-slate-300">
+                        {service.service_description}
+                      </p>
+                    )}
+
+                    {service.included_revisions > 0 && (
+                      <p className="mt-4 text-xs font-bold text-sky-200">
+                        Includes up to {service.included_revisions} revision
+                        {service.included_revisions === 1 ? "" : "s"}.
+                      </p>
+                    )}
+
+                    {service.subject_to_availability && (
+                      <p className="mt-4 text-xs font-bold text-amber-300">
+                        Subject to availability.
+                      </p>
+                    )}
+                  </article>
+                )
+              )}
+            </div>
+          ) : (
+            <p className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5 text-slate-300">
+              Contact Sales for current artwork design options.
+            </p>
+          )}
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/#availability"
+              className="rounded-xl bg-orange-500 px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+            >
+              Start Your Campaign
+            </Link>
+
+            <Link
+              href="/artwork-guidelines"
+              className="rounded-xl border border-white/15 bg-white/5 px-5 py-3.5 font-extrabold text-white transition hover:bg-white/10"
+            >
+              Review Artwork Guidelines
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <ComboPackageBuilder
         digitalPackages={

@@ -37,10 +37,23 @@ export type PublicBillboard = {
   image_url: string | null;
 };
 
+export type PublicCreativeService = {
+  service_id: string;
+  service_code: string;
+  service_name: string;
+  service_description: string | null;
+  service_category: string;
+  price: number;
+  currency_code: string;
+  included_revisions: number;
+  subject_to_availability: boolean;
+};
+
 export type PublicPricingCatalog = {
   digitalPackages: PublicDigitalPackage[];
   staticPackages: PublicStaticPackage[];
   billboards: PublicBillboard[];
+  creativeServices: PublicCreativeService[];
 };
 
 function createPublicServerClient() {
@@ -64,6 +77,7 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
     digitalResult,
     staticResult,
     billboardResult,
+    creativeResult,
   ] = await Promise.all([
     supabase.rpc(
       "get_public_ad_packages",
@@ -77,6 +91,9 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
     ),
     supabase.rpc(
       "get_public_location_billboards"
+    ),
+    supabase.rpc(
+      "get_public_creative_services"
     ),
   ]);
 
@@ -108,6 +125,15 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
   }
 
   if (
+    creativeResult.error
+  ) {
+    console.error(
+      "Unable to load public creative-service pricing:",
+      creativeResult.error
+    );
+  }
+
+  if (
     digitalResult.error &&
     staticResult.error
   ) {
@@ -126,6 +152,9 @@ async function loadPublicPricing(): Promise<PublicPricingCatalog> {
     billboards:
       (billboardResult.data ??
         []) as PublicBillboard[],
+    creativeServices:
+      (creativeResult.data ??
+        []) as PublicCreativeService[],
   };
 }
 
@@ -161,6 +190,8 @@ export async function getPublicPricing(): Promise<PublicPricingCatalog> {
       staticPackages:
         [],
       billboards:
+        [],
+      creativeServices:
         [],
     };
   }

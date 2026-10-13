@@ -13,6 +13,10 @@ import {
   isComboTerm,
   type ComboInquirySelection,
 } from "@/lib/combo-packages";
+import {
+  formatXcd,
+  getPublicPricing,
+} from "@/lib/public-pricing";
 
 type BillboardPageProps = {
   params: Promise<{
@@ -626,6 +630,17 @@ export default async function BillboardPage({
   const isDigital =
     billboard.billboard_type ===
     "digital";
+
+  const {
+    creativeServices,
+  } = await getPublicPricing();
+
+  const professionalArtwork =
+    creativeServices.find(
+      (service) =>
+        service.service_code ===
+        "artwork_professional"
+    );
 
   const typeLabel =
     isDigital
@@ -1302,6 +1317,45 @@ export default async function BillboardPage({
                   )}
                 </div>
               </section>
+
+              {!isDigital && (
+                <section className="mt-8 rounded-3xl border border-violet-200 bg-violet-50 p-7 shadow-sm">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-violet-600">
+                    Artwork Design Available
+                  </p>
+
+                  <h2 className="mt-3 text-2xl font-black tracking-tight text-[#071226]">
+                    Professional static billboard design
+                    {professionalArtwork
+                      ? ` from ${formatXcd(professionalArtwork.price)}`
+                      : " is available"}
+                    .
+                  </h2>
+
+                  <p className="mt-4 leading-7 text-slate-600">
+                    Artwork design is an optional service and is priced
+                    separately from printing, installation and billboard
+                    rental. You may also supply compliant finished artwork for
+                    Ernest Rentals approval.
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      href="/pricing#artwork-design"
+                      className="rounded-xl bg-[#071226] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-violet-700"
+                    >
+                      View Artwork Design Prices
+                    </Link>
+
+                    <Link
+                      href="/artwork-guidelines"
+                      className="rounded-xl border border-violet-200 bg-white px-5 py-3 text-sm font-extrabold text-violet-700 transition hover:border-violet-400"
+                    >
+                      Artwork Guidelines
+                    </Link>
+                  </div>
+                </section>
+              )}
             </div>
 
             {/* RIGHT SIDE */}

@@ -44,7 +44,14 @@ type ArtworkChoice =
   | ""
   | "ready"
   | "need_creation"
-  | "later";
+  | "unsure";
+
+type ArtworkServiceChoice =
+  | ""
+  | "artwork_digital_basic"
+  | "artwork_professional"
+  | "artwork_campaign_bundle"
+  | "unsure";
 
 type CampaignInquiryResponse = {
   success?: boolean;
@@ -489,8 +496,6 @@ export default function StartCampaignForm({
   selectedPackageMonthlyPrice = null,
   selectedPackageDurationLabel = null,
   selectedPackageSlotDuration = null,
-  selectedPackageIncludesAdCreation = false,
-
   comboSelection = null,
 
   onClose,
@@ -559,6 +564,14 @@ export default function StartCampaignForm({
     setArtworkChoice,
   ] =
     useState<ArtworkChoice>(
+      ""
+    );
+
+  const [
+    artworkService,
+    setArtworkService,
+  ] =
+    useState<ArtworkServiceChoice>(
       ""
     );
 
@@ -679,16 +692,26 @@ export default function StartCampaignForm({
   const artworkLabel =
     artworkChoice ===
       "ready"
-      ? "Artwork ready"
+      ? "Client will provide final artwork"
       : artworkChoice ===
           "need_creation"
-        ? selectedPackageIncludesAdCreation
-          ? "Use included ad creation"
-          : "Need Ernest Rentals to create my ad"
+        ? "Artwork Design required"
         : artworkChoice ===
-            "later"
-          ? "Artwork will be provided later"
+            "unsure"
+          ? "Unsure — please advise"
           : "Not selected";
+
+  const artworkServiceLabel =
+    artworkService ===
+      "artwork_digital_basic"
+      ? "Basic Digital Artwork Design"
+      : artworkService ===
+          "artwork_professional"
+        ? "Professional Artwork Design"
+        : artworkService ===
+            "artwork_campaign_bundle"
+          ? "Static + Digital Campaign Design Bundle"
+          : "Unsure — please advise";
 
   function validateSchedule() {
     if (
@@ -850,6 +873,15 @@ export default function StartCampaignForm({
       step ===
       3
     ) {
+      if (
+        !artworkChoice
+      ) {
+        setErrorMessage(
+          "Please tell us whether you need help with artwork design."
+        );
+        return;
+      }
+
       setStep(
         4
       );
@@ -951,6 +983,16 @@ export default function StartCampaignForm({
       return;
     }
 
+    if (
+      !artworkChoice
+    ) {
+      setErrorMessage(
+        "Please tell us whether you need help with artwork design."
+      );
+      setStep(3);
+      return;
+    }
+
     setLoading(
       true
     );
@@ -968,13 +1010,17 @@ export default function StartCampaignForm({
     const artworkNote =
       artworkChoice ===
       "need_creation"
-        ? selectedPackageIncludesAdCreation
-          ? "Artwork request: Customer selected the package's included ad creation service."
-          : "Artwork request: Customer would like Ernest Rentals to create the advertisement."
+        ? [
+            "Artwork Assistance: Required",
+            `Preferred Artwork Service: ${artworkServiceLabel}`,
+          ].join("\n")
         : artworkChoice ===
-            "later"
-          ? "Artwork request: Customer will provide artwork later."
-          : null;
+            "unsure"
+          ? "Artwork Assistance: Unsure — please advise\nPreferred Artwork Service: Unsure"
+          : artworkChoice ===
+              "ready"
+            ? "Artwork Assistance: No — client will provide final artwork for approval."
+            : null;
 
     const combinedMessage = [
       artworkNote,
@@ -1059,10 +1105,7 @@ export default function StartCampaignForm({
                   null,
 
                 artworkReady:
-                  artworkChoice ===
-                    ""
-                    ? null
-                    : artworkReady,
+                  artworkReady,
 
                 message:
                   combinedMessage,
@@ -1494,11 +1537,6 @@ export default function StartCampaignForm({
                       )}
                     </div>
 
-                    {selectedPackageIncludesAdCreation && (
-                      <p className="mt-3 border-t border-orange-100 pt-3 text-xs font-bold text-violet-700">
-                        ✓ Ad creation included with this package
-                      </p>
-                    )}
                   </div>
                 ) : (
                   <div className="mt-4">
@@ -1779,9 +1817,14 @@ export default function StartCampaignForm({
                     <button
                       type="button"
                       onClick={() =>
-                        setArtworkChoice(
-                          "ready"
-                        )
+                        {
+                          setArtworkChoice(
+                            "ready"
+                          );
+                          setArtworkService(
+                            ""
+                          );
+                        }
                       }
                       className={`rounded-2xl border p-4 text-left transition ${
                         artworkChoice ===
@@ -1795,20 +1838,29 @@ export default function StartCampaignForm({
                       </div>
 
                       <p className="mt-2 text-sm font-black text-slate-900">
-                        Artwork Ready
+                        I&apos;ll Provide Artwork
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        I already have the artwork and can provide it.
+                        No design service needed. My final artwork will still be reviewed before publication.
                       </p>
                     </button>
 
                     <button
                       type="button"
                       onClick={() =>
-                        setArtworkChoice(
-                          "need_creation"
-                        )
+                        {
+                          setArtworkChoice(
+                            "need_creation"
+                          );
+                          if (
+                            !artworkService
+                          ) {
+                            setArtworkService(
+                              "unsure"
+                            );
+                          }
+                        }
                       }
                       className={`rounded-2xl border p-4 text-left transition ${
                         artworkChoice ===
@@ -1822,26 +1874,29 @@ export default function StartCampaignForm({
                       </div>
 
                       <p className="mt-2 text-sm font-black text-slate-900">
-                        Need Ad Creation
+                        Yes, I Need Design
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {selectedPackageIncludesAdCreation
-                          ? "Use the ad creation included with this package."
-                          : "I would like Ernest Rentals to create my ad."}
+                        Add a separately priced Artwork Design service to my campaign discussion.
                       </p>
                     </button>
 
                     <button
                       type="button"
                       onClick={() =>
-                        setArtworkChoice(
-                          "later"
-                        )
+                        {
+                          setArtworkChoice(
+                            "unsure"
+                          );
+                          setArtworkService(
+                            "unsure"
+                          );
+                        }
                       }
                       className={`rounded-2xl border p-4 text-left transition ${
                         artworkChoice ===
-                        "later"
+                        "unsure"
                           ? "border-sky-400 bg-sky-50 ring-2 ring-sky-100"
                           : "border-slate-200 bg-white hover:border-slate-300"
                       }`}
@@ -1851,14 +1906,50 @@ export default function StartCampaignForm({
                       </div>
 
                       <p className="mt-2 text-sm font-black text-slate-900">
-                        Provide Later
+                        Unsure — Advise Me
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        I will send the artwork after my request is confirmed.
+                        Sales can help me decide whether design assistance is needed.
                       </p>
                     </button>
                   </div>
+
+                  {artworkChoice ===
+                    "need_creation" && (
+                    <label className="mt-4 block rounded-2xl border border-violet-200 bg-violet-50 p-4">
+                      <span className="text-sm font-semibold text-violet-900">
+                        Preferred Artwork Design service (optional)
+                      </span>
+
+                      <select
+                        value={artworkService}
+                        onChange={(event) =>
+                          setArtworkService(
+                            event.target.value as ArtworkServiceChoice
+                          )
+                        }
+                        className="mt-2 w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                      >
+                        <option value="unsure">
+                          Unsure — please advise
+                        </option>
+                        <option value="artwork_digital_basic">
+                          Basic Digital Artwork
+                        </option>
+                        <option value="artwork_professional">
+                          Professional Artwork
+                        </option>
+                        <option value="artwork_campaign_bundle">
+                          Static + Digital Design Bundle
+                        </option>
+                      </select>
+
+                      <p className="mt-2 text-xs leading-5 text-violet-700">
+                        This request does not automatically add a charge. Sales will confirm the suitable service and price with you.
+                      </p>
+                    </label>
+                  )}
                 </div>
 
                 <label className="mt-6 block">
@@ -2041,6 +2132,14 @@ export default function StartCampaignForm({
                       artworkLabel
                     }
                   />
+
+                  {artworkChoice ===
+                    "need_creation" && (
+                    <SummaryItem
+                      label="Preferred Design Service"
+                      value={artworkServiceLabel}
+                    />
+                  )}
                 </div>
 
                 {(campaignObjective ||
