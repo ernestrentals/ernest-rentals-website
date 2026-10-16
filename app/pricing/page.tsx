@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
+import { DigitalPlayEstimateCard } from "@/components/DigitalPlayEstimate";
 import DigitalPricingCards from "@/components/DigitalPricingCards";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -345,6 +346,8 @@ export default async function PricingPage() {
           </div>
         </div>
       </section>
+
+      <DigitalPlayEstimateCard />
 
       <DigitalPackageComparison
         packages={

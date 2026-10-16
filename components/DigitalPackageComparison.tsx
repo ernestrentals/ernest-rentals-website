@@ -1,6 +1,9 @@
 import Link from "next/link";
 
 import {
+  ESTIMATED_PLAYS_PER_DAY,
+} from "@/lib/digital-play-frequency";
+import {
   packagesByType,
   type PublicDigitalPackage,
 } from "@/lib/public-pricing";
@@ -63,6 +66,14 @@ export default function DigitalPackageComparison({
         `${standardDuration} seconds`,
       premium:
         `${premiumDuration} seconds`,
+    },
+    {
+      feature:
+        "Estimated plays",
+      standard:
+        `Approximately ${ESTIMATED_PLAYS_PER_DAY.toLocaleString("en-US")} per day`,
+      premium:
+        `Approximately ${ESTIMATED_PLAYS_PER_DAY.toLocaleString("en-US")} per day`,
     },
     {
       feature:

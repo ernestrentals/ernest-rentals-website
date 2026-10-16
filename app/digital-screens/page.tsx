@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
+import { DigitalPlayEstimateCard } from "@/components/DigitalPlayEstimate";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import {
@@ -459,6 +460,8 @@ export default async function DigitalScreensPage() {
           </div>
         </div>
       </section>
+
+      <DigitalPlayEstimateCard />
 
       <DigitalPackageComparison
         packages={

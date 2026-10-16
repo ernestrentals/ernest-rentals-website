@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import BillboardCampaignCTA from "@/components/BillboardCampaignCTA";
 import BillboardShareButtons from "@/components/BillboardShareButtons";
 import BillboardReviews from "@/components/BillboardReviews";
+import { DigitalPlayEstimateInline } from "@/components/DigitalPlayEstimate";
 import CompactAvailabilitySearch from "@/components/CompactAvailabilitySearch";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -1485,6 +1486,10 @@ export default async function BillboardPage({
                       />
                     )}
                   </div>
+                )}
+
+                {isDigital && (
+                  <DigitalPlayEstimateInline />
                 )}
 
                 <BillboardCampaignCTA
