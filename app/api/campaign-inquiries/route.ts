@@ -424,9 +424,18 @@ export async function POST(
       body.comboStaticPackageId
     );
 
-  const hasComboRequest =
+  const hasComboTerm =
     body.comboTerm !==
-      undefined ||
+      undefined &&
+    body.comboTerm !==
+      null &&
+    String(
+      body.comboTerm
+    ).trim() !==
+      "";
+
+  const hasComboRequest =
+    hasComboTerm ||
     Boolean(
       comboDigitalPackageId
     ) ||

@@ -1114,16 +1114,13 @@ export default function StartCampaignForm({
                   selectedPackageId,
 
                 comboTerm:
-                  comboSelection?.term ??
-                  null,
+                  comboSelection?.term,
 
                 comboDigitalPackageId:
-                  comboSelection?.digitalPackageId ??
-                  null,
+                  comboSelection?.digitalPackageId,
 
                 comboStaticPackageId:
-                  comboSelection?.staticPackageId ??
-                  null,
+                  comboSelection?.staticPackageId,
 
                 website,
               }),
