@@ -7,6 +7,8 @@ import {
   useState,
 } from "react";
 
+import Image from "next/image";
+
 import {
   createBrowserClient,
 } from "@/lib/supabase/client";
@@ -26,6 +28,15 @@ type Props = {
   billboardId: string;
   billboardName: string;
 };
+
+const REVIEW_IMAGE_MAX_BYTES =
+  3 * 1024 * 1024;
+
+const REVIEW_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
 
 function Stars({
   rating,
@@ -154,6 +165,16 @@ export default function BillboardReviews({
     >([]);
 
   const [
+    reviewIdsWithImages,
+    setReviewIdsWithImages,
+  ] =
+    useState<
+      Set<string>
+    >(
+      new Set()
+    );
+
+  const [
     loading,
     setLoading,
   ] =
@@ -225,12 +246,47 @@ export default function BillboardReviews({
   ] =
     useState("");
 
+  const [
+    image,
+    setImage,
+  ] =
+    useState<File | null>(
+      null
+    );
+
+  const imagePreview =
+    useMemo(
+      () =>
+        image
+          ? URL.createObjectURL(
+              image
+            )
+          : "",
+      [
+        image,
+      ]
+    );
+
   // Simple honeypot field for basic automated-spam resistance.
   const [
     website,
     setWebsite,
   ] =
     useState("");
+
+  useEffect(() => {
+    return () => {
+      if (
+        imagePreview
+      ) {
+        URL.revokeObjectURL(
+          imagePreview
+        );
+      }
+    };
+  }, [
+    imagePreview,
+  ]);
 
   useEffect(() => {
     let cancelled =
@@ -241,18 +297,26 @@ export default function BillboardReviews({
         true
       );
 
-      const {
-        data,
-        error:
-          loadError,
-      } =
-        await supabase.rpc(
+      const [
+        reviewsResult,
+        imagesResult,
+      ] =
+        await Promise.all([
+          supabase.rpc(
           "get_public_billboard_reviews",
           {
             p_billboard_id:
               billboardId,
           }
-        );
+          ),
+          supabase.rpc(
+            "get_public_billboard_review_images",
+            {
+              p_billboard_id:
+                billboardId,
+            }
+          ),
+        ]);
 
       if (
         cancelled
@@ -261,10 +325,10 @@ export default function BillboardReviews({
       }
 
       if (
-        loadError
+        reviewsResult.error
       ) {
         console.error(
-          loadError
+          reviewsResult.error
         );
 
         setReviews(
@@ -273,9 +337,37 @@ export default function BillboardReviews({
       } else {
         setReviews(
           (
-            data ??
+            reviewsResult.data ??
             []
           ) as Review[]
+        );
+      }
+
+      if (
+        imagesResult.error
+      ) {
+        console.error(
+          imagesResult.error
+        );
+
+        setReviewIdsWithImages(
+          new Set()
+        );
+      } else {
+        setReviewIdsWithImages(
+          new Set(
+            (
+              imagesResult.data ??
+              []
+            ).map(
+              (
+                item: {
+                  review_id: string;
+                }
+              ) =>
+                item.review_id
+            )
+          )
         );
       }
 
@@ -360,45 +452,100 @@ export default function BillboardReviews({
       false
     );
 
-    const {
-      error:
-        submitError,
-    } =
-      await supabase.rpc(
-        "submit_public_billboard_review",
-        {
-          p_billboard_id:
-            billboardId,
+    const formData =
+      new FormData();
 
-          p_reviewer_name:
-            reviewerName,
+    formData.set(
+      "billboardId",
+      billboardId
+    );
 
-          p_reviewer_company:
-            company,
+    formData.set(
+      "reviewerName",
+      reviewerName
+    );
 
-          p_reviewer_email:
-            email,
+    formData.set(
+      "company",
+      company
+    );
 
-          p_rating:
-            rating,
+    formData.set(
+      "email",
+      email
+    );
 
-          p_review_title:
-            title,
+    formData.set(
+      "rating",
+      String(
+        rating
+      )
+    );
 
-          p_review_text:
-            reviewText,
-        }
-      );
+    formData.set(
+      "title",
+      title
+    );
+
+    formData.set(
+      "reviewText",
+      reviewText
+    );
+
+    formData.set(
+      "website",
+      website
+    );
 
     if (
-      submitError
+      image
     ) {
-      console.error(
-        submitError
+      formData.set(
+        "image",
+        image
+      );
+    }
+
+    let response:
+      Response;
+
+    try {
+      response =
+        await fetch(
+          "/api/reviews",
+          {
+            method:
+              "POST",
+            body:
+              formData,
+          }
+        );
+    } catch {
+      setError(
+        "We could not submit your review. Please check your connection and try again."
       );
 
+      setSubmitting(
+        false
+      );
+
+      return;
+    }
+
+    const result =
+      (await response
+        .json()
+        .catch(
+          () => ({})
+        )) as {
+        error?: string;
+      };
+
+    if (
+      !response.ok
+    ) {
       setError(
-        submitError.message ||
+        result.error ||
           "We could not submit your review. Please try again."
       );
 
@@ -431,6 +578,10 @@ export default function BillboardReviews({
 
     setReviewText(
       ""
+    );
+
+    setImage(
+      null
     );
 
     setRating(
@@ -758,6 +909,117 @@ export default function BillboardReviews({
               </span>
             </label>
 
+            <div className="mt-3.5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Photo of your ad (optional)
+                </span>
+
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(
+                    event
+                  ) => {
+                    const selected =
+                      event.target.files?.[0] ??
+                      null;
+
+                    if (
+                      !selected
+                    ) {
+                      setImage(
+                        null
+                      );
+
+                      return;
+                    }
+
+                    if (
+                      !REVIEW_IMAGE_TYPES.includes(
+                        selected.type
+                      )
+                    ) {
+                      event.target.value =
+                        "";
+
+                      setImage(
+                        null
+                      );
+
+                      setError(
+                        "Please choose a JPG, PNG or WebP image."
+                      );
+
+                      return;
+                    }
+
+                    if (
+                      selected.size >
+                      REVIEW_IMAGE_MAX_BYTES
+                    ) {
+                      event.target.value =
+                        "";
+
+                      setImage(
+                        null
+                      );
+
+                      setError(
+                        "The ad image must be 3 MB or smaller."
+                      );
+
+                      return;
+                    }
+
+                    setError(
+                      ""
+                    );
+
+                    setImage(
+                      selected
+                    );
+                  }}
+                  className="mt-2 block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-[#071226] file:px-4 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-slate-800"
+                />
+              </label>
+
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                Add one JPG, PNG or WebP image up to 3 MB. The image is reviewed before it appears publicly.
+              </p>
+
+              {imagePreview && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <Image
+                    src={
+                      imagePreview
+                    }
+                    alt="Selected advertisement preview"
+                    width={
+                      900
+                    }
+                    height={
+                      600
+                    }
+                    unoptimized
+                    className="max-h-64 w-full object-contain"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImage(
+                        null
+                      )
+                    }
+                    className="w-full border-t border-slate-200 px-3 py-2 text-xs font-bold text-red-600 transition hover:bg-red-50"
+                  >
+                    Remove image
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Honeypot */}
             <div
               className="hidden"
@@ -868,6 +1130,25 @@ export default function BillboardReviews({
                           review.review_title
                         }
                       </h3>
+                    )}
+
+                    {reviewIdsWithImages.has(
+                      review.review_id
+                    ) && (
+                      <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                        <Image
+                          src={`/api/reviews/${review.review_id}/image`}
+                          alt={`Advertisement shared by ${review.reviewer_name}`}
+                          width={
+                            900
+                          }
+                          height={
+                            600
+                          }
+                          unoptimized
+                          className="max-h-72 w-full object-contain"
+                        />
+                      </div>
                     )}
 
                     <p className="mt-2.5 text-sm leading-5 text-slate-600">

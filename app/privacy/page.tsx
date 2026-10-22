@@ -251,10 +251,12 @@ export default function PrivacyPage() {
               </h3>
               <p>
                 If you submit a review, we collect your name, email address,
-                rating and review text, plus your company and review title if you
-                provide them. Reviews are moderated. If approved, your name,
-                company, rating, title and review may be displayed publicly; your
-                email address is not included in the public review data.
+                rating and review text, plus your company, review title and an
+                optional image of your advertisement if you provide them. Reviews
+                and uploaded images are moderated. If approved, your name,
+                company, rating, title, review and advertisement image may be
+                displayed publicly; your email address is not included in the
+                public review data.
               </p>
 
               <h3 className="pt-2 font-black text-[#071226]">
