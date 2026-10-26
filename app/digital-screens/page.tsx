@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import ComboPackageBuilder from "@/components/ComboPackageBuilder";
 import DigitalPackageComparison from "@/components/DigitalPackageComparison";
+import { ShoutoutPricingCard } from "@/components/DigitalPricingCards";
 import { DigitalPlayEstimateCard } from "@/components/DigitalPlayEstimate";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -119,7 +120,7 @@ const packages = [
       "15 seconds",
 
     description:
-      "Designed for celebratory, community and short-form special-message advertising.",
+      "Premium 15-second special-message advertising from EC$50 per day.",
   },
 ];
 
@@ -470,6 +471,14 @@ export default async function DigitalScreensPage() {
       />
 
       <section className="px-5 py-12 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <ShoutoutPricingCard
+            packages={digitalPackages}
+          />
+        </div>
+      </section>
+
+      <section className="px-5 py-12 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 rounded-[2rem] border border-violet-200 bg-violet-50 px-7 py-9 sm:px-10">
           <div className="max-w-3xl">
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-violet-600">
@@ -671,8 +680,9 @@ export default async function DigitalScreensPage() {
 
                 <p className="mt-1 text-sm leading-6 text-slate-300">
                   15-second option for birthdays, celebrations, community
-                  messages and other special announcements. Supply your own
-                  artwork or add an optional Artwork Design service.
+                  messages and other special announcements from EC$50 per
+                  day. Supply your own artwork or add an optional Artwork
+                  Design service.
                 </p>
               </div>
             </div>

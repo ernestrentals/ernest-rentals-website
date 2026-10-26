@@ -12,6 +12,11 @@ type DigitalPricingCardsProps = {
     PublicDigitalPackage[];
 };
 
+type ShoutoutPricingCardProps = {
+  packages:
+    PublicDigitalPackage[];
+};
+
 type PackageCardProps = {
   title:
     string;
@@ -191,6 +196,113 @@ function PackageCard({
   );
 }
 
+export function ShoutoutPricingCard({
+  packages,
+}: ShoutoutPricingCardProps) {
+  const shoutoutPackages =
+    packagesByType(
+      packages,
+      "shoutout"
+    );
+
+  const dailyRate =
+    shoutoutPackages.find(
+      (item) =>
+        item.duration_unit ===
+          "day" &&
+        item.duration_value ===
+          1
+    )?.price ?? 50;
+
+  return (
+    <article className="rounded-[2rem] border border-sky-200 bg-sky-50 p-6 sm:p-8">
+      <div className="grid gap-7 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-700">
+            Premium Shoutouts
+          </p>
+
+          <h3 className="mt-3 text-3xl font-black">
+            Premium Shoutouts &mdash; {formatXcd(
+              dailyRate
+            )}/Day
+          </h3>
+
+          <p className="mt-3 text-xl font-black text-orange-600">
+            Make Their Special Moment Unforgettable!
+          </p>
+
+          <p className="mt-4 leading-7 text-slate-600">
+            Celebrate birthdays, anniversaries, graduations, achievements and
+            special occasions on the Ernest Rentals Digital Billboard in
+            Rodney Bay. Your 15-second Shoutout appears throughout your
+            selected advertising period.
+          </p>
+
+          <p className="mt-4 text-sm font-bold text-sky-800">
+            Total = number of days &times; {formatXcd(
+              dailyRate
+            )}. No automatic multi-day discount.
+          </p>
+
+          <Link
+            href="/?type=digital#availability"
+            className="mt-6 inline-flex rounded-xl bg-[#071226] px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
+          >
+            Book Your Shoutout Today
+          </Link>
+        </div>
+
+        {shoutoutPackages.length >
+        0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {shoutoutPackages.map(
+              (item) => (
+                <div
+                  key={
+                    item.package_id
+                  }
+                  className="rounded-2xl border border-sky-200 bg-white p-4"
+                >
+                  <p className="text-sm font-extrabold text-slate-600">
+                    {item.duration_label ??
+                      item.package_name}
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-sky-700">
+                    {formatXcd(
+                      item.price
+                    )}
+                  </p>
+
+                  {item.duration_value ? (
+                    <p className="mt-2 text-xs font-bold text-slate-500">
+                      {item.duration_value} day{item.duration_value === 1 ? "" : "s"} &times; {formatXcd(
+                        dailyRate
+                      )}
+                    </p>
+                  ) : null}
+
+                  {item.includes_ad_creation ? (
+                    <p className="mt-2 text-xs font-bold text-orange-600">
+                      Includes ad creation
+                    </p>
+                  ) : null}
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <p className="rounded-2xl border border-sky-200 bg-white p-5 text-sm leading-6 text-slate-500">
+            Live Shoutout pricing is temporarily unavailable. Contact Sales
+            for current options.
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
 export default function DigitalPricingCards({
   packages,
 }: DigitalPricingCardsProps) {
@@ -204,12 +316,6 @@ export default function DigitalPricingCards({
     packagesByType(
       packages,
       "premium"
-    );
-
-  const shoutoutPackages =
-    packagesByType(
-      packages,
-      "shoutout"
     );
 
   return (
@@ -235,80 +341,11 @@ export default function DigitalPricingCards({
         />
       </div>
 
-      <article className="mt-8 rounded-[2rem] border border-sky-200 bg-sky-50 p-6 sm:p-8">
-        <div className="grid gap-7 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-700">
-              Premium Shoutout
-            </p>
-
-            <h3 className="mt-3 text-3xl font-black">
-              Special messages from {formatXcd(
-                shoutoutPackages.length >
-                  0
-                  ? Math.min(
-                      ...shoutoutPackages.map(
-                        (item) =>
-                          item.price
-                      )
-                    )
-                  : 150
-              )} per day.
-            </h3>
-
-            <p className="mt-4 leading-7 text-slate-600">
-              A 15-second option for birthdays, congratulations,
-              announcements, grand openings, special events and short
-              promotional messages.
-            </p>
-
-            <Link
-              href="/?type=digital#availability"
-              className="mt-6 inline-flex rounded-xl bg-[#071226] px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
-            >
-              Book a Shoutout
-            </Link>
-          </div>
-
-          {shoutoutPackages.length >
-          0 ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {shoutoutPackages.map(
-                (item) => (
-                  <div
-                    key={
-                      item.package_id
-                    }
-                    className="rounded-2xl border border-sky-200 bg-white p-4"
-                  >
-                    <p className="text-sm font-extrabold text-slate-600">
-                      {item.duration_label ??
-                        item.package_name}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-black text-sky-700">
-                      {formatXcd(
-                        item.price
-                      )}
-                    </p>
-
-                    {item.includes_ad_creation ? (
-                      <p className="mt-2 text-xs font-bold text-orange-600">
-                        Includes ad creation
-                      </p>
-                    ) : null}
-                  </div>
-                )
-              )}
-            </div>
-          ) : (
-            <p className="rounded-2xl border border-sky-200 bg-white p-5 text-sm leading-6 text-slate-500">
-              Live Shoutout pricing is temporarily unavailable. Contact Sales
-              for current options.
-            </p>
-          )}
-        </div>
-      </article>
+      <div className="mt-8">
+        <ShoutoutPricingCard
+          packages={packages}
+        />
+      </div>
     </>
   );
 }
