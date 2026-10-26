@@ -22,10 +22,6 @@ const primaryNavigation = [
     label: "How It Works",
   },
   {
-    href: "/resources",
-    label: "Resources",
-  },
-  {
     href: "/contact",
     label: "Contact",
   },

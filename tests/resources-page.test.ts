@@ -21,14 +21,13 @@ test("publishes both current rate-card downloads", () => {
 
 test("directs customers to artwork guidance and a custom proposal", () => {
   assert.match(page, /Billboard Artwork Guidelines/);
-  assert.match(page, /Custom Advertising Proposal/);
-  assert.match(page, /Request Proposal/);
+  assert.match(page, /Request a Custom Proposal/);
   assert.match(page, /href: "\/artwork-guidelines"/);
   assert.match(page, /href="\/contact"/);
 });
 
-test("adds Resources to desktop, mobile and footer navigation", () => {
-  assert.match(header, /href: "\/resources"[\s\S]*label: "Resources"/);
+test("keeps Resources out of the main menu and available elsewhere", () => {
+  assert.doesNotMatch(header, /href: "\/resources"[\s\S]*label: "Resources"/);
   assert.match(footer, /href: "\/resources"[\s\S]*label: "Resources"/);
   assert.match(footer, /Customer Resources/);
   assert.match(sitemap, /`\$\{siteUrl\}\/resources`/);
