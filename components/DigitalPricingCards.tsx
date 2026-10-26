@@ -32,6 +32,15 @@ function PackageCard({
   packages,
   premium = false,
 }: PackageCardProps) {
+  const weeklyStartingPrice =
+    packages.find(
+      (item) =>
+        item.duration_unit ===
+          "week" &&
+        item.duration_value ===
+          1
+    )?.price ?? null;
+
   return (
     <article
       className={
@@ -59,6 +68,21 @@ function PackageCard({
       <h3 className="mt-3 text-3xl font-black">
         {title}
       </h3>
+
+      {weeklyStartingPrice !==
+      null ? (
+        <p
+          className={`mt-2 text-sm font-extrabold ${
+            premium
+              ? "text-orange-300"
+              : "text-sky-700"
+          }`}
+        >
+          Starting at {formatXcd(
+            weeklyStartingPrice
+          )} per week
+        </p>
+      ) : null}
 
       <p
         className={`mt-3 max-w-xl leading-7 ${

@@ -7,8 +7,32 @@ export const DIGITAL_SCREEN_END_TIME =
 export const DIGITAL_OPERATING_HOURS_PER_DAY =
   19;
 
+export const DIGITAL_STANDARD_SLOT_CAPACITY =
+  8;
+
+export const DIGITAL_PREMIUM_SLOT_CAPACITY =
+  4;
+
+export const DIGITAL_STANDARD_SLOT_SECONDS =
+  10;
+
+export const DIGITAL_PREMIUM_SLOT_SECONDS =
+  15;
+
+export const DIGITAL_COMMERCIAL_ROTATION_SECONDS =
+  DIGITAL_STANDARD_SLOT_CAPACITY *
+    DIGITAL_STANDARD_SLOT_SECONDS +
+  DIGITAL_PREMIUM_SLOT_CAPACITY *
+    DIGITAL_PREMIUM_SLOT_SECONDS;
+
+// The live inventory currently has three separate 15-second Shoutout slots.
+// They remain outside Standard and Premium capacity.
+export const DIGITAL_RESERVED_CONTENT_SECONDS =
+  45;
+
 export const DIGITAL_ROTATION_SECONDS =
-  185;
+  DIGITAL_COMMERCIAL_ROTATION_SECONDS +
+  DIGITAL_RESERVED_CONTENT_SECONDS;
 
 export const ESTIMATED_PLAYS_PER_HOUR =
   Math.round(

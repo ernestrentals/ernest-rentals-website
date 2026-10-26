@@ -1,6 +1,9 @@
 import Link from "next/link";
 
 import {
+  DIGITAL_COMMERCIAL_ROTATION_SECONDS,
+  DIGITAL_PREMIUM_SLOT_CAPACITY,
+  DIGITAL_STANDARD_SLOT_CAPACITY,
   ESTIMATED_PLAYS_PER_DAY,
 } from "@/lib/digital-play-frequency";
 import {
@@ -96,6 +99,14 @@ export default function DigitalPackageComparison({
         "Checked online by date",
       premium:
         "Checked online by date",
+    },
+    {
+      feature:
+        "Maximum advertiser inventory",
+      standard:
+        `${DIGITAL_STANDARD_SLOT_CAPACITY} independent Standard slots`,
+      premium:
+        `${DIGITAL_PREMIUM_SLOT_CAPACITY} independent Premium slots`,
     },
     {
       feature:
@@ -201,6 +212,17 @@ export default function DigitalPackageComparison({
               )
             )}
           </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm leading-6 text-slate-600">
+          Standard and Premium are separate inventory categories. At full
+          advertiser capacity, their combined commercial portion is {" "}
+          <strong className="text-[#071226]">
+            {DIGITAL_COMMERCIAL_ROTATION_SECONDS} seconds
+          </strong>
+          . Dedicated Shoutout, promotional and internal content remains
+          reserved separately and is not sold as extra Standard or Premium
+          inventory.
         </div>
 
         <div className="mt-8 grid gap-5 rounded-[2rem] bg-[#071226] p-6 text-white sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
