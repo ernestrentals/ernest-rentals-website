@@ -22,6 +22,10 @@ const primaryNavigation = [
     label: "How It Works",
   },
   {
+    href: "/resources",
+    label: "Resources",
+  },
+  {
     href: "/contact",
     label: "Contact",
   },
@@ -60,7 +64,7 @@ export default function SiteHeader() {
         {/* PRIMARY DESKTOP NAVIGATION */}
         <nav
           aria-label="Primary navigation"
-          className="hidden items-center gap-7 text-sm font-bold text-slate-600 lg:flex"
+          className="hidden items-center gap-5 text-[13px] font-bold text-slate-600 lg:flex xl:gap-7 xl:text-sm"
         >
           {primaryNavigation.map(
             (

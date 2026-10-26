@@ -45,6 +45,12 @@ const mainPages = [
       "Learn how to search, select and start a campaign.",
   },
   {
+    href: "/resources",
+    label: "Resources",
+    description:
+      "Download rate cards and access customer planning guides.",
+  },
+  {
     href: "/contact",
     label: "Contact",
     description:
@@ -265,6 +271,13 @@ export default function SiteFooter() {
               className="transition hover:text-orange-600"
             >
               How Billboard Advertising Works
+            </Link>
+
+            <Link
+              href="/resources"
+              className="transition hover:text-orange-600"
+            >
+              Customer Resources
             </Link>
 
             <Link
