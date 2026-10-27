@@ -50,6 +50,7 @@ const downloadableResources = [
       "Compare Standard, Premium and Shoutout advertising packages for the Rodney Bay Digital Billboard.",
     href: "/downloads/ernest-rentals-digital-billboard-rate-card-2026.pdf",
     fileDetails: "PDF · 2026 rates · 348 KB",
+    action: "Download Rate Card",
     accent: "orange",
   },
   {
@@ -59,6 +60,47 @@ const downloadableResources = [
       "Review static billboard rental packages and the information needed to plan a campaign across Saint Lucia.",
     href: "/downloads/ernest-rentals-static-billboard-rate-card-2026.pdf",
     fileDetails: "PDF · 2026 rates · 1.4 MB",
+    action: "Download Rate Card",
+    accent: "sky",
+  },
+  {
+    eyebrow: "Creative Preparation",
+    title: "Static Billboard Artwork Guide",
+    description:
+      "Prepare correctly sized, print-ready artwork for Ernest Rentals static billboard faces.",
+    href: "/downloads/ernest-rentals-static-billboard-artwork-guide.pdf",
+    fileDetails: "PDF · 1 page · 119 KB",
+    action: "Download Artwork Guide",
+    accent: "orange",
+  },
+  {
+    eyebrow: "Creative Preparation",
+    title: "Digital Screen Artwork Guide",
+    description:
+      "Review the required dimensions, file formats and display durations for digital billboard artwork.",
+    href: "/downloads/ernest-rentals-digital-artwork-guide.pdf",
+    fileDetails: "PDF · 1 page · 119 KB",
+    action: "Download Artwork Guide",
+    accent: "sky",
+  },
+  {
+    eyebrow: "Campaign Planning",
+    title: "Billboard Advertising Proposal",
+    description:
+      "Explore Ernest Rentals static and digital advertising options, current packages and campaign pricing.",
+    href: "/downloads/ernest-rentals-advertising-proposal.pdf",
+    fileDetails: "PDF · 2 pages · 215 KB",
+    action: "Download Proposal",
+    accent: "orange",
+  },
+  {
+    eyebrow: "Exclusive Advertising",
+    title: "Exclusive Advertising Package",
+    description:
+      "Review the category-exclusive digital advertising package with additional screen time and visibility.",
+    href: "/downloads/ernest-rentals-exclusive-advertising-proposal.pdf",
+    fileDetails: "PDF · 1 page · 117 KB",
+    action: "Download Proposal",
     accent: "sky",
   },
 ] as const;
@@ -212,17 +254,17 @@ export default function ResourcesPage() {
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-orange-600">
-              Downloadable Rate Cards
+              Downloadable Resources
             </p>
 
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              Current advertising packages in one place.
+              Current guides, proposals and rate cards in one place.
             </h2>
 
             <p className="mt-4 leading-7 text-slate-500">
-              Save or share the latest Ernest Rentals rate cards. Final
-              placement remains subject to availability and campaign
-              confirmation.
+              Save or share the latest Ernest Rentals documents. Final
+              pricing and placement remain subject to availability and
+              campaign confirmation.
             </p>
           </div>
 
@@ -270,7 +312,7 @@ export default function ResourcesPage() {
                       className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-[#071226] px-5 py-3.5 font-extrabold text-white transition hover:bg-orange-600"
                     >
                       <DownloadIcon />
-                      Download Rate Card
+                      {resource.action}
                     </a>
                   </div>
                 </article>

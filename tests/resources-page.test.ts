@@ -7,10 +7,14 @@ const header = readFileSync("components/SiteHeader.tsx", "utf8");
 const footer = readFileSync("components/SiteFooter.tsx", "utf8");
 const sitemap = readFileSync("app/sitemap.ts", "utf8");
 
-test("publishes both current rate-card downloads", () => {
+test("publishes all current customer downloads", () => {
   const downloads = [
     "ernest-rentals-digital-billboard-rate-card-2026.pdf",
     "ernest-rentals-static-billboard-rate-card-2026.pdf",
+    "ernest-rentals-static-billboard-artwork-guide.pdf",
+    "ernest-rentals-digital-artwork-guide.pdf",
+    "ernest-rentals-advertising-proposal.pdf",
+    "ernest-rentals-exclusive-advertising-proposal.pdf",
   ];
 
   for (const file of downloads) {
